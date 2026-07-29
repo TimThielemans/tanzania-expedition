@@ -16,7 +16,21 @@ import {
   useQuizAnswers,
   useZones,
 } from "@/hooks/useGame";
-import { refreshZoneCompletion, unlockZoneWithPassword } from "@/lib/api";
+import {
+  refreshZoneCompletion,
+  unlockZoneWithPassword,
+  unlockedZoneIds,
+  zoneNeedsPassword,
+  type ZoneCompletionEvent,
+} from "@/lib/api";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { fireConfetti } from "@/lib/confetti";
 import { useTeamSession } from "@/lib/session";
 import { isSupabaseConfigured } from "@/lib/supabase";
@@ -48,10 +62,11 @@ function ZonePage() {
 
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [completion, setCompletion] = useState<ZoneCompletionEvent | null>(null);
 
   const zone = zones?.find((z) => z.id === zoneId);
   const zoneChallenges = useMemo(
-    () => (challenges ?? []).filter((c) => c.zone_id === zoneId),
+    () => (challenges ?? []).filter((c) => c.zone_id === zoneId && c.active),
     [challenges, zoneId],
   );
 
@@ -76,9 +91,7 @@ function ZonePage() {
     );
   }
 
-  const unlocked =
-    zone?.unlock_type === "open" ||
-    (progress ?? []).some((p) => p.zone_id === zoneId && p.unlocked);
+  const unlocked = unlockedZoneIds(zones ?? [], progress ?? []).has(zoneId);
 
   async function handleUnlock() {
     if (!zone || !session) return;
@@ -97,8 +110,10 @@ function ZonePage() {
 
   async function handleSubmitted() {
     if (!session || !zones || !challenges) return;
-    const completed = await refreshZoneCompletion(session.teamId, zones, challenges);
-    if (completed.includes(zoneId)) fireConfetti("big");
+    const { completedZones, events } = await refreshZoneCompletion(session.teamId, zones, challenges);
+    if (completedZones.includes(zoneId)) fireConfetti("big");
+    const event = events.find((e) => e.zoneName === zone?.name) ?? events[0];
+    if (event) setCompletion(event);
     await queryClient.invalidateQueries();
   }
 
@@ -124,7 +139,7 @@ function ZonePage() {
         <div className="mt-4 space-y-4 rounded-3xl border border-border bg-card p-5 shadow-card">
           <Lock className="size-8 text-accent" />
           <h2 className="text-2xl">Zone vergrendeld</h2>
-          {zone.unlock_type === "automatic_after_completion" ? (
+          {!zoneNeedsPassword(zone) ? (
             <p className="text-sm text-muted-foreground">
               Deze zone opent automatisch zodra je de vorige zone volledig hebt afgerond.
             </p>
@@ -188,6 +203,30 @@ function ZonePage() {
           </Button>
         </>
       )}
+
+      <Dialog open={completion !== null} onOpenChange={(open) => !open && setCompletion(null)}>
+        <DialogContent className="max-w-sm rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">
+              {completion?.nextNeedsPassword || !completion?.nextZoneName
+                ? "✅ Zone voltooid!"
+                : "🎉 Zone voltooid!"}
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              {completion?.nextNeedsPassword
+                ? "De spelleiding kijkt jullie antwoorden na. Klopt alles? Dan krijgen jullie het wachtwoord voor de volgende zone via Meldingen."
+                : completion?.nextZoneName
+                  ? `De volgende zone (${completion.nextZoneName}) is automatisch ontgrendeld.`
+                  : "Jullie hebben de laatste zone afgerond. Wat een expeditie!"}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button className="h-12 w-full rounded-2xl" onClick={() => setCompletion(null)}>
+              Verder
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
