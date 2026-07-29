@@ -2,12 +2,21 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, LogOut } from "lucide-react";
+import { Loader2, LogOut, Send, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   useAnswers,
   useChallenges,
@@ -19,8 +28,15 @@ import {
   useRealtime,
   useTeams,
   useZones,
+  useNotifications,
 } from "@/hooks/useGame";
-import { addPoints, verifyAdminPassword } from "@/lib/api";
+import { addPoints, sortZones, verifyAdminPassword, zoneNeedsPassword } from "@/lib/api";
+import {
+  createNotification,
+  deleteNotification,
+  setNotificationActive,
+} from "@/lib/notifications";
+import { clearAdminSession, saveAdminSession, useAdminSession } from "@/lib/admin-session";
 import {
   clearAllAnswers,
   clearAllPhotos,
@@ -28,7 +44,7 @@ import {
   resetTeamProgress,
   restartGame,
   setAllZones,
-  setTeamScore,
+  setChallengeActive,
 } from "@/lib/admin";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
@@ -46,29 +62,20 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
-const ADMIN_KEY = "bow-admin-session";
-
 function AdminPage() {
-  const [authed, setAuthed] = useState(false);
-  const [ready, setReady] = useState(false);
+  const { isAdmin, hydrated } = useAdminSession();
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    setAuthed(sessionStorage.getItem(ADMIN_KEY) === "1");
-    setReady(true);
-  }, []);
-
   if (!isSupabaseConfigured) return <ConfigNotice />;
-  if (!ready) return null;
+  if (!hydrated) return null;
 
   async function login() {
     setBusy(true);
     try {
       const ok = await verifyAdminPassword(password);
       if (!ok) throw new Error("Verkeerd adminwachtwoord.");
-      sessionStorage.setItem(ADMIN_KEY, "1");
-      setAuthed(true);
+      saveAdminSession();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Inloggen mislukt.");
     } finally {
@@ -76,7 +83,7 @@ function AdminPage() {
     }
   }
 
-  if (!authed) {
+  if (!isAdmin) {
     return (
       <AppShell title="Admin" subtitle="Beveiligde zone">
         <div className="mt-4 space-y-3 rounded-3xl border border-border bg-card p-5 shadow-card">
@@ -101,7 +108,7 @@ function AdminPage() {
     );
   }
 
-  return <AdminDashboard onLogout={() => { sessionStorage.removeItem(ADMIN_KEY); setAuthed(false); }} />;
+  return <AdminDashboard onLogout={clearAdminSession} />;
 }
 
 function AdminDashboard({ onLogout }: { onLogout: () => void }) {
