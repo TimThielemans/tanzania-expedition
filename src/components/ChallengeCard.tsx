@@ -63,13 +63,29 @@ export function ChallengeCard({
       </div>
 
       {challenge.image_url ? (
-        <img
-          src={challenge.image_url}
-          alt={challenge.title}
-          loading="lazy"
-          className="mt-3 aspect-video w-full rounded-2xl object-cover"
-        />
+        <>
+          <button
+            type="button"
+            onClick={() => setLightbox(true)}
+            className="mt-3 block w-full overflow-hidden rounded-2xl bg-muted"
+            aria-label={`${challenge.title} — foto vergroten`}
+          >
+            <img
+              src={challenge.image_url}
+              alt={challenge.title}
+              loading="lazy"
+              className="max-h-72 w-full object-contain"
+            />
+          </button>
+          <ImageLightbox
+            src={challenge.image_url}
+            alt={challenge.title}
+            open={lightbox}
+            onClose={() => setLightbox(false)}
+          />
+        </>
       ) : null}
+
 
       {submitted ? (
         <div className="mt-4 flex items-center gap-2 rounded-2xl bg-secondary px-4 py-3 text-sm font-semibold text-secondary-foreground">
