@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Loader2, LogOut, Send, Trash2 } from "lucide-react";
@@ -122,10 +122,14 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const { data: quiz } = useQuizAnswers();
   const { data: photos } = usePhotos();
   const { data: progress } = useProgress();
+  const { data: notifications } = useNotifications();
 
-  useRealtime(["scores", "answers", "quiz_answers", "photos", "team_progress"], () => {
-    void queryClient.invalidateQueries();
-  });
+  useRealtime(
+    ["scores", "answers", "quiz_answers", "photos", "team_progress", "notifications", "challenges"],
+    () => {
+      void queryClient.invalidateQueries();
+    },
+  );
 
   const refresh = () => queryClient.invalidateQueries();
   const teamName = (id: string) => teams?.find((t) => t.id === id)?.name ?? id;
@@ -155,10 +159,11 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       }
     >
       <Tabs defaultValue="scores" className="mt-4">
-        <TabsList className="grid w-full grid-cols-4 rounded-2xl">
+        <TabsList className="grid w-full grid-cols-5 rounded-2xl text-xs">
           <TabsTrigger value="scores">Punten</TabsTrigger>
           <TabsTrigger value="answers">Antwoorden</TabsTrigger>
           <TabsTrigger value="zones">Zones</TabsTrigger>
+          <TabsTrigger value="meldingen">Meldingen</TabsTrigger>
           <TabsTrigger value="beheer">Beheer</TabsTrigger>
         </TabsList>
 
@@ -193,28 +198,15 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 ))}
               </div>
 
-              <div className="mt-3 flex gap-2">
-                <Input
-                  type="number"
-                  defaultValue={row.points}
-                  className="h-11 rounded-2xl"
-                  onKeyDown={async (e) => {
-                    if (e.key !== "Enter") return;
-                    await setTeamScore(row.team.id, Number((e.target as HTMLInputElement).value));
-                    toast.success("Score aangepast.");
-                    await refresh();
-                  }}
-                  aria-label={`Score van ${row.team.name}`}
-                />
+              <div className="mt-3">
                 <Button
                   variant="secondary"
-                  className="h-11 shrink-0 rounded-2xl"
+                  className="h-11 w-full rounded-2xl"
                   onClick={() => guarded(`Reset voortgang van ${row.team.name}.`, () => resetTeamProgress(row.team.id))}
                 >
                   Reset team
                 </Button>
               </div>
-              <p className="mt-1 text-xs text-muted-foreground">Enter = score exact instellen.</p>
             </div>
           ))}
         </TabsContent>
@@ -290,7 +282,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                     <li key={p.id} className="flex items-center justify-between gap-2">
                       <span className="min-w-0 truncate">{zoneName(p.zone_id)}</span>
                       <span className="shrink-0">
-                        {p.unlocked ? "🔓" : "🔒"} {p.completed ? "✅" : ""}
+                        {p.unlocked ? "🔑" : "🔒"} {p.completed ? "✅" : ""}
                       </span>
                     </li>
                   ))}
