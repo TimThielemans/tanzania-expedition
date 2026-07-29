@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import {
   fetchChallenges,
   fetchPhotos,
@@ -50,9 +50,10 @@ export const usePointActions = () =>
 
 /** Live updates via Supabase Realtime. */
 export function useRealtime(tables: string[], onChange: () => void) {
+  const id = useId();
   useEffect(() => {
     if (!isSupabaseConfigured) return;
-    const channel = supabase.channel(`bow-${tables.join("-")}`);
+    const channel = supabase.channel(`bow-${id}-${tables.join("-")}`);
     tables.forEach((table) => {
       channel.on("postgres_changes", { event: "*", schema: "public", table }, onChange);
     });
@@ -61,7 +62,7 @@ export function useRealtime(tables: string[], onChange: () => void) {
       void supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tables.join(",")]);
+  }, [id, tables.join(",")]);
 }
 
 /* ------------------------------ meldingen ------------------------------ */
