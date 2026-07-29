@@ -4,6 +4,7 @@ import { Camera, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageLightbox } from "@/components/ImageLightbox";
 import { OfflineQueuedError, submitQuizAnswer, submitTextAnswer, uploadPhoto } from "@/lib/api";
 import type { Challenge } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ export function ChallengeCard({
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const ctx = { teamId, zoneId: challenge.zone_id, challenge };
 
