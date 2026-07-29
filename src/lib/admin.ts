@@ -79,3 +79,8 @@ export function downloadCsv(filename: string, rows: Record<string, unknown>[]) {
   link.click();
   URL.revokeObjectURL(url);
 }
+
+export async function setChallengeActive(challengeId: string, active: boolean) {
+  const { error } = await supabase.from("challenges").update({ active }).eq("id", challengeId);
+  if (error) throw error;
+}

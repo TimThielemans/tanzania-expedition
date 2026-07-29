@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import {
   fetchChallenges,
   fetchPhotos,
@@ -12,6 +12,7 @@ import {
   fetchAnswers,
   fetchQuizAnswers,
 } from "@/lib/api";
+import { fetchNotifications, fetchNotificationReads } from "@/lib/notifications";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 const enabled = isSupabaseConfigured;
@@ -49,9 +50,10 @@ export const usePointActions = () =>
 
 /** Live updates via Supabase Realtime. */
 export function useRealtime(tables: string[], onChange: () => void) {
+  const id = useId();
   useEffect(() => {
     if (!isSupabaseConfigured) return;
-    const channel = supabase.channel(`bow-${tables.join("-")}`);
+    const channel = supabase.channel(`bow-${id}-${tables.join("-")}`);
     tables.forEach((table) => {
       channel.on("postgres_changes", { event: "*", schema: "public", table }, onChange);
     });
@@ -60,5 +62,17 @@ export function useRealtime(tables: string[], onChange: () => void) {
       void supabase.removeChannel(channel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tables.join(",")]);
+  }, [id, tables.join(",")]);
 }
+
+/* ------------------------------ meldingen ------------------------------ */
+
+export const useNotifications = () =>
+  useQuery({ queryKey: ["notifications"], queryFn: fetchNotifications, enabled });
+
+export const useNotificationReads = (reader: string) =>
+  useQuery({
+    queryKey: ["notification-reads", reader],
+    queryFn: () => fetchNotificationReads(reader),
+    enabled: enabled && Boolean(reader),
+  });

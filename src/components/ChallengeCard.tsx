@@ -4,6 +4,7 @@ import { Camera, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageLightbox } from "@/components/ImageLightbox";
 import { OfflineQueuedError, submitQuizAnswer, submitTextAnswer, uploadPhoto } from "@/lib/api";
 import type { Challenge } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -26,6 +27,7 @@ export function ChallengeCard({
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const ctx = { teamId, zoneId: challenge.zone_id, challenge };
 
@@ -63,13 +65,29 @@ export function ChallengeCard({
       </div>
 
       {challenge.image_url ? (
-        <img
-          src={challenge.image_url}
-          alt={challenge.title}
-          loading="lazy"
-          className="mt-3 aspect-video w-full rounded-2xl object-cover"
-        />
+        <>
+          <button
+            type="button"
+            onClick={() => setLightbox(true)}
+            className="mt-3 block w-full overflow-hidden rounded-2xl bg-muted"
+            aria-label={`${challenge.title} — foto vergroten`}
+          >
+            <img
+              src={challenge.image_url}
+              alt={challenge.title}
+              loading="lazy"
+              className="max-h-72 w-full object-contain"
+            />
+          </button>
+          <ImageLightbox
+            src={challenge.image_url}
+            alt={challenge.title}
+            open={lightbox}
+            onClose={() => setLightbox(false)}
+          />
+        </>
       ) : null}
+
 
       {submitted ? (
         <div className="mt-4 flex items-center gap-2 rounded-2xl bg-secondary px-4 py-3 text-sm font-semibold text-secondary-foreground">

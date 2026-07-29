@@ -101,3 +101,30 @@ export interface RankedTeam {
   lastScoredAt: string;
   rank: number;
 }
+
+export type NotificationAudience = "all" | "team" | "admin";
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  body: string | null;
+  audience: NotificationAudience;
+  team_id: string | null;
+  kind: string;
+  active: boolean;
+  created_at: string;
+}
+
+export interface NotificationRead {
+  id: string;
+  notification_id: string;
+  reader: string;
+  read_at: string;
+}
+
+export interface ZoneFirstUnlock {
+  id: string;
+  zone_id: string;
+  team_id: string;
+  created_at: string;
+}
