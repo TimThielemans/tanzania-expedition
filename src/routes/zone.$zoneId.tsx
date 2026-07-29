@@ -1,0 +1,193 @@
+import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { ArrowLeft, Loader2, Lock } from "lucide-react";
+import { AppShell } from "@/components/AppShell";
+import { ConfigNotice } from "@/components/ConfigNotice";
+import { ChallengeCard } from "@/components/ChallengeCard";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  useAnswers,
+  useChallenges,
+  usePhotos,
+  useProgress,
+  useQuizAnswers,
+  useZones,
+} from "@/hooks/useGame";
+import { refreshZoneCompletion, unlockZoneWithPassword } from "@/lib/api";
+import { fireConfetti } from "@/lib/confetti";
+import { useTeamSession } from "@/lib/session";
+import { isSupabaseConfigured } from "@/lib/supabase";
+
+export const Route = createFileRoute("/zone/$zoneId")({
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Zone — BOW in Tanzania" },
+      { name: "description", content: "Los de opdrachten van deze zone op en verdien punten." },
+      { property: "og:title", content: "Zone — BOW in Tanzania" },
+      { property: "og:description", content: "Los de opdrachten van deze zone op en verdien punten." },
+    ],
+  }),
+  component: ZonePage,
+});
+
+function ZonePage() {
+  const { zoneId } = useParams({ from: "/zone/$zoneId" });
+  const { session, hydrated } = useTeamSession();
+  const queryClient = useQueryClient();
+
+  const { data: zones } = useZones();
+  const { data: challenges } = useChallenges();
+  const { data: progress } = useProgress(session?.teamId);
+  const { data: answers } = useAnswers(session?.teamId);
+  const { data: quiz } = useQuizAnswers(session?.teamId);
+  const { data: photos } = usePhotos(session?.teamId);
+
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const zone = zones?.find((z) => z.id === zoneId);
+  const zoneChallenges = useMemo(
+    () => (challenges ?? []).filter((c) => c.zone_id === zoneId),
+    [challenges, zoneId],
+  );
+
+  const submittedValue = useMemo(() => {
+    const map = new Map<string, string>();
+    (answers ?? []).forEach((a) => map.set(a.challenge_id, a.answer));
+    (quiz ?? []).forEach((a) => map.set(a.challenge_id, a.selected_option));
+    (photos ?? []).forEach((p) => map.set(p.challenge_id, "foto"));
+    return map;
+  }, [answers, quiz, photos]);
+
+  if (!isSupabaseConfigured) return <ConfigNotice />;
+  if (!hydrated) return null;
+  if (!session) {
+    return (
+      <AppShell title="Niet ingelogd">
+        <p className="mt-4 text-sm text-muted-foreground">Log eerst in met je team.</p>
+        <Link to="/" className="mt-4 inline-block underline">
+          Naar login
+        </Link>
+      </AppShell>
+    );
+  }
+
+  const unlocked =
+    zone?.unlock_type === "open" ||
+    (progress ?? []).some((p) => p.zone_id === zoneId && p.unlocked);
+
+  async function handleUnlock() {
+    if (!zone || !session) return;
+    setBusy(true);
+    try {
+      await unlockZoneWithPassword(session.teamId, zone, password);
+      fireConfetti();
+      toast.success(`${zone.name} ontgrendeld!`);
+      await queryClient.invalidateQueries({ queryKey: ["progress"] });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Ontgrendelen mislukt.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleSubmitted() {
+    if (!session || !zones || !challenges) return;
+    const completed = await refreshZoneCompletion(session.teamId, zones, challenges);
+    if (completed.includes(zoneId)) fireConfetti("big");
+    await queryClient.invalidateQueries();
+  }
+
+  const completedCount = zoneChallenges.filter((c) => submittedValue.has(c.id)).length;
+
+  return (
+    <AppShell
+      title={zone ? `${zone.icon} ${zone.name}` : "Zone"}
+      subtitle={
+        zone ? `${completedCount}/${zoneChallenges.length} opdrachten voltooid` : undefined
+      }
+      action={
+        <Button asChild variant="secondary" size="sm" className="rounded-full">
+          <Link to="/">
+            <ArrowLeft className="size-4" /> Home
+          </Link>
+        </Button>
+      }
+    >
+      {!zone ? (
+        <p className="mt-4 text-sm text-muted-foreground">Zone niet gevonden.</p>
+      ) : !unlocked ? (
+        <div className="mt-4 space-y-4 rounded-3xl border border-border bg-card p-5 shadow-card">
+          <Lock className="size-8 text-accent" />
+          <h2 className="text-2xl">Zone vergrendeld</h2>
+          {zone.unlock_type === "automatic_after_completion" ? (
+            <p className="text-sm text-muted-foreground">
+              Deze zone opent automatisch zodra je de vorige zone volledig hebt afgerond.
+            </p>
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Vul het zonewachtwoord in dat je van de begeleiding kreeg.
+              </p>
+              <Input
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Zonewachtwoord"
+                className="h-12 rounded-2xl text-base"
+              />
+              <Button
+                size="lg"
+                className="h-12 w-full rounded-2xl text-base"
+                disabled={busy || !password}
+                onClick={handleUnlock}
+              >
+                {busy ? <Loader2 className="size-4 animate-spin" /> : "Ontgrendelen"}
+              </Button>
+            </>
+          )}
+        </div>
+      ) : (
+        <>
+          {zone.description ? (
+            <p className="mt-4 rounded-3xl border border-border bg-card p-4 text-sm shadow-card">
+              {zone.description}
+            </p>
+          ) : null}
+
+          <div className="mt-4 space-y-4">
+            {zoneChallenges.map((challenge) => (
+              <ChallengeCard
+                key={challenge.id}
+                challenge={challenge}
+                teamId={session.teamId}
+                submitted={submittedValue.has(challenge.id)}
+                submittedValue={submittedValue.get(challenge.id)}
+                onSubmitted={handleSubmitted}
+              />
+            ))}
+            {zoneChallenges.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nog geen opdrachten in deze zone.</p>
+            ) : null}
+          </div>
+
+          {zone.picture ? (
+            <img
+              src={zone.picture}
+              alt={zone.name}
+              loading="lazy"
+              className="mt-5 w-full rounded-3xl object-cover shadow-card"
+            />
+          ) : null}
+
+          <Button asChild size="lg" variant="secondary" className="mt-6 h-12 w-full rounded-2xl">
+            <Link to="/">Terug naar Home</Link>
+          </Button>
+        </>
+      )}
+    </AppShell>
+  );
+}
