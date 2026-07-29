@@ -40,9 +40,18 @@ Open in Supabase: **SQL Editor → New query**.
    Realtime-publicatie en de Storage-policies aan.
    Tabellen: `teams`, `zones`, `challenges`, `answers`, `photos`, `scores`, `quiz_answers`,
    `team_progress`, `game_settings`, `admin_settings`, `point_actions`.
-2. Nieuwe query → plak de inhoud van `supabase/seed.sql` en klik **Run**.
+2. Nieuwe query → plak de inhoud van `supabase/upgrade.sql` en klik **Run**.
+   Dit voegt het `active`-veld op opdrachten toe en maakt `notifications`,
+   `notification_reads` en `zone_first_unlocks` (meldingencentrum, adminmeldingen
+   en "eerste team"-prestaties), inclusief GRANTs, RLS en Realtime.
+3. Nieuwe query → plak de inhoud van `supabase/seed.sql` en klik **Run**.
    Dit vult voorbeeldteams, de vier zones (🚵 MTB Adventure, ⛰️ Mt Meru, 🦁 Safari, 🌴 Zanzibar),
    voorbeeldopdrachten, instellingen, het adminwachtwoord en de puntenknoppen (+3, +5, −3, −5).
+
+> **Zones ontgrendelen:** een zone met een ingevuld `unlock_password` blijft dicht tot de
+> spelleiding de code via Meldingen stuurt. Is het wachtwoord leeg, dan opent de zone
+> automatisch zodra de vorige zone volledig is afgerond. De eerste zone staat altijd open.
+
 
 > Later zones, teams of opdrachten toevoegen/hernoemen/verwijderen? Dat doe je volledig in de
 > Supabase **Table Editor** — er is geen codewijziging nodig.
