@@ -142,7 +142,53 @@ export async function addPoints(teamId: string, points: number) {
 
 /* ------------------------------ zones ------------------------------ */
 
-export async function setZoneUnlocked(teamId: string, zoneId: string, unlocked: boolean) {
+/** Een zone zonder wachtwoord opent automatisch zodra de vorige zone klaar is. */
+export function zoneNeedsPassword(zone: Zone): boolean {
+  return (zone.unlock_password ?? "").trim().length > 0;
+}
+
+export function sortZones(zones: Zone[]): Zone[] {
+  return [...zones].sort((a, b) => a.order_index - b.order_index);
+}
+
+/** Bepaalt welke zones open staan voor een team. Zone 1 staat altijd open. */
+export function unlockedZoneIds(zones: Zone[], progress: TeamProgress[]): Set<string> {
+  const sorted = sortZones(zones);
+  const byZone = new Map(progress.map((p) => [p.zone_id, p]));
+  const open = new Set<string>();
+
+  sorted.forEach((zone, index) => {
+    if (index === 0) {
+      open.add(zone.id);
+      return;
+    }
+    if (byZone.get(zone.id)?.unlocked) {
+      open.add(zone.id);
+      return;
+    }
+    const previous = sorted[index - 1];
+    if (!zoneNeedsPassword(zone) && byZone.get(previous.id)?.completed) open.add(zone.id);
+  });
+
+  return open;
+}
+
+/** Registreer het eerste team dat een zone bereikt en maak een globale melding. */
+async function registerFirstUnlock(teamId: string, zone: Zone) {
+  const { error } = await supabase
+    .from("zone_first_unlocks")
+    .insert({ zone_id: zone.id, team_id: teamId });
+  if (error) return; // al bezet door een sneller team
+  const { data: team } = await supabase.from("teams").select("name").eq("id", teamId).maybeSingle();
+  await createNotification({
+    title: `🏆 ${team?.name ?? "Een team"} bereikte als eerste ${zone.name}!`,
+    body: "Wie volgt? Zet de achtervolging in!",
+    audience: "all",
+    kind: "achievement",
+  });
+}
+
+export async function setZoneUnlocked(teamId: string, zoneId: string, unlocked: boolean, zone?: Zone) {
   const { error } = await supabase.from("team_progress").upsert(
     {
       team_id: teamId,
@@ -153,36 +199,57 @@ export async function setZoneUnlocked(teamId: string, zoneId: string, unlocked: 
     { onConflict: "team_id,zone_id" },
   );
   if (error) throw error;
+  if (unlocked && zone) await registerFirstUnlock(teamId, zone);
 }
 
 export async function unlockZoneWithPassword(teamId: string, zone: Zone, password: string) {
   if ((zone.unlock_password ?? "").trim().toLowerCase() !== password.trim().toLowerCase()) {
     throw new Error("Verkeerd wachtwoord voor deze zone.");
   }
-  await setZoneUnlocked(teamId, zone.id, true);
+  await setZoneUnlocked(teamId, zone.id, true, zone);
 }
 
-/** Markeer zone als voltooid en open automatisch de volgende zone indien ingesteld. */
-export async function refreshZoneCompletion(teamId: string, zones: Zone[], challenges: Challenge[]) {
-  const [answers, quiz, photos] = await Promise.all([
+export interface ZoneCompletionEvent {
+  zoneName: string;
+  nextZoneName: string | null;
+  nextNeedsPassword: boolean;
+}
+
+/**
+ * Markeer voltooide zones. Zonder wachtwoord opent de volgende zone automatisch;
+ * met wachtwoord krijgt de spelleiding een melding om de antwoorden na te kijken.
+ */
+export async function refreshZoneCompletion(
+  teamId: string,
+  zones: Zone[],
+  challenges: Challenge[],
+): Promise<{ completedZones: string[]; events: ZoneCompletionEvent[] }> {
+  const [answers, quiz, photos, existing, teamRow] = await Promise.all([
     fetchAnswers(teamId),
     fetchQuizAnswers(teamId),
     fetchPhotos(teamId),
+    fetchProgress(teamId),
+    supabase.from("teams").select("name").eq("id", teamId).maybeSingle(),
   ]);
+  const teamName = teamRow.data?.name ?? "Een team";
   const done = new Set<string>([
     ...answers.map((a) => a.challenge_id),
     ...quiz.map((a) => a.challenge_id),
     ...photos.map((p) => p.challenge_id),
   ]);
+  const alreadyCompleted = new Set(existing.filter((p) => p.completed).map((p) => p.zone_id));
 
-  const sorted = [...zones].sort((a, b) => a.order_index - b.order_index);
+  const sorted = sortZones(zones);
   const completedZones: string[] = [];
+  const events: ZoneCompletionEvent[] = [];
 
-  for (const zone of sorted) {
-    const zoneChallenges = challenges.filter((c) => c.zone_id === zone.id);
+  for (const [index, zone] of sorted.entries()) {
+    const zoneChallenges = challenges.filter((c) => c.zone_id === zone.id && c.active);
     const complete = zoneChallenges.length > 0 && zoneChallenges.every((c) => done.has(c.id));
     if (!complete) continue;
     completedZones.push(zone.id);
+    const isNew = !alreadyCompleted.has(zone.id);
+
     await supabase.from("team_progress").upsert(
       {
         team_id: teamId,
@@ -193,13 +260,34 @@ export async function refreshZoneCompletion(teamId: string, zones: Zone[], chall
       },
       { onConflict: "team_id,zone_id" },
     );
-    const next = sorted[sorted.indexOf(zone) + 1];
-    if (next && (next.automatic_unlock || next.unlock_type === "automatic_after_completion")) {
-      await setZoneUnlocked(teamId, next.id, true);
+
+    const next = sorted[index + 1] ?? null;
+    const nextNeedsPassword = next ? zoneNeedsPassword(next) : false;
+
+    if (next && !nextNeedsPassword) {
+      await setZoneUnlocked(teamId, next.id, true, next);
+    }
+
+    if (isNew) {
+      events.push({
+        zoneName: zone.name,
+        nextZoneName: next?.name ?? null,
+        nextNeedsPassword,
+      });
+      if (nextNeedsPassword) {
+        await createNotification({
+          title: `✅ ${teamName} voltooide alle opdrachten in ${zone.name}.`,
+          body: "Bekijk de antwoorden en beslis of de volgende zone geopend mag worden.",
+          audience: "admin",
+          teamId,
+          kind: "review",
+        });
+      }
     }
   }
-  return completedZones;
+  return { completedZones, events };
 }
+
 
 /* ------------------------------ inzendingen ------------------------------ */
 
