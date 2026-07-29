@@ -1,5 +1,6 @@
 import { supabase, PHOTO_BUCKET } from "./supabase";
 import { enqueue } from "./offline";
+import { createNotification } from "./notifications";
 import type {
   Answer,
   Challenge,
