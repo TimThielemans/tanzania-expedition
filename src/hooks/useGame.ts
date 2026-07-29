@@ -12,6 +12,7 @@ import {
   fetchAnswers,
   fetchQuizAnswers,
 } from "@/lib/api";
+import { fetchNotifications, fetchNotificationReads } from "@/lib/notifications";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 const enabled = isSupabaseConfigured;
@@ -62,3 +63,15 @@ export function useRealtime(tables: string[], onChange: () => void) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tables.join(",")]);
 }
+
+/* ------------------------------ meldingen ------------------------------ */
+
+export const useNotifications = () =>
+  useQuery({ queryKey: ["notifications"], queryFn: fetchNotifications, enabled });
+
+export const useNotificationReads = (reader: string) =>
+  useQuery({
+    queryKey: ["notification-reads", reader],
+    queryFn: () => fetchNotificationReads(reader),
+    enabled: enabled && Boolean(reader),
+  });
