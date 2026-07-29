@@ -9,38 +9,105 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as StatistiekenRouteImport } from './routes/statistieken'
+import { Route as ScorebordRouteImport } from './routes/scorebord'
+import { Route as GalerijRouteImport } from './routes/galerij'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ZoneZoneIdRouteImport } from './routes/zone.$zoneId'
 
+const StatistiekenRoute = StatistiekenRouteImport.update({
+  id: '/statistieken',
+  path: '/statistieken',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScorebordRoute = ScorebordRouteImport.update({
+  id: '/scorebord',
+  path: '/scorebord',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GalerijRoute = GalerijRouteImport.update({
+  id: '/galerij',
+  path: '/galerij',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ZoneZoneIdRoute = ZoneZoneIdRouteImport.update({
+  id: '/zone/$zoneId',
+  path: '/zone/$zoneId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/galerij': typeof GalerijRoute
+  '/scorebord': typeof ScorebordRoute
+  '/statistieken': typeof StatistiekenRoute
+  '/zone/$zoneId': typeof ZoneZoneIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/galerij': typeof GalerijRoute
+  '/scorebord': typeof ScorebordRoute
+  '/statistieken': typeof StatistiekenRoute
+  '/zone/$zoneId': typeof ZoneZoneIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/galerij': typeof GalerijRoute
+  '/scorebord': typeof ScorebordRoute
+  '/statistieken': typeof StatistiekenRoute
+  '/zone/$zoneId': typeof ZoneZoneIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/galerij' | '/scorebord' | '/statistieken' | '/zone/$zoneId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/galerij' | '/scorebord' | '/statistieken' | '/zone/$zoneId'
+  id:
+    | '__root__'
+    | '/'
+    | '/galerij'
+    | '/scorebord'
+    | '/statistieken'
+    | '/zone/$zoneId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  GalerijRoute: typeof GalerijRoute
+  ScorebordRoute: typeof ScorebordRoute
+  StatistiekenRoute: typeof StatistiekenRoute
+  ZoneZoneIdRoute: typeof ZoneZoneIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/statistieken': {
+      id: '/statistieken'
+      path: '/statistieken'
+      fullPath: '/statistieken'
+      preLoaderRoute: typeof StatistiekenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scorebord': {
+      id: '/scorebord'
+      path: '/scorebord'
+      fullPath: '/scorebord'
+      preLoaderRoute: typeof ScorebordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/galerij': {
+      id: '/galerij'
+      path: '/galerij'
+      fullPath: '/galerij'
+      preLoaderRoute: typeof GalerijRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +115,22 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/zone/$zoneId': {
+      id: '/zone/$zoneId'
+      path: '/zone/$zoneId'
+      fullPath: '/zone/$zoneId'
+      preLoaderRoute: typeof ZoneZoneIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  GalerijRoute: GalerijRoute,
+  ScorebordRoute: ScorebordRoute,
+  StatistiekenRoute: StatistiekenRoute,
+  ZoneZoneIdRoute: ZoneZoneIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
