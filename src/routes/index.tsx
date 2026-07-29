@@ -25,7 +25,7 @@ import {
   useTeams,
   useZones,
 } from "@/hooks/useGame";
-import { loginTeam } from "@/lib/api";
+import { loginTeam, unlockedZoneIds } from "@/lib/api";
 import { clearSession, saveSession, useTeamSession } from "@/lib/session";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
@@ -157,7 +157,7 @@ function HomeScreen({ teamId }: { teamId: string }) {
   );
 
   const me = ranking?.find((r) => r.team.id === teamId);
-  const unlockedIds = new Set((progress ?? []).filter((p) => p.unlocked).map((p) => p.zone_id));
+  const unlockedIds = unlockedZoneIds(zones ?? [], progress ?? []);
 
   return (
     <AppShell
@@ -186,12 +186,12 @@ function HomeScreen({ teamId }: { teamId: string }) {
       <h2 className="mt-6 text-2xl">Zones</h2>
       <div className="mt-3 space-y-3">
         {(zones ?? []).map((zone) => {
-          const zoneChallenges = (challenges ?? []).filter((c) => c.zone_id === zone.id);
+          const zoneChallenges = (challenges ?? []).filter((c) => c.zone_id === zone.id && c.active);
           return (
             <ZoneCard
               key={zone.id}
               zone={zone}
-              unlocked={zone.unlock_type === "open" || unlockedIds.has(zone.id)}
+              unlocked={unlockedIds.has(zone.id)}
               completed={zoneChallenges.filter((c) => done.has(c.id)).length}
               total={zoneChallenges.length}
             />
