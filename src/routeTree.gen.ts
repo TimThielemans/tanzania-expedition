@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as StatistiekenRouteImport } from './routes/statistieken'
 import { Route as ScorebordRouteImport } from './routes/scorebord'
 import { Route as GalerijRouteImport } from './routes/galerij'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ZoneZoneIdRouteImport } from './routes/zone.$zoneId'
 
@@ -30,6 +31,11 @@ const GalerijRoute = GalerijRouteImport.update({
   path: '/galerij',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -43,6 +49,7 @@ const ZoneZoneIdRoute = ZoneZoneIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/galerij': typeof GalerijRoute
   '/scorebord': typeof ScorebordRoute
   '/statistieken': typeof StatistiekenRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/galerij': typeof GalerijRoute
   '/scorebord': typeof ScorebordRoute
   '/statistieken': typeof StatistiekenRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin': typeof AdminRoute
   '/galerij': typeof GalerijRoute
   '/scorebord': typeof ScorebordRoute
   '/statistieken': typeof StatistiekenRoute
@@ -65,12 +74,25 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/galerij' | '/scorebord' | '/statistieken' | '/zone/$zoneId'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/galerij'
+    | '/scorebord'
+    | '/statistieken'
+    | '/zone/$zoneId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/galerij' | '/scorebord' | '/statistieken' | '/zone/$zoneId'
+  to:
+    | '/'
+    | '/admin'
+    | '/galerij'
+    | '/scorebord'
+    | '/statistieken'
+    | '/zone/$zoneId'
   id:
     | '__root__'
     | '/'
+    | '/admin'
     | '/galerij'
     | '/scorebord'
     | '/statistieken'
@@ -79,6 +101,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminRoute: typeof AdminRoute
   GalerijRoute: typeof GalerijRoute
   ScorebordRoute: typeof ScorebordRoute
   StatistiekenRoute: typeof StatistiekenRoute
@@ -108,6 +131,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GalerijRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -127,6 +157,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminRoute: AdminRoute,
   GalerijRoute: GalerijRoute,
   ScorebordRoute: ScorebordRoute,
   StatistiekenRoute: StatistiekenRoute,
