@@ -389,8 +389,11 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 title={`${teamName(row.teamId)} — ${challengeTitle(row.challengeId)}`}
                 subtitle={`${row.value} · ${zoneName(row.zoneId)} · ${fmt(row.createdAt)}`}
                 status={row.status}
-                onApprove={() => decide(row, true)}
-                onReject={() => decide(row, false)}
+                creativity={row.creativity}
+                canExcel={supportsCreativity(challenge(row.challengeId))}
+                onApprove={() => decide(row, "approved")}
+                onReject={() => decide(row, "rejected")}
+                onExcellent={() => decide(row, "excellent")}
               />
             ))}
             {filteredItems.length === 0 ? (
@@ -414,21 +417,43 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                   <p className="truncate text-[11px] text-muted-foreground">
                     {challengeTitle(row.challengeId)}
                   </p>
-                  <StatusPill status={row.status} />
+                  <StatusPill status={row.status} creativity={row.creativity} />
+                  <label className="flex items-center justify-between gap-2 text-[11px] font-semibold">
+                    Teamfoto
+                    <Switch
+                      checked={row.isGroupPhoto}
+                      aria-label="Als teamfoto gebruiken"
+                      onCheckedChange={async (checked) => {
+                        await markPhotoAsGroupPhoto(row.id, row.teamId, checked);
+                        await refresh();
+                      }}
+                    />
+                  </label>
                   <div className="flex gap-1">
                     <Button
                       size="sm"
                       className="h-9 flex-1 rounded-xl"
-                      onClick={() => decide(row, true)}
+                      onClick={() => decide(row, "approved")}
                       aria-label="Goedkeuren"
                     >
                       <Check className="size-4" />
                     </Button>
+                    {supportsCreativity(challenge(row.challengeId)) ? (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="h-9 flex-1 rounded-xl"
+                        onClick={() => decide(row, "excellent")}
+                        aria-label="Uitstekend"
+                      >
+                        <Star className="size-4" />
+                      </Button>
+                    ) : null}
                     <Button
                       size="sm"
                       variant="destructive"
                       className="h-9 flex-1 rounded-xl"
-                      onClick={() => decide(row, false)}
+                      onClick={() => decide(row, "rejected")}
                       aria-label="Afkeuren"
                     >
                       <X className="size-4" />
@@ -441,6 +466,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               <p className="text-sm text-muted-foreground">Geen foto's.</p>
             ) : null}
           </Section>
+
         </TabsContent>
 
         {/* ---------------- opdrachten ---------------- */}
