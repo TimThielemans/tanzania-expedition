@@ -82,3 +82,14 @@ export const useNotificationReads = (reader: string) =>
     queryFn: () => fetchNotificationReads(reader),
     enabled: enabled && Boolean(reader),
   });
+
+/* ------------------------------ locatie ------------------------------ */
+
+export const useTeamLocations = () =>
+  useQuery({ queryKey: ["team-locations"], queryFn: fetchTeamLocations, enabled });
+
+export const useLocationEvents = () =>
+  useQuery({ queryKey: ["location-events"], queryFn: fetchLocationEvents, enabled });
+
+export const useLocationTriggers = () =>
+  useQuery({ queryKey: ["location-triggers"], queryFn: fetchLocationTriggers, enabled });
