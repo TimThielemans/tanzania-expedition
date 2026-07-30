@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Trophy, ClipboardList, Bell, MapPin, Settings } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   useAllChallenges,
@@ -318,12 +319,31 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       }
     >
       <Tabs defaultValue="answers" className="mt-4">
-        <TabsList className="grid w-full grid-cols-5 rounded-2xl text-[11px]">
-          <TabsTrigger value="answers">Score</TabsTrigger>
-          <TabsTrigger value="opdrachten">Opdrachten</TabsTrigger>
-          <TabsTrigger value="meldingen">Meldingen</TabsTrigger>
-          <TabsTrigger value="map">Map</TabsTrigger>
-          <TabsTrigger value="beheer">Beheer</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-5 rounded-2xl">
+          <TabsTrigger value="answers" className="flex flex-col gap-1">
+            <Trophy className="h-4 w-4" />
+            <span className="text-[10px]">Score</span>
+          </TabsTrigger>
+
+          <TabsTrigger value="opdrachten" className="flex flex-col gap-1">
+            <ClipboardList className="h-4 w-4" />
+            <span className="text-[10px]">Taken</span>
+          </TabsTrigger>
+
+          <TabsTrigger value="meldingen" className="flex flex-col gap-1">
+            <Bell className="h-4 w-4" />
+            <span className="text-[10px]">Meld.</span>
+          </TabsTrigger>
+
+          <TabsTrigger value="map" className="flex flex-col gap-1">
+            <MapPin className="h-4 w-4" />
+            <span className="text-[10px]">Kaart</span>
+          </TabsTrigger>
+
+          <TabsTrigger value="beheer" className="flex flex-col gap-1">
+            <Settings className="h-4 w-4" />
+            <span className="text-[10px]">Beheer</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* ---------------- antwoorden ---------------- */}
