@@ -277,6 +277,20 @@ function HomeScreen({ teamId }: { teamId: string }) {
         </div>
       </Link>
 
+      {trackingOn && !consented ? (
+        <div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
+          <h2 className="text-xl">📍 Deel jullie locatie</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            De reisleider volgt de expeditie live. Locatie wordt enkel gedeeld zolang de app open is.
+          </p>
+          <Button className="mt-3 h-12 w-full rounded-2xl text-base" onClick={askLocation}>
+            Locatie delen aanzetten
+          </Button>
+        </div>
+      ) : null}
+
+
+
       {bonus.length > 0 ? (
         <section className="mt-6 space-y-3">
           <h2 className="text-2xl">Bonusopdrachten</h2>
