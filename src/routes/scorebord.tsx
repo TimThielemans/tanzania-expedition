@@ -3,13 +3,7 @@ import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppShell } from "@/components/AppShell";
 import { ConfigNotice } from "@/components/ConfigNotice";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useProgress, useRanking, useRealtime, useZones } from "@/hooks/useGame";
 import { sortZones } from "@/lib/api";
 import { fireConfetti } from "@/lib/confetti";
@@ -61,7 +55,7 @@ function ScoreboardPage() {
   };
 
   return (
-    <AppShell title="Scorebord" subtitle="Live stand">
+    <AppShell title="Scorebord" subtitle="Live stand, tik op het team voor details.">
       <ol className="mt-4 space-y-3">
         {(ranking ?? []).map((row) => (
           <li key={row.team.id}>
@@ -81,16 +75,16 @@ function ScoreboardPage() {
             </button>
           </li>
         ))}
-        {ranking && ranking.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nog geen teams.</p>
-        ) : null}
+        {ranking && ranking.length === 0 ? <p className="text-sm text-muted-foreground">Nog geen teams.</p> : null}
       </ol>
 
       <Dialog open={detail !== null} onOpenChange={(open) => !open && setOpenTeam(null)}>
         <DialogContent className="max-w-sm rounded-3xl">
           <DialogHeader>
             <DialogTitle className="text-2xl">{detail?.team.name}</DialogTitle>
-            <DialogDescription>Plaats {detail?.rank} · {currentZone(detail?.team.id ?? "")}</DialogDescription>
+            <DialogDescription>
+              Plaats {detail?.rank} · {currentZone(detail?.team.id ?? "")}
+            </DialogDescription>
           </DialogHeader>
 
           {detail?.team.group_photo_url ? (
@@ -122,4 +116,3 @@ function ScoreboardPage() {
     </AppShell>
   );
 }
-
