@@ -20,7 +20,7 @@ export async function fetchNotificationReads(reader: string): Promise<Notificati
   return (data ?? []) as NotificationRead[];
 }
 
-/** Meldingen die zichtbaar zijn voor een team (of voor de spelleiding). */
+/** Meldingen die zichtbaar zijn voor een team (of voor de reisleider). */
 export function visibleFor(
   notifications: AppNotification[],
   reader: { kind: "team"; teamId: string } | { kind: "admin" },

@@ -300,7 +300,7 @@ function HomeScreen({ teamId }: { teamId: string }) {
             </DialogTitle>
             <DialogDescription className="text-base">
               {lockedZone && zoneNeedsPassword(lockedZone)
-                ? "Vul het zonewachtwoord in dat je van de spelleiding kreeg."
+                ? "Vul het zonewachtwoord in dat je van de reisleider kreeg."
                 : "Deze zone opent automatisch zodra jullie de vorige zone volledig hebben afgerond."}
             </DialogDescription>
           </DialogHeader>

@@ -590,7 +590,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                       {n.audience === "all"
                         ? "Alle teams"
                         : n.audience === "admin"
-                          ? "Spelleiding"
+                          ? "Reisleider"
                           : teamName(n.team_id ?? "")}{" "}
                       · {fmt(n.created_at)}
                     </p>

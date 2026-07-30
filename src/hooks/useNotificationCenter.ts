@@ -10,7 +10,7 @@ import {
 import { useAdminSession } from "@/lib/admin-session";
 import { useTeamSession } from "@/lib/session";
 
-/** Meldingen voor het ingelogde team (of de spelleiding), inclusief leesstatus. */
+/** Meldingen voor het ingelogde team (of de reisleider), inclusief leesstatus. */
 export function useNotificationCenter() {
   const { session } = useTeamSession();
   const { isAdmin } = useAdminSession();

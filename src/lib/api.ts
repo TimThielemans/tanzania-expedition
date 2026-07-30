@@ -272,7 +272,7 @@ export interface ZoneCompletionEvent {
 
 /**
  * Markeer voltooide zones. Zonder wachtwoord opent de volgende zone automatisch;
- * met wachtwoord krijgt de spelleiding een melding om de antwoorden na te kijken.
+ * met wachtwoord krijgt de reisleider een melding om de antwoorden na te kijken.
  */
 export async function refreshZoneCompletion(
   teamId: string,
@@ -353,7 +353,7 @@ export interface SubmitContext {
 }
 
 export async function submitTextAnswer({ teamId, zoneId, challenge }: SubmitContext, answer: string) {
-  // Met een correct antwoord in de database keuren we automatisch; anders kijkt de spelleiding na.
+  // Met een correct antwoord in de database keuren we automatisch; anders kijkt de reisleider na.
   const expected = (challenge.correct_answer ?? "").trim();
   const auto = expected.length > 0;
   const correct = auto && expected.toLowerCase() === answer.trim().toLowerCase();
@@ -419,7 +419,7 @@ export async function uploadPhoto({ teamId, zoneId, challenge }: SubmitContext, 
     points_awarded: 0,
   });
   if (error) throw error;
-  // Foto's leveren pas punten op na goedkeuring door de spelleiding.
+  // Foto's leveren pas punten op na goedkeuring door de reisleider.
   return data.publicUrl;
 }
 

@@ -152,7 +152,7 @@ function ZonePage() {
           ) : (
             <>
               <p className="text-sm text-muted-foreground">
-                Vul het zonewachtwoord in dat je van de begeleiding kreeg.
+                Vul het zonewachtwoord in dat je van de reisleider kreeg.
               </p>
               <Input
                 value={password}
@@ -222,7 +222,7 @@ function ZonePage() {
             </DialogTitle>
             <DialogDescription className="text-base">
               {completion?.nextNeedsPassword
-                ? "De spelleiding kijkt jullie antwoorden na. Klopt alles? Dan krijgen jullie het wachtwoord voor de volgende zone via Meldingen."
+                ? "De reisleider kijkt jullie antwoorden na. Klopt alles? Dan krijgen jullie het wachtwoord voor de volgende zone via Meldingen."
                 : completion?.nextZoneName
                   ? `De volgende zone (${completion.nextZoneName}) is automatisch ontgrendeld.`
                   : "Jullie hebben de laatste zone afgerond. Wat een expeditie!"}
