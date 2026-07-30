@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, Loader2, LogOut, Send, Timer, Trash2, X } from "lucide-react";
+import { Check, Loader2, LogOut, Send, Star, Timer, Trash2, X } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { StatusPill } from "@/components/StatusBadge";
