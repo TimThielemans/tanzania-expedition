@@ -623,7 +623,13 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
           </Section>
         </TabsContent>
 
+        {/* ---------------- kaart ---------------- */}
+        <TabsContent value="kaart" className="mt-4">
+          <AdminMapPanel />
+        </TabsContent>
+
         {/* ---------------- beheer ---------------- */}
+
         <TabsContent value="beheer" className="mt-4 space-y-3">
           <Section title="Teams">
             <TeamManager onDone={refresh} />
