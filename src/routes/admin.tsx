@@ -1072,3 +1072,108 @@ function ReviewRow({
   );
 }
 
+
+/** Teams aanmaken, hernoemen, wachtwoord wijzigen en verwijderen. */
+function TeamManager({ onDone }: { onDone: () => void }) {
+  const { data: teams } = useTeams();
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function run(action: () => Promise<unknown>) {
+    setBusy(true);
+    try {
+      await action();
+      toast.success("Klaar.");
+      onDone();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Actie mislukt.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="grid gap-2 rounded-2xl bg-muted p-3">
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Teamnaam"
+          className="h-11 rounded-xl"
+        />
+        <Input
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Teamwachtwoord"
+          className="h-11 rounded-xl"
+        />
+        <Button
+          className="h-11 rounded-xl"
+          disabled={busy || !name.trim() || !password.trim()}
+          onClick={() =>
+            run(async () => {
+              await createTeam({ name, password, sortOrder: (teams?.length ?? 0) + 1 });
+              setName("");
+              setPassword("");
+            })
+          }
+        >
+          Team toevoegen
+        </Button>
+      </div>
+
+      {(teams ?? []).map((team) => (
+        <TeamRow key={team.id} team={team} busy={busy} onRun={run} />
+      ))}
+      {(teams ?? []).length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nog geen teams.</p>
+      ) : null}
+    </div>
+  );
+}
+
+function TeamRow({
+  team,
+  busy,
+  onRun,
+}: {
+  team: Team;
+  busy: boolean;
+  onRun: (action: () => Promise<unknown>) => Promise<void>;
+}) {
+  const [name, setName] = useState(team.name);
+  const [password, setPassword] = useState(team.password);
+
+  return (
+    <div className="grid gap-2 rounded-2xl bg-muted p-3">
+      <Input value={name} onChange={(e) => setName(e.target.value)} className="h-11 rounded-xl" />
+      <Input
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className="h-11 rounded-xl"
+      />
+      <div className="flex gap-2">
+        <Button
+          className="h-11 flex-1 rounded-xl"
+          disabled={busy}
+          onClick={() => onRun(() => updateTeam(team.id, { name: name.trim(), password: password.trim() }))}
+        >
+          Opslaan
+        </Button>
+        <Button
+          variant="destructive"
+          className="h-11 rounded-xl"
+          disabled={busy}
+          aria-label={`${team.name} verwijderen`}
+          onClick={() => {
+            if (!window.confirm(`${team.name} en alle gegevens verwijderen?`)) return;
+            void onRun(() => deleteTeam(team.id));
+          }}
+        >
+          <Trash2 className="size-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
