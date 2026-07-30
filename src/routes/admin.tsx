@@ -34,30 +34,43 @@ import {
   useQuizAnswers,
   useRanking,
   useRealtime,
+  useTeamLocations,
   useTeams,
   useZones,
   useNotifications,
 } from "@/hooks/useGame";
 import { addPoints, bonusRemainingMs, sortZones, verifyAdminPassword } from "@/lib/api";
 import {
-  approveSubmission,
-  rejectSubmission,
+  markPhotoAsGroupPhoto,
+  reviewSubmission,
   setBonusActive,
+  supportsCreativity,
   updateBonusChallenge,
 } from "@/lib/review";
-import { deleteNotification, createNotification, setNotificationActive } from "@/lib/notifications";
+import type { ReviewVerdict } from "@/lib/review";
+import {
+  deleteAllNotifications,
+  deleteNotification,
+  createNotification,
+  setNotificationActive,
+} from "@/lib/notifications";
 import { clearAdminSession, saveAdminSession, useAdminSession } from "@/lib/admin-session";
+import { AdminMapPanel } from "@/components/AdminMapPanel";
 import {
   clearAllAnswers,
   clearAllPhotos,
+  createTeam,
+  deleteAllTeams,
+  deleteTeam,
   downloadCsv,
-  resetTeamProgress,
-  restartGame,
+  fullGameReset,
   setAllZones,
   setChallengeActive,
+  updateTeam,
 } from "@/lib/admin";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import type { Challenge, ReviewStatus } from "@/lib/types";
+import type { Challenge, ReviewStatus, Team } from "@/lib/types";
+
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
