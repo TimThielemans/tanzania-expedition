@@ -3,63 +3,143 @@ import { addPoints, fetchAllChallenges, fetchZones, sortZones, zoneNeedsPassword
 import { createNotification } from "./notifications";
 import type { Answer, Challenge, Photo, QuizAnswer, ReviewStatus } from "./types";
 
-export type Submission =
-  | ({ table: "answers"; value: string } & Answer)
-  | ({ table: "quiz_answers"; value: string } & QuizAnswer)
-  | ({ table: "photos"; value: string } & Photo);
+export type SubmissionTable = "answers" | "quiz_answers" | "photos";
 
-/* --------------------------- goedkeuren / afkeuren --------------------------- */
+/** Beoordelingsopties: goedkeuren, afkeuren of ⭐ uitstekend (met creativiteitsbonus). */
+export type ReviewVerdict = "approved" | "rejected" | "excellent";
 
-async function setStatus(
-  table: "answers" | "quiz_answers" | "photos",
-  id: string,
-  status: ReviewStatus,
-  points: number,
-) {
-  const { error } = await supabase.from(table).update({ status, points_awarded: points }).eq("id", id);
-  if (error) throw error;
-}
-
-interface ReviewInput {
-  table: "answers" | "quiz_answers" | "photos";
+export interface ReviewInput {
+  table: SubmissionTable;
   id: string;
   teamId: string;
   zoneId: string | null;
+  /** Punten die deze inzending nu al opleverde. */
   currentPoints: number;
+  /** Creativiteitspunten die deze inzending nu al opleverde. */
+  currentCreativity: number;
   challenge: Challenge | undefined;
 }
 
-/** Keurt een inzending goed en kent de punten van de opdracht toe. */
-export async function approveSubmission(input: ReviewInput) {
-  const points = input.challenge?.points ?? 0;
-  const delta = points - input.currentPoints;
-  await setStatus(input.table, input.id, "approved", points);
-  if (delta !== 0) await addPoints(input.teamId, delta);
-  await afterReview(input, "approved", points);
+/** Mag deze opdracht een creativiteitsbonus krijgen? Bonus/locatieopdrachten nooit. */
+export function supportsCreativity(challenge: Challenge | undefined): boolean {
+  if (!challenge) return false;
+  if (challenge.is_bonus || challenge.is_location) return false;
+  return (challenge.creativity_bonus_points ?? 0) > 0;
 }
 
-/** Keurt een inzending af: geen punten. */
-export async function rejectSubmission(input: ReviewInput) {
-  await setStatus(input.table, input.id, "rejected", 0);
-  if (input.currentPoints !== 0) await addPoints(input.teamId, -input.currentPoints);
-  await afterReview(input, "rejected", 0);
+async function setStatus(
+  table: SubmissionTable,
+  id: string,
+  status: ReviewStatus,
+  points: number,
+  creativity: number,
+) {
+  const { error } = await supabase
+    .from(table)
+    .update({ status, points_awarded: points, creativity_points: creativity })
+    .eq("id", id);
+  if (error) throw error;
 }
+
+/** Centrale beoordelingsactie voor antwoorden, quizantwoorden en foto's. */
+export async function reviewSubmission(input: ReviewInput, verdict: ReviewVerdict) {
+  const challenge = input.challenge;
+  const rejected = verdict === "rejected";
+  const excellent = verdict === "excellent" && supportsCreativity(challenge);
+
+  const points = rejected ? 0 : (challenge?.points ?? 0);
+  const creativity = excellent ? (challenge?.creativity_bonus_points ?? 0) : 0;
+  const status: ReviewStatus = rejected ? "rejected" : "approved";
+
+  await setStatus(input.table, input.id, status, points, creativity);
+
+  const kind = challenge?.is_bonus ? "bonus" : "regular";
+  const pointDelta = points - input.currentPoints;
+  const creativityDelta = creativity - input.currentCreativity;
+  if (pointDelta !== 0) await addPoints(input.teamId, pointDelta, kind);
+  if (creativityDelta !== 0) await addPoints(input.teamId, creativityDelta, "creativity");
+
+  if (excellent && challenge) {
+    await createNotification({
+      title: "🎁 Dat was uitstekend!",
+      body: `Jullie krijgen een creativiteitsbonus van ${creativity} punten bij:\n\n${challenge.title}`,
+      audience: "team",
+      teamId: input.teamId,
+      kind: "creativity",
+    });
+  }
+
+  // Foto die als teamfoto gemarkeerd is, wordt bij goedkeuring de groepsfoto.
+  if (!rejected && input.table === "photos") await maybeSetGroupPhoto(input.id, input.teamId);
+
+  await afterReview(input, status, points);
+}
+
+/** Backwards-compatible helpers. */
+export const approveSubmission = (input: ReviewInput) => reviewSubmission(input, "approved");
+export const rejectSubmission = (input: ReviewInput) => reviewSubmission(input, "rejected");
+
+/* --------------------------- teamfoto --------------------------- */
+
+/** Markeert een foto als teamfoto (of haalt die markering weg). */
+export async function markPhotoAsGroupPhoto(photoId: string, teamId: string, value: boolean) {
+  const { error } = await supabase
+    .from("photos")
+    .update({ is_group_photo: value })
+    .eq("id", photoId);
+  if (error) throw error;
+
+  if (value) {
+    const { data } = await supabase.from("photos").select("photo_url, status").eq("id", photoId).maybeSingle();
+    if (data?.status === "approved") {
+      await supabase.from("teams").update({ group_photo_url: data.photo_url }).eq("id", teamId);
+    }
+  }
+}
+
+async function maybeSetGroupPhoto(photoId: string, teamId: string) {
+  const { data } = await supabase
+    .from("photos")
+    .select("photo_url, is_group_photo")
+    .eq("id", photoId)
+    .maybeSingle();
+  if (!data?.is_group_photo) return;
+  await supabase.from("teams").update({ group_photo_url: data.photo_url }).eq("id", teamId);
+}
+
+/* --------------------------- na de beoordeling --------------------------- */
 
 async function afterReview(input: ReviewInput, status: ReviewStatus, points: number) {
-  // Bonusopdracht: het team krijgt meteen bericht.
-  if (input.challenge?.is_bonus) {
+  const challenge = input.challenge;
+
+  if (challenge?.is_bonus) {
     await createNotification({
       title: status === "approved" ? "✅ Bonusopdracht goedgekeurd!" : "❌ Bonusopdracht afgekeurd.",
       body:
         status === "approved"
-          ? `${points} punten toegekend voor "${input.challenge.title}".`
-          : `Geen punten voor "${input.challenge.title}".`,
+          ? `${points} punten toegekend voor "${challenge.title}".`
+          : `Geen punten voor "${challenge.title}".`,
       audience: "team",
       teamId: input.teamId,
       kind: "bonus",
     });
     return;
   }
+
+  if (challenge?.is_location) {
+    await createNotification({
+      title: status === "approved" ? "✅ Punten toegekend" : "❌ Inzending afgekeurd",
+      body:
+        status === "approved"
+          ? `${points} punten voor de locatieopdracht "${challenge.title}".`
+          : `Geen punten voor de locatieopdracht "${challenge.title}".`,
+      audience: "team",
+      teamId: input.teamId,
+      kind: "location",
+    });
+    return;
+  }
+
   if (input.zoneId) await maybeDeliverZoneCode(input.teamId, input.zoneId);
 }
 
@@ -76,7 +156,9 @@ export async function maybeDeliverZoneCode(teamId: string, zoneId: string) {
   const zone = sorted[index];
   if (!zone) return;
 
-  const zoneChallenges = challenges.filter((c) => c.zone_id === zoneId && c.active && !c.is_bonus);
+  const zoneChallenges = challenges.filter(
+    (c) => c.zone_id === zoneId && c.active && !c.is_bonus && !c.is_location,
+  );
   if (zoneChallenges.length === 0) return;
 
   const [answers, quiz, photos] = await Promise.all([
@@ -97,7 +179,13 @@ export async function maybeDeliverZoneCode(teamId: string, zoneId: string) {
   });
   if (!allDone) return;
 
-  const earned = zoneChallenges.reduce((sum, c) => sum + (byChallenge.get(c.id)?.points_awarded ?? 0), 0);
+  const earned = zoneChallenges.reduce(
+    (sum, c) =>
+      sum +
+      (byChallenge.get(c.id)?.points_awarded ?? 0) +
+      (byChallenge.get(c.id)?.creativity_points ?? 0),
+    0,
+  );
   const max = zoneChallenges.reduce((sum, c) => sum + c.points, 0);
 
   // Eén keer per team/zone

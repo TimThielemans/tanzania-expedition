@@ -1,10 +1,12 @@
 import { supabase, PHOTO_BUCKET } from "./supabase";
 import { enqueue } from "./offline";
 import { createNotification } from "./notifications";
+import { compareTeams } from "./scoring";
 import type {
   Answer,
   Challenge,
   PointAction,
+  PointKind,
   Photo,
   QuizAnswer,
   RankedTeam,
@@ -13,6 +15,7 @@ import type {
   TeamProgress,
   Zone,
 } from "./types";
+
 
 /* ------------------------------ reads ------------------------------ */
 
@@ -75,6 +78,17 @@ export function activeBonusChallenges(challenges: Challenge[], now = Date.now())
   return challenges.filter((c) => c.is_bonus && c.active && bonusRemainingMs(c, now) > 0);
 }
 
+/** Locatieopdrachten die specifiek voor dit team zijn aangemaakt. */
+export function locationChallengesFor(challenges: Challenge[], teamId: string): Challenge[] {
+  return challenges.filter((c) => c.is_location && c.active && c.target_team_id === teamId);
+}
+
+/** Opdrachten die in een zone horen (dus geen bonus- of locatieopdracht). */
+export function zoneChallengesOf(challenges: Challenge[], zoneId: string): Challenge[] {
+  return challenges.filter((c) => c.zone_id === zoneId && c.active && !c.is_bonus && !c.is_location);
+}
+
+
 export async function fetchProgress(teamId?: string): Promise<TeamProgress[]> {
   let query = supabase.from("team_progress").select("*");
   if (teamId) query = query.eq("team_id", teamId);
@@ -126,15 +140,23 @@ export async function fetchPointActions(): Promise<PointAction[]> {
 export async function fetchRanking(): Promise<RankedTeam[]> {
   const [teams, scores] = await Promise.all([fetchTeams(), fetchScores()]);
   const byTeam = new Map(scores.map((s) => [s.team_id, s]));
-  const rows = teams.map((team) => ({
-    team,
-    points: byTeam.get(team.id)?.points ?? 0,
-    lastScoredAt: byTeam.get(team.id)?.last_scored_at ?? new Date().toISOString(),
-  }));
-  // Gelijke stand: wie er als eerste kwam, staat eerst.
-  rows.sort((a, b) => b.points - a.points || a.lastScoredAt.localeCompare(b.lastScoredAt));
+  const rows: RankedTeam[] = teams.map((team) => {
+    const score = byTeam.get(team.id);
+    return {
+      team,
+      points: score?.points ?? 0,
+      regularPoints: score?.regular_points ?? 0,
+      bonusPoints: score?.bonus_points ?? 0,
+      creativityPoints: score?.creativity_points ?? 0,
+      lastScoredAt: score?.last_scored_at ?? new Date().toISOString(),
+      rank: 0,
+    };
+  });
+  // Volgorde + gelijke stand: zie src/lib/scoring.ts (TIEBREAKERS).
+  rows.sort(compareTeams);
   return rows.map((row, index) => ({ ...row, rank: index + 1 }));
 }
+
 
 /* ------------------------------ login ------------------------------ */
 
@@ -159,10 +181,19 @@ export async function verifyAdminPassword(password: string): Promise<boolean> {
 
 /* ------------------------------ punten ------------------------------ */
 
-export async function addPoints(teamId: string, points: number) {
-  const { error } = await supabase.rpc("add_points", { p_team_id: teamId, p_points: points });
+/**
+ * Kent punten toe in één van de drie categorieën.
+ * Het totaal (scores.points) is altijd de som van gewoon + bonus + creativiteit.
+ */
+export async function addPoints(teamId: string, points: number, kind: PointKind = "regular") {
+  const { error } = await supabase.rpc("add_points", {
+    p_team_id: teamId,
+    p_points: points,
+    p_kind: kind,
+  });
   if (error) throw error;
 }
+
 
 /* ------------------------------ zones ------------------------------ */
 
@@ -241,7 +272,7 @@ export interface ZoneCompletionEvent {
 
 /**
  * Markeer voltooide zones. Zonder wachtwoord opent de volgende zone automatisch;
- * met wachtwoord krijgt de spelleiding een melding om de antwoorden na te kijken.
+ * met wachtwoord krijgt de reisleider een melding om de antwoorden na te kijken.
  */
 export async function refreshZoneCompletion(
   teamId: string,
@@ -268,7 +299,7 @@ export async function refreshZoneCompletion(
   const events: ZoneCompletionEvent[] = [];
 
   for (const [index, zone] of sorted.entries()) {
-    const zoneChallenges = challenges.filter((c) => c.zone_id === zone.id && c.active && !c.is_bonus);
+    const zoneChallenges = zoneChallengesOf(challenges, zone.id);
     const complete = zoneChallenges.length > 0 && zoneChallenges.every((c) => done.has(c.id));
     if (!complete) continue;
     completedZones.push(zone.id);
@@ -322,7 +353,7 @@ export interface SubmitContext {
 }
 
 export async function submitTextAnswer({ teamId, zoneId, challenge }: SubmitContext, answer: string) {
-  // Met een correct antwoord in de database keuren we automatisch; anders kijkt de spelleiding na.
+  // Met een correct antwoord in de database keuren we automatisch; anders kijkt de reisleider na.
   const expected = (challenge.correct_answer ?? "").trim();
   const auto = expected.length > 0;
   const correct = auto && expected.toLowerCase() === answer.trim().toLowerCase();
@@ -388,7 +419,7 @@ export async function uploadPhoto({ teamId, zoneId, challenge }: SubmitContext, 
     points_awarded: 0,
   });
   if (error) throw error;
-  // Foto's leveren pas punten op na goedkeuring door de spelleiding.
+  // Foto's leveren pas punten op na goedkeuring door de reisleider.
   return data.publicUrl;
 }
 

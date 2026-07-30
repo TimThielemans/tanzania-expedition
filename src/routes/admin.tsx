@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, Loader2, LogOut, Send, Timer, Trash2, X } from "lucide-react";
+import { Check, Loader2, LogOut, Send, Star, Timer, Trash2, X } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { StatusPill } from "@/components/StatusBadge";
@@ -34,30 +34,43 @@ import {
   useQuizAnswers,
   useRanking,
   useRealtime,
+  useTeamLocations,
   useTeams,
   useZones,
   useNotifications,
 } from "@/hooks/useGame";
 import { addPoints, bonusRemainingMs, sortZones, verifyAdminPassword } from "@/lib/api";
 import {
-  approveSubmission,
-  rejectSubmission,
+  markPhotoAsGroupPhoto,
+  reviewSubmission,
   setBonusActive,
+  supportsCreativity,
   updateBonusChallenge,
 } from "@/lib/review";
-import { deleteNotification, createNotification, setNotificationActive } from "@/lib/notifications";
+import type { ReviewVerdict } from "@/lib/review";
+import {
+  deleteAllNotifications,
+  deleteNotification,
+  createNotification,
+  setNotificationActive,
+} from "@/lib/notifications";
 import { clearAdminSession, saveAdminSession, useAdminSession } from "@/lib/admin-session";
+import { AdminMapPanel } from "@/components/AdminMapPanel";
 import {
   clearAllAnswers,
   clearAllPhotos,
+  createTeam,
+  deleteAllTeams,
+  deleteTeam,
   downloadCsv,
-  resetTeamProgress,
-  restartGame,
+  fullGameReset,
   setAllZones,
   setChallengeActive,
+  updateTeam,
 } from "@/lib/admin";
 import { isSupabaseConfigured } from "@/lib/supabase";
-import type { Challenge, ReviewStatus } from "@/lib/types";
+import type { Challenge, ReviewStatus, Team } from "@/lib/types";
+
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -129,8 +142,11 @@ interface ReviewItem {
   photoUrl?: string;
   status: ReviewStatus;
   points: number;
+  creativity: number;
+  isGroupPhoto: boolean;
   createdAt: string;
 }
+
 
 function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const queryClient = useQueryClient();
@@ -144,6 +160,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const { data: photos } = usePhotos();
   const { data: progress } = useProgress();
   const { data: notifications } = useNotifications();
+  const { data: locations } = useTeamLocations();
+
 
   useRealtime(
     ["scores", "answers", "quiz_answers", "photos", "team_progress", "notifications", "challenges"],
@@ -170,50 +188,67 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const bonusChallenges = (challenges ?? []).filter((c) => c.is_bonus);
   const regularChallenges = (challenges ?? []).filter((c) => !c.is_bonus);
 
+  // Wachtende inzendingen staan altijd bovenaan.
+  const pendingFirst = (rows: ReviewItem[]) =>
+    [...rows].sort((a, b) => {
+      if (a.status === b.status) return a.createdAt.localeCompare(b.createdAt);
+      return a.status === "pending" ? -1 : b.status === "pending" ? 1 : 0;
+    });
+
   const items: ReviewItem[] = useMemo(
-    () => [
-      ...(answers ?? []).map((a) => ({
-        table: "answers" as const,
-        id: a.id,
-        teamId: a.team_id,
-        zoneId: a.zone_id,
-        challengeId: a.challenge_id,
-        value: a.answer,
-        status: a.status,
-        points: a.points_awarded,
-        createdAt: a.created_at,
-      })),
-      ...(quiz ?? []).map((q) => ({
-        table: "quiz_answers" as const,
-        id: q.id,
-        teamId: q.team_id,
-        zoneId: q.zone_id,
-        challengeId: q.challenge_id,
-        value: q.selected_option,
-        status: q.status,
-        points: q.points_awarded,
-        createdAt: q.created_at,
-      })),
-    ],
+    () =>
+      pendingFirst([
+        ...(answers ?? []).map((a) => ({
+          table: "answers" as const,
+          id: a.id,
+          teamId: a.team_id,
+          zoneId: a.zone_id,
+          challengeId: a.challenge_id,
+          value: a.answer,
+          status: a.status,
+          points: a.points_awarded,
+          creativity: a.creativity_points ?? 0,
+          isGroupPhoto: false,
+          createdAt: a.created_at,
+        })),
+        ...(quiz ?? []).map((q) => ({
+          table: "quiz_answers" as const,
+          id: q.id,
+          teamId: q.team_id,
+          zoneId: q.zone_id,
+          challengeId: q.challenge_id,
+          value: q.selected_option,
+          status: q.status,
+          points: q.points_awarded,
+          creativity: q.creativity_points ?? 0,
+          isGroupPhoto: false,
+          createdAt: q.created_at,
+        })),
+      ]),
     [answers, quiz],
   );
 
   const photoItems: ReviewItem[] = useMemo(
     () =>
-      (photos ?? []).map((p) => ({
-        table: "photos" as const,
-        id: p.id,
-        teamId: p.team_id,
-        zoneId: p.zone_id,
-        challengeId: p.challenge_id,
-        value: "foto",
-        photoUrl: p.photo_url,
-        status: p.status,
-        points: p.points_awarded,
-        createdAt: p.created_at,
-      })),
+      pendingFirst(
+        (photos ?? []).map((p) => ({
+          table: "photos" as const,
+          id: p.id,
+          teamId: p.team_id,
+          zoneId: p.zone_id,
+          challengeId: p.challenge_id,
+          value: "foto",
+          photoUrl: p.photo_url,
+          status: p.status,
+          points: p.points_awarded,
+          creativity: p.creativity_points ?? 0,
+          isGroupPhoto: p.is_group_photo ?? false,
+          createdAt: p.created_at,
+        })),
+      ),
     [photos],
   );
+
 
   const matches = (row: ReviewItem) =>
     (teamFilter === "all" || row.teamId === teamFilter) &&
@@ -224,34 +259,43 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const pendingAnswers = filteredItems.filter((r) => r.status === "pending");
   const pendingPhotos = filteredPhotos.filter((r) => r.status === "pending");
 
-  async function decide(item: ReviewItem, approve: boolean) {
-    const input = {
-      table: item.table,
-      id: item.id,
-      teamId: item.teamId,
-      zoneId: item.zoneId,
-      currentPoints: item.points,
-      challenge: challenge(item.challengeId),
-    };
+  async function decide(item: ReviewItem, verdict: ReviewVerdict) {
     try {
-      if (approve) await approveSubmission(input);
-      else await rejectSubmission(input);
-      toast.success(approve ? "Goedgekeurd." : "Afgekeurd.");
+      await reviewSubmission(
+        {
+          table: item.table,
+          id: item.id,
+          teamId: item.teamId,
+          zoneId: item.zoneId,
+          currentPoints: item.points,
+          currentCreativity: item.creativity,
+          challenge: challenge(item.challengeId),
+        },
+        verdict,
+      );
+      toast.success(
+        verdict === "rejected"
+          ? "Afgekeurd."
+          : verdict === "excellent"
+            ? "Goedgekeurd met creativiteitsbonus."
+            : "Goedgekeurd.",
+      );
       await refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Beoordelen mislukt.");
     }
   }
 
-  async function decideInQueue(approve: boolean) {
+  async function decideInQueue(verdict: ReviewVerdict) {
     if (!queue) return;
     const item = queue.items[queue.index];
     if (!item) return;
-    await decide(item, approve);
+    await decide(item, verdict);
     const next = queue.index + 1;
     if (next >= queue.items.length) setQueue(null);
     else setQueue({ ...queue, index: next });
   }
+
 
   async function sendNotification() {
     if (!noteTitle.trim()) return;
@@ -295,12 +339,14 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       }
     >
       <Tabs defaultValue="answers" className="mt-4">
-        <TabsList className="grid w-full grid-cols-4 rounded-2xl text-xs">
+        <TabsList className="grid w-full grid-cols-5 rounded-2xl text-[11px]">
           <TabsTrigger value="answers">Antwoorden</TabsTrigger>
           <TabsTrigger value="opdrachten">Opdrachten</TabsTrigger>
           <TabsTrigger value="meldingen">Meldingen</TabsTrigger>
+          <TabsTrigger value="kaart">🗺 Kaart</TabsTrigger>
           <TabsTrigger value="beheer">Beheer</TabsTrigger>
         </TabsList>
+
 
         {/* ---------------- antwoorden ---------------- */}
         <TabsContent value="answers" className="mt-4 space-y-4">
@@ -389,8 +435,11 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 title={`${teamName(row.teamId)} — ${challengeTitle(row.challengeId)}`}
                 subtitle={`${row.value} · ${zoneName(row.zoneId)} · ${fmt(row.createdAt)}`}
                 status={row.status}
-                onApprove={() => decide(row, true)}
-                onReject={() => decide(row, false)}
+                creativity={row.creativity}
+                canExcel={supportsCreativity(challenge(row.challengeId))}
+                onApprove={() => decide(row, "approved")}
+                onReject={() => decide(row, "rejected")}
+                onExcellent={() => decide(row, "excellent")}
               />
             ))}
             {filteredItems.length === 0 ? (
@@ -414,21 +463,43 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                   <p className="truncate text-[11px] text-muted-foreground">
                     {challengeTitle(row.challengeId)}
                   </p>
-                  <StatusPill status={row.status} />
+                  <StatusPill status={row.status} creativity={row.creativity} />
+                  <label className="flex items-center justify-between gap-2 text-[11px] font-semibold">
+                    Teamfoto
+                    <Switch
+                      checked={row.isGroupPhoto}
+                      aria-label="Als teamfoto gebruiken"
+                      onCheckedChange={async (checked) => {
+                        await markPhotoAsGroupPhoto(row.id, row.teamId, checked);
+                        await refresh();
+                      }}
+                    />
+                  </label>
                   <div className="flex gap-1">
                     <Button
                       size="sm"
                       className="h-9 flex-1 rounded-xl"
-                      onClick={() => decide(row, true)}
+                      onClick={() => decide(row, "approved")}
                       aria-label="Goedkeuren"
                     >
                       <Check className="size-4" />
                     </Button>
+                    {supportsCreativity(challenge(row.challengeId)) ? (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="h-9 flex-1 rounded-xl"
+                        onClick={() => decide(row, "excellent")}
+                        aria-label="Uitstekend"
+                      >
+                        <Star className="size-4" />
+                      </Button>
+                    ) : null}
                     <Button
                       size="sm"
                       variant="destructive"
                       className="h-9 flex-1 rounded-xl"
-                      onClick={() => decide(row, false)}
+                      onClick={() => decide(row, "rejected")}
                       aria-label="Afkeuren"
                     >
                       <X className="size-4" />
@@ -441,6 +512,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               <p className="text-sm text-muted-foreground">Geen foto's.</p>
             ) : null}
           </Section>
+
         </TabsContent>
 
         {/* ---------------- opdrachten ---------------- */}
@@ -578,6 +650,20 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
           </Section>
 
           <Section title={`Geschiedenis (${notifications?.length ?? 0})`}>
+            <Button
+              variant="destructive"
+              className="h-11 w-full rounded-2xl"
+              disabled={(notifications ?? []).length === 0}
+              onClick={() =>
+                guarded(
+                  "Alle meldingen en leesstatussen verwijderen.",
+                  deleteAllNotifications,
+                )
+              }
+            >
+              <Trash2 className="size-4" /> Alle meldingen verwijderen
+            </Button>
+
             {(notifications ?? []).map((n) => (
               <div key={n.id} className="rounded-2xl bg-muted px-3 py-2">
                 <div className="flex items-start justify-between gap-2">
@@ -590,7 +676,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                       {n.audience === "all"
                         ? "Alle teams"
                         : n.audience === "admin"
-                          ? "Spelleiding"
+                          ? "Reisleider"
                           : teamName(n.team_id ?? "")}{" "}
                       · {fmt(n.created_at)}
                     </p>
@@ -623,24 +709,47 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
           </Section>
         </TabsContent>
 
+        {/* ---------------- kaart ---------------- */}
+        <TabsContent value="kaart" className="mt-4">
+          <AdminMapPanel />
+        </TabsContent>
+
         {/* ---------------- beheer ---------------- */}
+
         <TabsContent value="beheer" className="mt-4 space-y-3">
-          <Section title="Teams resetten">
-            <div className="grid gap-2">
-              {(teams ?? []).map((team) => (
-                <Button
-                  key={team.id}
-                  variant="secondary"
-                  className="h-11 rounded-2xl"
-                  onClick={() =>
-                    guarded(`Reset voortgang van ${team.name}.`, () => resetTeamProgress(team.id))
-                  }
-                >
-                  Reset {team.name}
-                </Button>
-              ))}
-            </div>
+          <Section title="Teams">
+            <TeamManager onDone={refresh} />
           </Section>
+
+          <Section title="Teamoverzicht">
+            <ul className="space-y-2">
+              {(teams ?? []).map((team) => {
+                const unlocked = (progress ?? []).filter((p) => p.team_id === team.id && p.unlocked);
+                const currentZone =
+                  sortedZones.filter((z) => unlocked.some((p) => p.zone_id === z.id)).at(-1)?.name ??
+                  "—";
+                const activity = [...items, ...photoItems]
+                  .filter((r) => r.teamId === team.id)
+                  .map((r) => r.createdAt)
+                  .sort()
+                  .at(-1);
+                const gps = (locations ?? []).find((l) => l.team_id === team.id)?.updated_at;
+                return (
+                  <li key={team.id} className="rounded-2xl bg-muted px-3 py-2 text-sm">
+                    <p className="font-semibold">{team.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Zone: {currentZone} · Laatste activiteit: {activity ? fmt(activity) : "—"} ·
+                      GPS: {gps ? fmt(gps) : "—"}
+                    </p>
+                  </li>
+                );
+              })}
+              {(teams ?? []).length === 0 ? (
+                <li className="text-sm text-muted-foreground">Nog geen teams.</li>
+              ) : null}
+            </ul>
+          </Section>
+
 
           <Section title="Exporteren">
             <div className="grid gap-2">
@@ -724,12 +833,27 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               <Button
                 variant="destructive"
                 className="h-12 rounded-2xl"
-                onClick={() => guarded("Volledig spel herstarten: alles wordt gewist.", restartGame)}
+                onClick={() =>
+                  guarded(
+                    "Volledige reset: antwoorden, foto's, meldingen, scores, voortgang, prestaties, locaties en locatieopdrachten worden gewist. Bonusopdrachten gaan uit.",
+                    fullGameReset,
+                  )
+                }
               >
-                Spel herstarten
+                Volledige reset
+              </Button>
+              <Button
+                variant="destructive"
+                className="h-12 rounded-2xl"
+                onClick={() =>
+                  guarded("Alle teams én al hun gegevens verwijderen.", deleteAllTeams)
+                }
+              >
+                Alle teams verwijderen
               </Button>
             </div>
           </Section>
+
         </TabsContent>
       </Tabs>
 
@@ -760,16 +884,47 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
           <p className="text-center text-xs text-muted-foreground">
             {queue ? `${queue.index + 1} van ${queue.items.length}` : ""} ·{" "}
             {challenge(current?.challengeId ?? "")?.points ?? 0} punten
+            {supportsCreativity(challenge(current?.challengeId ?? ""))
+              ? ` · ⭐ +${challenge(current?.challengeId ?? "")?.creativity_bonus_points} mogelijk`
+              : ""}
           </p>
 
+          {current?.photoUrl ? (
+            <label className="flex items-center justify-between gap-3 rounded-2xl bg-muted px-3 py-2 text-sm font-semibold">
+              Gebruik als teamfoto
+              <Switch
+                checked={current.isGroupPhoto}
+                aria-label="Als teamfoto gebruiken"
+                onCheckedChange={async (checked) => {
+                  await markPhotoAsGroupPhoto(current.id, current.teamId, checked);
+                  await refresh();
+                }}
+              />
+            </label>
+          ) : null}
+
           <div className="grid grid-cols-2 gap-2">
-            <Button className="h-12 rounded-2xl" onClick={() => decideInQueue(true)}>
+            <Button className="h-12 rounded-2xl" onClick={() => decideInQueue("approved")}>
               <Check className="size-4" /> Goedkeuren
             </Button>
-            <Button variant="destructive" className="h-12 rounded-2xl" onClick={() => decideInQueue(false)}>
+            <Button
+              variant="destructive"
+              className="h-12 rounded-2xl"
+              onClick={() => decideInQueue("rejected")}
+            >
               <X className="size-4" /> Afkeuren
             </Button>
+            {supportsCreativity(challenge(current?.challengeId ?? "")) ? (
+              <Button
+                variant="secondary"
+                className="col-span-2 h-12 rounded-2xl"
+                onClick={() => decideInQueue("excellent")}
+              >
+                <Star className="size-4" /> Uitstekend (+creativiteit)
+              </Button>
+            ) : null}
           </div>
+
         </DialogContent>
       </Dialog>
     </AppShell>
@@ -870,14 +1025,20 @@ function ReviewRow({
   title,
   subtitle,
   status,
+  creativity,
+  canExcel,
   onApprove,
   onReject,
+  onExcellent,
 }: {
   title: string;
   subtitle: string;
   status: ReviewStatus;
+  creativity: number;
+  canExcel: boolean;
   onApprove: () => void;
   onReject: () => void;
+  onExcellent: () => void;
 }) {
   return (
     <div className="rounded-2xl bg-muted px-3 py-2">
@@ -886,14 +1047,131 @@ function ReviewRow({
           <p className="truncate text-sm font-semibold">{title}</p>
           <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
         </div>
-        <StatusPill status={status} />
+        <StatusPill status={status} creativity={creativity} />
       </div>
       <div className="mt-2 flex gap-2">
         <Button size="sm" className="h-9 flex-1 rounded-xl" onClick={onApprove}>
           <Check className="size-4" /> Goed
         </Button>
+        {canExcel ? (
+          <Button
+            size="sm"
+            variant="secondary"
+            className="h-9 flex-1 rounded-xl"
+            onClick={onExcellent}
+            aria-label="Uitstekend met creativiteitsbonus"
+          >
+            <Star className="size-4" /> Top
+          </Button>
+        ) : null}
         <Button size="sm" variant="destructive" className="h-9 flex-1 rounded-xl" onClick={onReject}>
           <X className="size-4" /> Af
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+
+/** Teams aanmaken, hernoemen, wachtwoord wijzigen en verwijderen. */
+function TeamManager({ onDone }: { onDone: () => void }) {
+  const { data: teams } = useTeams();
+  const [name, setName] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function run(action: () => Promise<unknown>) {
+    setBusy(true);
+    try {
+      await action();
+      toast.success("Klaar.");
+      onDone();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Actie mislukt.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="grid gap-2 rounded-2xl bg-muted p-3">
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Teamnaam"
+          className="h-11 rounded-xl"
+        />
+        <Input
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Teamwachtwoord"
+          className="h-11 rounded-xl"
+        />
+        <Button
+          className="h-11 rounded-xl"
+          disabled={busy || !name.trim() || !password.trim()}
+          onClick={() =>
+            run(async () => {
+              await createTeam({ name, password, sortOrder: (teams?.length ?? 0) + 1 });
+              setName("");
+              setPassword("");
+            })
+          }
+        >
+          Team toevoegen
+        </Button>
+      </div>
+
+      {(teams ?? []).map((team) => (
+        <TeamRow key={team.id} team={team} busy={busy} onRun={run} />
+      ))}
+      {(teams ?? []).length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nog geen teams.</p>
+      ) : null}
+    </div>
+  );
+}
+
+function TeamRow({
+  team,
+  busy,
+  onRun,
+}: {
+  team: Team;
+  busy: boolean;
+  onRun: (action: () => Promise<unknown>) => Promise<void>;
+}) {
+  const [name, setName] = useState(team.name);
+  const [password, setPassword] = useState(team.password);
+
+  return (
+    <div className="grid gap-2 rounded-2xl bg-muted p-3">
+      <Input value={name} onChange={(e) => setName(e.target.value)} className="h-11 rounded-xl" />
+      <Input
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        className="h-11 rounded-xl"
+      />
+      <div className="flex gap-2">
+        <Button
+          className="h-11 flex-1 rounded-xl"
+          disabled={busy}
+          onClick={() => onRun(() => updateTeam(team.id, { name: name.trim(), password: password.trim() }))}
+        >
+          Opslaan
+        </Button>
+        <Button
+          variant="destructive"
+          className="h-11 rounded-xl"
+          disabled={busy}
+          aria-label={`${team.name} verwijderen`}
+          onClick={() => {
+            if (!window.confirm(`${team.name} en alle gegevens verwijderen?`)) return;
+            void onRun(() => deleteTeam(team.id));
+          }}
+        >
+          <Trash2 className="size-4" />
         </Button>
       </div>
     </div>

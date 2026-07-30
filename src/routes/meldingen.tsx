@@ -16,12 +16,12 @@ export const Route = createFileRoute("/meldingen")({
       { title: "Meldingen — BOW in Tanzania" },
       {
         name: "description",
-        content: "Alle berichten van de spelleiding: zonecodes, prestaties en updates van de expeditie.",
+        content: "Alle berichten van de reisleider: zonecodes, prestaties en updates van de expeditie.",
       },
       { property: "og:title", content: "Meldingen — BOW in Tanzania" },
       {
         property: "og:description",
-        content: "Alle berichten van de spelleiding tijdens de Tanzania-expeditie.",
+        content: "Alle berichten van de reisleider tijdens de Tanzania-expeditie.",
       },
     ],
   }),
@@ -38,7 +38,7 @@ function NotificationsPage() {
 
   if (!session && !isAdmin) {
     return (
-      <AppShell title="Meldingen" subtitle="Berichten van de spelleiding">
+      <AppShell title="Meldingen" subtitle="Berichten van de reisleider">
         <p className="mt-4 text-sm text-muted-foreground">
           Log eerst in met je team om jullie meldingen te zien.
         </p>

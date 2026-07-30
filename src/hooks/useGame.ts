@@ -14,7 +14,9 @@ import {
   fetchQuizAnswers,
 } from "@/lib/api";
 import { fetchNotifications, fetchNotificationReads } from "@/lib/notifications";
+import { fetchLocationEvents, fetchLocationTriggers, fetchTeamLocations } from "@/lib/locations";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+
 
 const enabled = isSupabaseConfigured;
 
@@ -80,3 +82,14 @@ export const useNotificationReads = (reader: string) =>
     queryFn: () => fetchNotificationReads(reader),
     enabled: enabled && Boolean(reader),
   });
+
+/* ------------------------------ locatie ------------------------------ */
+
+export const useTeamLocations = () =>
+  useQuery({ queryKey: ["team-locations"], queryFn: fetchTeamLocations, enabled });
+
+export const useLocationEvents = () =>
+  useQuery({ queryKey: ["location-events"], queryFn: fetchLocationEvents, enabled });
+
+export const useLocationTriggers = () =>
+  useQuery({ queryKey: ["location-triggers"], queryFn: fetchLocationTriggers, enabled });

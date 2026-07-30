@@ -50,12 +50,32 @@ Open in Supabase: **SQL Editor → New query**.
    het nieuwe opdrachttype `bonus_photo_upload`, een review-`status`
    (`pending` / `approved` / `rejected`) op antwoorden, quizantwoorden en foto's,
    en de tabel `zone_completion_notices` voor de automatische zonecode.
-4. Nieuwe query → plak de inhoud van `supabase/seed.sql` en klik **Run**.
+4. Nieuwe query → plak de inhoud van `supabase/upgrade3.sql` en klik **Run**.
+   Dit voegt toe: puntensoorten op `scores` (`regular_points`, `bonus_points`,
+   `creativity_points`), `creativity_bonus_points` op opdrachten, `is_group_photo` op
+   foto's en `group_photo_url` op teams, de tabellen `team_locations`,
+   `location_events` en `location_event_triggers` (live kaart en geofences), plus de
+   functies `full_game_reset`, `delete_all_teams` en `delete_all_notifications`.
+5. Nieuwe query → plak de inhoud van `supabase/seed.sql` en klik **Run**.
    Dit vult voorbeeldteams, de vier zones (🚵 MTB Adventure, ⛰️ Mt Meru, 🦁 Safari, 🌴 Zanzibar),
    voorbeeldopdrachten, instellingen, het adminwachtwoord en de puntenknoppen (+3, +5, −3, −5).
 
+### Tiebreakregels aanpassen
+
+De rangschikking staat in `src/lib/scoring.ts`. Teams worden gesorteerd op totaalscore;
+bij een gelijke stand gelden achtereenvolgens: meeste creativiteitspunten → meeste gewone
+punten → meeste bonuspunten → wie het snelst aan die stand raakte. Verplaats of
+becommentarieer de regels in `TIEBREAKERS` om dit te wijzigen.
+
+### Locatietracking
+
+Zet tracking aan in Admin → Kaart. Teams zien dan op het startscherm een knop om hun
+locatie te delen. De app stuurt maximaal één update per 20 seconden en enkel na 20 meter
+verplaatsing, uitsluitend zolang het tabblad actief is.
+
+
 > **Nakijken en punten:** foto's en open (tekst/numerieke) antwoorden zonder `correct_answer`
-> leveren pas punten op nadat de spelleiding ze in Admin → Antwoorden goedkeurt. Opdrachten
+> leveren pas punten op nadat de reisleider ze in Admin → Antwoorden goedkeurt. Opdrachten
 > met een ingevuld `correct_answer` worden automatisch beoordeeld.
 
 > **Automatische zonecode:** zodra alle opdrachten van een zone voor een team ingezonden én
@@ -68,7 +88,7 @@ Open in Supabase: **SQL Editor → New query**.
 > meteen een melding en de opdracht verschijnt met aftelklok op het startscherm.
 
 > **Zones ontgrendelen:** een zone met een ingevuld `unlock_password` blijft dicht tot de
-> spelleiding de code via Meldingen stuurt. Is het wachtwoord leeg, dan opent de zone
+> reisleider de code via Meldingen stuurt. Is het wachtwoord leeg, dan opent de zone
 > automatisch zodra de vorige zone volledig is afgerond. De eerste zone staat altijd open.
 
 

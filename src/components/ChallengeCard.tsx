@@ -22,7 +22,7 @@ interface ChallengeCardProps {
 
 const stateHint: Record<ChallengeState, string> = {
   todo: "",
-  pending: "Ingezonden — de spelleiding kijkt dit na.",
+  pending: "Ingezonden — de reisleider kijkt dit na.",
   approved: "Goedgekeurd — punten toegekend.",
   rejected: "Afgekeurd — geen punten.",
 };
@@ -260,7 +260,7 @@ export function ChallengeCard({
                 {busy ? <Loader2 className="size-4 animate-spin" /> : "Foto versturen"}
               </Button>
               <p className="text-center text-xs text-muted-foreground">
-                Foto's leveren punten op zodra de spelleiding ze goedkeurt.
+                Foto's leveren punten op zodra de reisleider ze goedkeurt.
               </p>
             </>
           )}

@@ -20,7 +20,7 @@ export async function fetchNotificationReads(reader: string): Promise<Notificati
   return (data ?? []) as NotificationRead[];
 }
 
-/** Meldingen die zichtbaar zijn voor een team (of voor de spelleiding). */
+/** Meldingen die zichtbaar zijn voor een team (of voor de reisleider). */
 export function visibleFor(
   notifications: AppNotification[],
   reader: { kind: "team"; teamId: string } | { kind: "admin" },
@@ -59,6 +59,13 @@ export async function deleteNotification(id: string) {
   const { error } = await supabase.from("notifications").delete().eq("id", id);
   if (error) throw error;
 }
+
+/** Wist álle meldingen én alle leesstatussen. */
+export async function deleteAllNotifications() {
+  const { error } = await supabase.rpc("delete_all_notifications");
+  if (error) throw error;
+}
+
 
 export async function setNotificationActive(id: string, active: boolean) {
   const { error } = await supabase.from("notifications").update({ active }).eq("id", id);

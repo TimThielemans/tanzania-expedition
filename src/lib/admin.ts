@@ -1,18 +1,8 @@
 import { supabase } from "./supabase";
 import { fetchTeams, fetchZones } from "./api";
+import type { Team } from "./types";
 
 /* ------------------------------ admin acties ------------------------------ */
-
-export async function resetTeamProgress(teamId: string) {
-  await supabase.from("answers").delete().eq("team_id", teamId);
-  await supabase.from("quiz_answers").delete().eq("team_id", teamId);
-  await supabase.from("photos").delete().eq("team_id", teamId);
-  await supabase.from("team_progress").delete().eq("team_id", teamId);
-  await supabase.from("scores").upsert(
-    { team_id: teamId, points: 0, last_scored_at: new Date().toISOString() },
-    { onConflict: "team_id" },
-  );
-}
 
 export async function setAllZones(unlocked: boolean) {
   const [teams, zones] = await Promise.all([fetchTeams(), fetchZones()]);
@@ -38,26 +28,70 @@ export async function clearAllPhotos() {
   const paths = (data ?? []).map((p) => p.storage_path).filter(Boolean) as string[];
   if (paths.length > 0) await supabase.storage.from("photos").remove(paths);
   await supabase.from("photos").delete().not("id", "is", null);
+  await supabase.from("teams").update({ group_photo_url: null }).not("id", "is", null);
 }
 
-export async function restartGame() {
-  await clearAllPhotos();
-  await clearAllAnswers();
-  await supabase.from("team_progress").delete().not("id", "is", null);
-  const teams = await fetchTeams();
-  const now = new Date().toISOString();
+/**
+ * Volledige reset: het spel staat daarna exact zoals bij een verse opstart.
+ * Wist antwoorden, quizantwoorden, foto's (ook uit Storage), meldingen en
+ * leesstatussen, voortgang, zonecodes, eerste-team-prestaties, teamfoto's,
+ * locaties, locatietriggers en locatieopdrachten, en zet bonusopdrachten uit.
+ */
+export async function fullGameReset() {
+  // Eerst de bestanden uit Storage, daarna de databasekant in één transactie.
+  const { data } = await supabase.from("photos").select("storage_path");
+  const paths = (data ?? []).map((p) => p.storage_path).filter(Boolean) as string[];
+  if (paths.length > 0) await supabase.storage.from("photos").remove(paths);
+
+  const { error } = await supabase.rpc("full_game_reset");
+  if (error) throw error;
+}
+
+/** Verwijdert alle teams én alles wat eraan hangt. */
+export async function deleteAllTeams() {
+  const { error } = await supabase.rpc("delete_all_teams");
+  if (error) throw error;
+}
+
+/* ------------------------------ teambeheer ------------------------------ */
+
+export async function createTeam(input: { name: string; password: string; sortOrder?: number }) {
+  const { data, error } = await supabase
+    .from("teams")
+    .insert({
+      name: input.name.trim(),
+      password: input.password.trim(),
+      sort_order: input.sortOrder ?? 0,
+      active: true,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
   await supabase
     .from("scores")
-    .upsert(teams.map((t) => ({ team_id: t.id, points: 0, last_scored_at: now })), {
-      onConflict: "team_id",
-    });
+    .upsert(
+      { team_id: data.id, points: 0, regular_points: 0, bonus_points: 0, creativity_points: 0 },
+      { onConflict: "team_id" },
+    );
 }
 
-export async function setTeamScore(teamId: string, points: number) {
-  const { error } = await supabase.from("scores").upsert(
-    { team_id: teamId, points, last_scored_at: new Date().toISOString() },
-    { onConflict: "team_id" },
-  );
+export async function updateTeam(id: string, values: Partial<Pick<Team, "name" | "password">>) {
+  const { error } = await supabase.from("teams").update(values).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteTeam(id: string) {
+  await supabase.from("notification_reads").delete().eq("reader", id);
+  const { error } = await supabase.from("teams").delete().eq("id", id);
+  if (error) throw error;
+}
+
+/* ------------------------------ instellingen ------------------------------ */
+
+export async function setSetting(key: string, value: string) {
+  const { error } = await supabase
+    .from("game_settings")
+    .upsert({ key, value }, { onConflict: "key" });
   if (error) throw error;
 }
 

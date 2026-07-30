@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { LogOut, Loader2 } from "lucide-react";
@@ -26,6 +26,7 @@ import {
 import {
   useAnswers,
   useChallenges,
+  useLocationEvents,
   usePhotos,
   useProgress,
   useQuizAnswers,
@@ -35,6 +36,8 @@ import {
   useTeams,
   useZones,
 } from "@/hooks/useGame";
+import { useLocationTracking, requestLocationPermission } from "@/hooks/useLocationTracking";
+import { TRACKING_KEY } from "@/components/AdminMapPanel";
 import {
   activeBonusChallenges,
   loginTeam,
@@ -46,6 +49,9 @@ import { fireConfetti } from "@/lib/confetti";
 import type { ReviewStatus, Zone } from "@/lib/types";
 import { clearSession, saveSession, useTeamSession } from "@/lib/session";
 import { isSupabaseConfigured } from "@/lib/supabase";
+
+const CONSENT_KEY = "bow-location-consent";
+
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
@@ -167,11 +173,17 @@ function HomeScreen({ teamId }: { teamId: string }) {
   const { data: answers } = useAnswers(teamId);
   const { data: quiz } = useQuizAnswers(teamId);
   const { data: photos } = usePhotos(teamId);
+  const { data: locationEvents } = useLocationEvents();
 
   const [lockedZone, setLockedZone] = useState<Zone | null>(null);
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [tick, setTick] = useState(0);
+  const [consented, setConsented] = useState(false);
+
+  useEffect(() => {
+    setConsented(window.localStorage.getItem(CONSENT_KEY) === "true");
+  }, []);
 
   useRealtime(["scores", "challenges", "team_progress", "notifications"], () => {
     void queryClient.invalidateQueries();
@@ -187,11 +199,31 @@ function HomeScreen({ teamId }: { teamId: string }) {
 
   const me = ranking?.find((r) => r.team.id === teamId);
   const unlockedIds = unlockedZoneIds(zones ?? [], progress ?? []);
+  const trackingOn = (settings?.[TRACKING_KEY] ?? "false") === "true";
+
+  useLocationTracking({
+    team: me ? { id: me.team.id, name: me.team.name } : null,
+    trackingEnabled: trackingOn,
+    consented,
+    events: locationEvents ?? [],
+    onTriggered: () => queryClient.invalidateQueries(),
+  });
+
   const bonus = useMemo(
     () => activeBonusChallenges(challenges ?? []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [challenges, tick],
   );
+
+  async function askLocation() {
+    const ok = await requestLocationPermission();
+    window.localStorage.setItem(CONSENT_KEY, ok ? "true" : "false");
+    setConsented(ok);
+    toast[ok ? "success" : "error"](
+      ok ? "Locatie delen staat aan." : "Zonder locatie kunnen we jullie niet volgen.",
+    );
+  }
+
 
   async function handleUnlock() {
     if (!lockedZone) return;
@@ -244,6 +276,20 @@ function HomeScreen({ teamId }: { teamId: string }) {
           <span className="text-xs font-semibold text-muted-foreground">pt</span>
         </div>
       </Link>
+
+      {trackingOn && !consented ? (
+        <div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
+          <h2 className="text-xl">📍 Deel jullie locatie</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            De reisleider volgt de expeditie live. Locatie wordt enkel gedeeld zolang de app open is.
+          </p>
+          <Button className="mt-3 h-12 w-full rounded-2xl text-base" onClick={askLocation}>
+            Locatie delen aanzetten
+          </Button>
+        </div>
+      ) : null}
+
+
 
       {bonus.length > 0 ? (
         <section className="mt-6 space-y-3">
@@ -300,7 +346,7 @@ function HomeScreen({ teamId }: { teamId: string }) {
             </DialogTitle>
             <DialogDescription className="text-base">
               {lockedZone && zoneNeedsPassword(lockedZone)
-                ? "Vul het zonewachtwoord in dat je van de spelleiding kreeg."
+                ? "Vul het zonewachtwoord in dat je van de reisleider kreeg."
                 : "Deze zone opent automatisch zodra jullie de vorige zone volledig hebben afgerond."}
             </DialogDescription>
           </DialogHeader>

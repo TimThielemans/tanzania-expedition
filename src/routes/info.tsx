@@ -49,7 +49,7 @@ const SECTIONS = [
       "Speel met één toestel per team en blijf samen.",
       "Elke opdracht kan één keer ingezonden worden — overleg dus goed.",
       "Foto's maken jullie ter plaatse, niet van het internet.",
-      "Fair play: de spelleiding kan punten toekennen of aftrekken.",
+      "Fair play: de reisleider kan punten toekennen of aftrekken.",
     ],
   },
   {
@@ -59,7 +59,7 @@ const SECTIONS = [
     body: [
       "Elke opdracht toont het aantal punten dat ze oplevert.",
       "Vragen met een vast juist antwoord worden meteen automatisch beoordeeld.",
-      "Open vragen en foto's worden door de spelleiding nagekeken.",
+      "Open vragen en foto's worden door de reisleider nagekeken.",
       "Kleurcode: ⏳ wacht op nakijken · ✅ goedgekeurd (punten toegekend) · ❌ afgekeurd (geen punten).",
       "Bonusopdrachten leveren extra punten op, maar zijn maar even beschikbaar.",
     ],
@@ -71,7 +71,7 @@ const SECTIONS = [
     body: [
       "De eerste zone staat altijd open.",
       "Een zone zonder wachtwoord opent automatisch zodra de vorige zone volledig af is.",
-      "Een zone met wachtwoord blijft dicht tot de spelleiding de code doorstuurt.",
+      "Een zone met wachtwoord blijft dicht tot de reisleider de code doorstuurt.",
       "De code komt binnen via Meldingen, zodra al jullie antwoorden nagekeken zijn.",
     ],
   },
@@ -80,7 +80,7 @@ const SECTIONS = [
     icon: "⚡",
     title: "Bonusopdrachten",
     body: [
-      "De spelleiding kan tijdens het spel een bonusopdracht starten.",
+      "De reisleider kan tijdens het spel een bonusopdracht starten.",
       "Jullie krijgen meteen een melding met de opdracht en de tijd die jullie hebben.",
       "De bonusopdracht staat bovenaan het startscherm met een aftelklok.",
       "Zodra de tijd om is, verdwijnt de opdracht automatisch.",
@@ -93,7 +93,7 @@ const SECTIONS = [
     body: [
       "Geen internet? Antwoorden worden lokaal bewaard en automatisch verstuurd zodra je weer verbinding hebt.",
       "Zie je iets niet verschijnen? Sluit de app niet af, maar ververs de pagina.",
-      "Bij twijfel: spreek de spelleiding aan.",
+      "Bij twijfel: spreek de reisleider aan.",
     ],
   },
 ];
