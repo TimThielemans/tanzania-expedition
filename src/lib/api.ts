@@ -181,10 +181,19 @@ export async function verifyAdminPassword(password: string): Promise<boolean> {
 
 /* ------------------------------ punten ------------------------------ */
 
-export async function addPoints(teamId: string, points: number) {
-  const { error } = await supabase.rpc("add_points", { p_team_id: teamId, p_points: points });
+/**
+ * Kent punten toe in één van de drie categorieën.
+ * Het totaal (scores.points) is altijd de som van gewoon + bonus + creativiteit.
+ */
+export async function addPoints(teamId: string, points: number, kind: PointKind = "regular") {
+  const { error } = await supabase.rpc("add_points", {
+    p_team_id: teamId,
+    p_points: points,
+    p_kind: kind,
+  });
   if (error) throw error;
 }
+
 
 /* ------------------------------ zones ------------------------------ */
 
