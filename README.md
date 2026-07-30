@@ -55,7 +55,7 @@ Open in Supabase: **SQL Editor → New query**.
    voorbeeldopdrachten, instellingen, het adminwachtwoord en de puntenknoppen (+3, +5, −3, −5).
 
 > **Nakijken en punten:** foto's en open (tekst/numerieke) antwoorden zonder `correct_answer`
-> leveren pas punten op nadat de spelleiding ze in Admin → Antwoorden goedkeurt. Opdrachten
+> leveren pas punten op nadat de reisleider ze in Admin → Antwoorden goedkeurt. Opdrachten
 > met een ingevuld `correct_answer` worden automatisch beoordeeld.
 
 > **Automatische zonecode:** zodra alle opdrachten van een zone voor een team ingezonden én
@@ -68,7 +68,7 @@ Open in Supabase: **SQL Editor → New query**.
 > meteen een melding en de opdracht verschijnt met aftelklok op het startscherm.
 
 > **Zones ontgrendelen:** een zone met een ingevuld `unlock_password` blijft dicht tot de
-> spelleiding de code via Meldingen stuurt. Is het wachtwoord leeg, dan opent de zone
+> reisleider de code via Meldingen stuurt. Is het wachtwoord leeg, dan opent de zone
 > automatisch zodra de vorige zone volledig is afgerond. De eerste zone staat altijd open.
 
 
