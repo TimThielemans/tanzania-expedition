@@ -160,6 +160,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const { data: photos } = usePhotos();
   const { data: progress } = useProgress();
   const { data: notifications } = useNotifications();
+  const { data: locations } = useTeamLocations();
+
 
   useRealtime(
     ["scores", "answers", "quiz_answers", "photos", "team_progress", "notifications", "challenges"],
