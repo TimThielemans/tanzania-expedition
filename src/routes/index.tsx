@@ -173,11 +173,17 @@ function HomeScreen({ teamId }: { teamId: string }) {
   const { data: answers } = useAnswers(teamId);
   const { data: quiz } = useQuizAnswers(teamId);
   const { data: photos } = usePhotos(teamId);
+  const { data: locationEvents } = useLocationEvents();
 
   const [lockedZone, setLockedZone] = useState<Zone | null>(null);
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [tick, setTick] = useState(0);
+  const [consented, setConsented] = useState(false);
+
+  useEffect(() => {
+    setConsented(window.localStorage.getItem(CONSENT_KEY) === "true");
+  }, []);
 
   useRealtime(["scores", "challenges", "team_progress", "notifications"], () => {
     void queryClient.invalidateQueries();
@@ -193,11 +199,31 @@ function HomeScreen({ teamId }: { teamId: string }) {
 
   const me = ranking?.find((r) => r.team.id === teamId);
   const unlockedIds = unlockedZoneIds(zones ?? [], progress ?? []);
+  const trackingOn = (settings?.[TRACKING_KEY] ?? "false") === "true";
+
+  useLocationTracking({
+    team: me ? { id: me.team.id, name: me.team.name } : null,
+    trackingEnabled: trackingOn,
+    consented,
+    events: locationEvents ?? [],
+    onTriggered: () => queryClient.invalidateQueries(),
+  });
+
   const bonus = useMemo(
     () => activeBonusChallenges(challenges ?? []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [challenges, tick],
   );
+
+  async function askLocation() {
+    const ok = await requestLocationPermission();
+    window.localStorage.setItem(CONSENT_KEY, ok ? "true" : "false");
+    setConsented(ok);
+    toast[ok ? "success" : "error"](
+      ok ? "Locatie delen staat aan." : "Zonder locatie kunnen we jullie niet volgen.",
+    );
+  }
+
 
   async function handleUnlock() {
     if (!lockedZone) return;
