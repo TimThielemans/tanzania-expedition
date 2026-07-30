@@ -578,6 +578,20 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
           </Section>
 
           <Section title={`Geschiedenis (${notifications?.length ?? 0})`}>
+            <Button
+              variant="destructive"
+              className="h-11 w-full rounded-2xl"
+              disabled={(notifications ?? []).length === 0}
+              onClick={() =>
+                guarded(
+                  "Alle meldingen en leesstatussen verwijderen.",
+                  deleteAllNotifications,
+                )
+              }
+            >
+              <Trash2 className="size-4" /> Alle meldingen verwijderen
+            </Button>
+
             {(notifications ?? []).map((n) => (
               <div key={n.id} className="rounded-2xl bg-muted px-3 py-2">
                 <div className="flex items-start justify-between gap-2">
