@@ -129,8 +129,11 @@ interface ReviewItem {
   photoUrl?: string;
   status: ReviewStatus;
   points: number;
+  creativity: number;
+  isGroupPhoto: boolean;
   createdAt: string;
 }
+
 
 function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const queryClient = useQueryClient();
