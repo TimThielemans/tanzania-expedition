@@ -78,6 +78,17 @@ export function activeBonusChallenges(challenges: Challenge[], now = Date.now())
   return challenges.filter((c) => c.is_bonus && c.active && bonusRemainingMs(c, now) > 0);
 }
 
+/** Locatieopdrachten die specifiek voor dit team zijn aangemaakt. */
+export function locationChallengesFor(challenges: Challenge[], teamId: string): Challenge[] {
+  return challenges.filter((c) => c.is_location && c.active && c.target_team_id === teamId);
+}
+
+/** Opdrachten die in een zone horen (dus geen bonus- of locatieopdracht). */
+export function zoneChallengesOf(challenges: Challenge[], zoneId: string): Challenge[] {
+  return challenges.filter((c) => c.zone_id === zoneId && c.active && !c.is_bonus && !c.is_location);
+}
+
+
 export async function fetchProgress(teamId?: string): Promise<TeamProgress[]> {
   let query = supabase.from("team_progress").select("*");
   if (teamId) query = query.eq("team_id", teamId);
