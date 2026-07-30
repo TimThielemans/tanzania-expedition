@@ -26,6 +26,7 @@ import {
 import {
   useAnswers,
   useChallenges,
+  useLocationEvents,
   usePhotos,
   useProgress,
   useQuizAnswers,
@@ -35,6 +36,8 @@ import {
   useTeams,
   useZones,
 } from "@/hooks/useGame";
+import { useLocationTracking, requestLocationPermission } from "@/hooks/useLocationTracking";
+import { TRACKING_KEY } from "@/components/AdminMapPanel";
 import {
   activeBonusChallenges,
   loginTeam,
@@ -46,6 +49,9 @@ import { fireConfetti } from "@/lib/confetti";
 import type { ReviewStatus, Zone } from "@/lib/types";
 import { clearSession, saveSession, useTeamSession } from "@/lib/session";
 import { isSupabaseConfigured } from "@/lib/supabase";
+
+const CONSENT_KEY = "bow-location-consent";
+
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
