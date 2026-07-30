@@ -760,16 +760,47 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
           <p className="text-center text-xs text-muted-foreground">
             {queue ? `${queue.index + 1} van ${queue.items.length}` : ""} ·{" "}
             {challenge(current?.challengeId ?? "")?.points ?? 0} punten
+            {supportsCreativity(challenge(current?.challengeId ?? ""))
+              ? ` · ⭐ +${challenge(current?.challengeId ?? "")?.creativity_bonus_points} mogelijk`
+              : ""}
           </p>
 
+          {current?.photoUrl ? (
+            <label className="flex items-center justify-between gap-3 rounded-2xl bg-muted px-3 py-2 text-sm font-semibold">
+              Gebruik als teamfoto
+              <Switch
+                checked={current.isGroupPhoto}
+                aria-label="Als teamfoto gebruiken"
+                onCheckedChange={async (checked) => {
+                  await markPhotoAsGroupPhoto(current.id, current.teamId, checked);
+                  await refresh();
+                }}
+              />
+            </label>
+          ) : null}
+
           <div className="grid grid-cols-2 gap-2">
-            <Button className="h-12 rounded-2xl" onClick={() => decideInQueue(true)}>
+            <Button className="h-12 rounded-2xl" onClick={() => decideInQueue("approved")}>
               <Check className="size-4" /> Goedkeuren
             </Button>
-            <Button variant="destructive" className="h-12 rounded-2xl" onClick={() => decideInQueue(false)}>
+            <Button
+              variant="destructive"
+              className="h-12 rounded-2xl"
+              onClick={() => decideInQueue("rejected")}
+            >
               <X className="size-4" /> Afkeuren
             </Button>
+            {supportsCreativity(challenge(current?.challengeId ?? "")) ? (
+              <Button
+                variant="secondary"
+                className="col-span-2 h-12 rounded-2xl"
+                onClick={() => decideInQueue("excellent")}
+              >
+                <Star className="size-4" /> Uitstekend (+creativiteit)
+              </Button>
+            ) : null}
           </div>
+
         </DialogContent>
       </Dialog>
     </AppShell>
