@@ -870,14 +870,20 @@ function ReviewRow({
   title,
   subtitle,
   status,
+  creativity,
+  canExcel,
   onApprove,
   onReject,
+  onExcellent,
 }: {
   title: string;
   subtitle: string;
   status: ReviewStatus;
+  creativity: number;
+  canExcel: boolean;
   onApprove: () => void;
   onReject: () => void;
+  onExcellent: () => void;
 }) {
   return (
     <div className="rounded-2xl bg-muted px-3 py-2">
@@ -886,12 +892,23 @@ function ReviewRow({
           <p className="truncate text-sm font-semibold">{title}</p>
           <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
         </div>
-        <StatusPill status={status} />
+        <StatusPill status={status} creativity={creativity} />
       </div>
       <div className="mt-2 flex gap-2">
         <Button size="sm" className="h-9 flex-1 rounded-xl" onClick={onApprove}>
           <Check className="size-4" /> Goed
         </Button>
+        {canExcel ? (
+          <Button
+            size="sm"
+            variant="secondary"
+            className="h-9 flex-1 rounded-xl"
+            onClick={onExcellent}
+            aria-label="Uitstekend met creativiteitsbonus"
+          >
+            <Star className="size-4" /> Top
+          </Button>
+        ) : null}
         <Button size="sm" variant="destructive" className="h-9 flex-1 rounded-xl" onClick={onReject}>
           <X className="size-4" /> Af
         </Button>
@@ -899,3 +916,4 @@ function ReviewRow({
     </div>
   );
 }
+
