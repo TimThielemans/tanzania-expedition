@@ -299,7 +299,7 @@ export async function refreshZoneCompletion(
   const events: ZoneCompletionEvent[] = [];
 
   for (const [index, zone] of sorted.entries()) {
-    const zoneChallenges = challenges.filter((c) => c.zone_id === zone.id && c.active && !c.is_bonus);
+    const zoneChallenges = zoneChallengesOf(challenges, zone.id);
     const complete = zoneChallenges.length > 0 && zoneChallenges.every((c) => done.has(c.id));
     if (!complete) continue;
     completedZones.push(zone.id);
