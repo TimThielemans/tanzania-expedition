@@ -39,18 +39,27 @@ export function PointsBadge({
   );
 }
 
-export function StatusPill({ status }: { status: ReviewStatus }) {
+/** Statuslabel; met creativiteitspunten toont hij ⭐ Creatief. */
+export function StatusPill({
+  status,
+  creativity = 0,
+}: {
+  status: ReviewStatus;
+  creativity?: number;
+}) {
+  const excellent = status === "approved" && creativity > 0;
   const style = styles[status];
   return (
     <span
       className={cn(
         "inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold",
-        style.className,
+        excellent ? "bg-gold-gradient text-accent-foreground" : style.className,
       )}
     >
-      {style.icon} {style.label}
+      {excellent ? `⭐ Creatief +${creativity}` : `${style.icon} ${style.label}`}
     </span>
   );
 }
+
 
 export const statusLabels = styles;
