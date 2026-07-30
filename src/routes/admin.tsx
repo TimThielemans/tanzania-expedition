@@ -224,34 +224,43 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const pendingAnswers = filteredItems.filter((r) => r.status === "pending");
   const pendingPhotos = filteredPhotos.filter((r) => r.status === "pending");
 
-  async function decide(item: ReviewItem, approve: boolean) {
-    const input = {
-      table: item.table,
-      id: item.id,
-      teamId: item.teamId,
-      zoneId: item.zoneId,
-      currentPoints: item.points,
-      challenge: challenge(item.challengeId),
-    };
+  async function decide(item: ReviewItem, verdict: ReviewVerdict) {
     try {
-      if (approve) await approveSubmission(input);
-      else await rejectSubmission(input);
-      toast.success(approve ? "Goedgekeurd." : "Afgekeurd.");
+      await reviewSubmission(
+        {
+          table: item.table,
+          id: item.id,
+          teamId: item.teamId,
+          zoneId: item.zoneId,
+          currentPoints: item.points,
+          currentCreativity: item.creativity,
+          challenge: challenge(item.challengeId),
+        },
+        verdict,
+      );
+      toast.success(
+        verdict === "rejected"
+          ? "Afgekeurd."
+          : verdict === "excellent"
+            ? "Goedgekeurd met creativiteitsbonus."
+            : "Goedgekeurd.",
+      );
       await refresh();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Beoordelen mislukt.");
     }
   }
 
-  async function decideInQueue(approve: boolean) {
+  async function decideInQueue(verdict: ReviewVerdict) {
     if (!queue) return;
     const item = queue.items[queue.index];
     if (!item) return;
-    await decide(item, approve);
+    await decide(item, verdict);
     const next = queue.index + 1;
     if (next >= queue.items.length) setQueue(null);
     else setQueue({ ...queue, index: next });
   }
+
 
   async function sendNotification() {
     if (!noteTitle.trim()) return;
