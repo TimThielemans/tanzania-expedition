@@ -39,6 +39,14 @@ export async function fetchZones(): Promise<Zone[]> {
   return (data ?? []) as Zone[];
 }
 
+function mapChallenges(data: unknown[]): Challenge[] {
+  return (data ?? []).map((c) => ({
+    ...(c as Challenge),
+    options: Array.isArray((c as Challenge).options) ? ((c as Challenge).options as string[]) : [],
+  })) as Challenge[];
+}
+
+/** Actieve opdrachten (inclusief bonusopdrachten). */
 export async function fetchChallenges(): Promise<Challenge[]> {
   const { data, error } = await supabase
     .from("challenges")
@@ -46,10 +54,25 @@ export async function fetchChallenges(): Promise<Challenge[]> {
     .eq("active", true)
     .order("sort_order");
   if (error) throw error;
-  return (data ?? []).map((c) => ({
-    ...c,
-    options: Array.isArray(c.options) ? (c.options as string[]) : [],
-  })) as Challenge[];
+  return mapChallenges(data ?? []);
+}
+
+/** Alle opdrachten, ook uitgeschakelde — voor de admin. */
+export async function fetchAllChallenges(): Promise<Challenge[]> {
+  const { data, error } = await supabase.from("challenges").select("*").order("sort_order");
+  if (error) throw error;
+  return mapChallenges(data ?? []);
+}
+
+/** Loopt een bonusopdracht nog? */
+export function bonusRemainingMs(challenge: Challenge, now = Date.now()): number {
+  if (!challenge.is_bonus || !challenge.bonus_active || !challenge.bonus_started_at) return 0;
+  const end = new Date(challenge.bonus_started_at).getTime() + challenge.duration_minutes * 60_000;
+  return Math.max(0, end - now);
+}
+
+export function activeBonusChallenges(challenges: Challenge[], now = Date.now()): Challenge[] {
+  return challenges.filter((c) => c.is_bonus && c.active && bonusRemainingMs(c, now) > 0);
 }
 
 export async function fetchProgress(teamId?: string): Promise<TeamProgress[]> {
@@ -245,7 +268,7 @@ export async function refreshZoneCompletion(
   const events: ZoneCompletionEvent[] = [];
 
   for (const [index, zone] of sorted.entries()) {
-    const zoneChallenges = challenges.filter((c) => c.zone_id === zone.id && c.active);
+    const zoneChallenges = challenges.filter((c) => c.zone_id === zone.id && c.active && !c.is_bonus);
     const complete = zoneChallenges.length > 0 && zoneChallenges.every((c) => done.has(c.id));
     if (!complete) continue;
     completedZones.push(zone.id);
@@ -294,37 +317,44 @@ export async function refreshZoneCompletion(
 
 export interface SubmitContext {
   teamId: string;
-  zoneId: string;
+  zoneId: string | null;
   challenge: Challenge;
 }
 
 export async function submitTextAnswer({ teamId, zoneId, challenge }: SubmitContext, answer: string) {
+  // Met een correct antwoord in de database keuren we automatisch; anders kijkt de spelleiding na.
+  const expected = (challenge.correct_answer ?? "").trim();
+  const auto = expected.length > 0;
+  const correct = auto && expected.toLowerCase() === answer.trim().toLowerCase();
+  const points = auto && correct ? challenge.points : 0;
   const payload = {
     team_id: teamId,
     zone_id: zoneId,
     challenge_id: challenge.id,
     answer,
-    points_awarded: challenge.points,
+    status: auto ? (correct ? "approved" : "rejected") : "pending",
+    points_awarded: points,
   };
   try {
     const { error } = await supabase.from("answers").upsert(payload, { onConflict: "team_id,challenge_id" });
     if (error) throw error;
-    await addPoints(teamId, challenge.points);
+    if (points !== 0) await addPoints(teamId, points);
   } catch (err) {
-    enqueue({ kind: "answer", payload, points: challenge.points, teamId });
+    enqueue({ kind: "answer", payload, points, teamId });
     throw new OfflineQueuedError(err);
   }
 }
 
 export async function submitQuizAnswer({ teamId, zoneId, challenge }: SubmitContext, option: string) {
   const isCorrect = challenge.correct_answer ? challenge.correct_answer.trim() === option.trim() : null;
-  const points = isCorrect === false ? 0 : challenge.points;
+  const points = isCorrect === true ? challenge.points : 0;
   const payload = {
     team_id: teamId,
     zone_id: zoneId,
     challenge_id: challenge.id,
     selected_option: option,
     is_correct: isCorrect,
+    status: isCorrect === null ? "pending" : isCorrect ? "approved" : "rejected",
     points_awarded: points,
   };
   try {
@@ -354,10 +384,11 @@ export async function uploadPhoto({ teamId, zoneId, challenge }: SubmitContext, 
     challenge_id: challenge.id,
     photo_url: data.publicUrl,
     storage_path: path,
-    points_awarded: challenge.points,
+    status: "pending",
+    points_awarded: 0,
   });
   if (error) throw error;
-  await addPoints(teamId, challenge.points);
+  // Foto's leveren pas punten op na goedkeuring door de spelleiding.
   return data.publicUrl;
 }
 
