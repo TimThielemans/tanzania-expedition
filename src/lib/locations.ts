@@ -162,7 +162,9 @@ async function runTriggerAction(team: { id: string; name: string }, event: Locat
       if (error) throw error;
       await createNotification({
         title: `📍 Locatieopdracht: ${event.challenge_title ?? event.name}`,
-        body: event.challenge_description ?? message || "Open de app — er staat een opdracht klaar.",
+        body:
+          event.challenge_description ?? (message || "Open de app — er staat een opdracht klaar."),
+
         audience: "team",
         teamId: team.id,
         kind: "location",
