@@ -724,12 +724,27 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               <Button
                 variant="destructive"
                 className="h-12 rounded-2xl"
-                onClick={() => guarded("Volledig spel herstarten: alles wordt gewist.", restartGame)}
+                onClick={() =>
+                  guarded(
+                    "Volledige reset: antwoorden, foto's, meldingen, scores, voortgang, prestaties, locaties en locatieopdrachten worden gewist. Bonusopdrachten gaan uit.",
+                    fullGameReset,
+                  )
+                }
               >
-                Spel herstarten
+                Volledige reset
+              </Button>
+              <Button
+                variant="destructive"
+                className="h-12 rounded-2xl"
+                onClick={() =>
+                  guarded("Alle teams én al hun gegevens verwijderen.", deleteAllTeams)
+                }
+              >
+                Alle teams verwijderen
               </Button>
             </div>
           </Section>
+
         </TabsContent>
       </Tabs>
 
