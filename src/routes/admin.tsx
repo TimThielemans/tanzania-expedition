@@ -295,12 +295,14 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       }
     >
       <Tabs defaultValue="answers" className="mt-4">
-        <TabsList className="grid w-full grid-cols-4 rounded-2xl text-xs">
+        <TabsList className="grid w-full grid-cols-5 rounded-2xl text-[11px]">
           <TabsTrigger value="answers">Antwoorden</TabsTrigger>
           <TabsTrigger value="opdrachten">Opdrachten</TabsTrigger>
           <TabsTrigger value="meldingen">Meldingen</TabsTrigger>
+          <TabsTrigger value="kaart">🗺 Kaart</TabsTrigger>
           <TabsTrigger value="beheer">Beheer</TabsTrigger>
         </TabsList>
+
 
         {/* ---------------- antwoorden ---------------- */}
         <TabsContent value="answers" className="mt-4 space-y-4">
