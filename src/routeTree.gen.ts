@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as StatistiekenRouteImport } from './routes/statistieken'
 import { Route as ScorebordRouteImport } from './routes/scorebord'
 import { Route as MeldingenRouteImport } from './routes/meldingen'
+import { Route as InfoRouteImport } from './routes/info'
 import { Route as GalerijRouteImport } from './routes/galerij'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -30,6 +31,11 @@ const ScorebordRoute = ScorebordRouteImport.update({
 const MeldingenRoute = MeldingenRouteImport.update({
   id: '/meldingen',
   path: '/meldingen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InfoRoute = InfoRouteImport.update({
+  id: '/info',
+  path: '/info',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GalerijRoute = GalerijRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/galerij': typeof GalerijRoute
+  '/info': typeof InfoRoute
   '/meldingen': typeof MeldingenRoute
   '/scorebord': typeof ScorebordRoute
   '/statistieken': typeof StatistiekenRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/galerij': typeof GalerijRoute
+  '/info': typeof InfoRoute
   '/meldingen': typeof MeldingenRoute
   '/scorebord': typeof ScorebordRoute
   '/statistieken': typeof StatistiekenRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/galerij': typeof GalerijRoute
+  '/info': typeof InfoRoute
   '/meldingen': typeof MeldingenRoute
   '/scorebord': typeof ScorebordRoute
   '/statistieken': typeof StatistiekenRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/galerij'
+    | '/info'
     | '/meldingen'
     | '/scorebord'
     | '/statistieken'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/galerij'
+    | '/info'
     | '/meldingen'
     | '/scorebord'
     | '/statistieken'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/galerij'
+    | '/info'
     | '/meldingen'
     | '/scorebord'
     | '/statistieken'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   GalerijRoute: typeof GalerijRoute
+  InfoRoute: typeof InfoRoute
   MeldingenRoute: typeof MeldingenRoute
   ScorebordRoute: typeof ScorebordRoute
   StatistiekenRoute: typeof StatistiekenRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/meldingen'
       fullPath: '/meldingen'
       preLoaderRoute: typeof MeldingenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/info': {
+      id: '/info'
+      path: '/info'
+      fullPath: '/info'
+      preLoaderRoute: typeof InfoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/galerij': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   GalerijRoute: GalerijRoute,
+  InfoRoute: InfoRoute,
   MeldingenRoute: MeldingenRoute,
   ScorebordRoute: ScorebordRoute,
   StatistiekenRoute: StatistiekenRoute,

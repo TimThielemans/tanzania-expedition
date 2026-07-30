@@ -44,9 +44,28 @@ Open in Supabase: **SQL Editor → New query**.
    Dit voegt het `active`-veld op opdrachten toe en maakt `notifications`,
    `notification_reads` en `zone_first_unlocks` (meldingencentrum, adminmeldingen
    en "eerste team"-prestaties), inclusief GRANTs, RLS en Realtime.
-3. Nieuwe query → plak de inhoud van `supabase/seed.sql` en klik **Run**.
+3. Nieuwe query → plak de inhoud van `supabase/upgrade2.sql` en klik **Run**.
+   Dit voegt toe: `tagline` op zones, bonusopdrachten op `challenges`
+   (`is_bonus`, `notification_message`, `duration_minutes`, `bonus_active`, `bonus_started_at`),
+   het nieuwe opdrachttype `bonus_photo_upload`, een review-`status`
+   (`pending` / `approved` / `rejected`) op antwoorden, quizantwoorden en foto's,
+   en de tabel `zone_completion_notices` voor de automatische zonecode.
+4. Nieuwe query → plak de inhoud van `supabase/seed.sql` en klik **Run**.
    Dit vult voorbeeldteams, de vier zones (🚵 MTB Adventure, ⛰️ Mt Meru, 🦁 Safari, 🌴 Zanzibar),
    voorbeeldopdrachten, instellingen, het adminwachtwoord en de puntenknoppen (+3, +5, −3, −5).
+
+> **Nakijken en punten:** foto's en open (tekst/numerieke) antwoorden zonder `correct_answer`
+> leveren pas punten op nadat de spelleiding ze in Admin → Antwoorden goedkeurt. Opdrachten
+> met een ingevuld `correct_answer` worden automatisch beoordeeld.
+
+> **Automatische zonecode:** zodra alle opdrachten van een zone voor een team ingezonden én
+> nagekeken zijn, krijgt dat team automatisch een melding met de behaalde punten en — als de
+> volgende zone een wachtwoord heeft — de code. Dit gebeurt één keer per team per zone.
+
+> **Bonusopdrachten:** maak in de Table Editor een rij in `challenges` met `is_bonus = true`,
+> `zone_id = null`, `challenge_type = 'bonus_photo_upload'`, een `notification_message`,
+> `duration_minutes` en `points`. Activeer ze in Admin → Opdrachten; alle teams krijgen dan
+> meteen een melding en de opdracht verschijnt met aftelklok op het startscherm.
 
 > **Zones ontgrendelen:** een zone met een ingevuld `unlock_password` blijft dicht tot de
 > spelleiding de code via Meldingen stuurt. Is het wachtwoord leeg, dan opent de zone
@@ -155,3 +174,34 @@ supabase/
   schema.sql      volledig databaseschema (uitvoeren in SQL Editor)
   seed.sql        voorbeelddata
 ```
+
+
+## Spelinfo-pagina aanpassen
+
+De pagina **Info** (🎲 in de onderste navigatie) bevat een algemene uitleg: het spel, de
+spelregels, het puntensysteem, zones ontgrendelen, bonusopdrachten en hulp.
+
+Die teksten staan in **`src/routes/info.tsx`** in de constante `SECTIONS`. Elke sectie heeft:
+
+```ts
+{
+  id: "regels",          // unieke id (voor het openklappen)
+  icon: "📜",            // emoji voor de titel
+  title: "Spelregels",   // titel van de sectie
+  body: ["Regel 1", "Regel 2"],  // elke regel wordt een bullet
+}
+```
+
+Pas de teksten aan, voeg secties toe of verwijder ze — er is geen databasewijziging nodig.
+
+## Zone-taglines
+
+Elke zone heeft een korte slogan (`tagline`) die op het startscherm en boven de zone
+verschijnt. Aanpassen doe je in de Supabase **Table Editor → zones → tagline**, bijvoorbeeld:
+
+| Zone | Tagline |
+| --- | --- |
+| MTB Adventure | Niet iedereen die dwaalt is verdwaald. |
+| Mt Meru | Samen naar de top. |
+| Safari | Ogen open voor avontuur. |
+| Zanzibar | De finish is een paradijs. |

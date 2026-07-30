@@ -2,7 +2,7 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Lock } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { ChallengeCard } from "@/components/ChallengeCard";
@@ -31,6 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import type { ReviewStatus } from "@/lib/types";
 import { fireConfetti } from "@/lib/confetti";
 import { useTeamSession } from "@/lib/session";
 import { isSupabaseConfigured } from "@/lib/supabase";
@@ -66,15 +67,21 @@ function ZonePage() {
 
   const zone = zones?.find((z) => z.id === zoneId);
   const zoneChallenges = useMemo(
-    () => (challenges ?? []).filter((c) => c.zone_id === zoneId && c.active),
+    () => (challenges ?? []).filter((c) => c.zone_id === zoneId && c.active && !c.is_bonus),
     [challenges, zoneId],
   );
 
   const submittedValue = useMemo(() => {
-    const map = new Map<string, string>();
-    (answers ?? []).forEach((a) => map.set(a.challenge_id, a.answer));
-    (quiz ?? []).forEach((a) => map.set(a.challenge_id, a.selected_option));
-    (photos ?? []).forEach((p) => map.set(p.challenge_id, "foto"));
+    const map = new Map<string, { value: string; status: ReviewStatus; points: number }>();
+    (answers ?? []).forEach((a) =>
+      map.set(a.challenge_id, { value: a.answer, status: a.status, points: a.points_awarded }),
+    );
+    (quiz ?? []).forEach((a) =>
+      map.set(a.challenge_id, { value: a.selected_option, status: a.status, points: a.points_awarded }),
+    );
+    (photos ?? []).forEach((p) =>
+      map.set(p.challenge_id, { value: "foto", status: p.status, points: p.points_awarded }),
+    );
     return map;
   }, [answers, quiz, photos]);
 
@@ -122,15 +129,14 @@ function ZonePage() {
   return (
     <AppShell
       title={zone ? `${zone.icon} ${zone.name}` : "Zone"}
-      subtitle={
-        zone ? `${completedCount}/${zoneChallenges.length} opdrachten voltooid` : undefined
-      }
+      subtitle={zone?.tagline ? <span className="italic">{zone.tagline}</span> : undefined}
       action={
-        <Button asChild variant="secondary" size="sm" className="rounded-full">
-          <Link to="/">
-            <ArrowLeft className="size-4" /> Home
-          </Link>
-        </Button>
+        <div className="rounded-2xl bg-primary-foreground/15 px-3 py-2 text-center">
+          <p className="text-lg font-bold leading-none">
+            {completedCount} / {zoneChallenges.length}
+          </p>
+          <p className="text-[10px] font-semibold uppercase tracking-wide opacity-80">voltooid</p>
+        </div>
       }
     >
       {!zone ? (
@@ -180,7 +186,9 @@ function ZonePage() {
                 challenge={challenge}
                 teamId={session.teamId}
                 submitted={submittedValue.has(challenge.id)}
-                submittedValue={submittedValue.get(challenge.id)}
+                submittedValue={submittedValue.get(challenge.id)?.value}
+                state={submittedValue.get(challenge.id)?.status ?? "todo"}
+                awardedPoints={submittedValue.get(challenge.id)?.points}
                 onSubmitted={handleSubmitted}
               />
             ))}

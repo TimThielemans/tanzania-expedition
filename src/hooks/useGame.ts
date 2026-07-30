@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useId } from "react";
 import {
   fetchChallenges,
+  fetchAllChallenges,
   fetchPhotos,
   fetchPointActions,
   fetchProgress,
@@ -26,6 +27,9 @@ export const useZones = () => useQuery({ queryKey: ["zones"], queryFn: fetchZone
 
 export const useChallenges = () =>
   useQuery({ queryKey: ["challenges"], queryFn: fetchChallenges, enabled });
+
+export const useAllChallenges = () =>
+  useQuery({ queryKey: ["all-challenges"], queryFn: fetchAllChallenges, enabled });
 
 export const useProgress = (teamId?: string) =>
   useQuery({

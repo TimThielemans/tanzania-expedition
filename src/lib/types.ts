@@ -1,4 +1,11 @@
-export type ChallengeType = "text_answer" | "numeric_answer" | "photo_upload" | "multiple_choice";
+export type ChallengeType =
+  | "text_answer"
+  | "numeric_answer"
+  | "photo_upload"
+  | "multiple_choice"
+  | "bonus_photo_upload";
+
+export type ReviewStatus = "pending" | "approved" | "rejected";
 export type UnlockType = "password" | "automatic_after_completion" | "open";
 
 export interface Team {
@@ -15,6 +22,7 @@ export interface Zone {
   id: string;
   name: string;
   description: string | null;
+  tagline: string | null;
   picture: string | null;
   icon: string;
   order_index: number;
@@ -26,7 +34,7 @@ export interface Zone {
 
 export interface Challenge {
   id: string;
-  zone_id: string;
+  zone_id: string | null;
   title: string;
   description: string | null;
   image_url: string | null;
@@ -36,14 +44,20 @@ export interface Challenge {
   points: number;
   sort_order: number;
   active: boolean;
+  is_bonus: boolean;
+  notification_message: string | null;
+  duration_minutes: number;
+  bonus_active: boolean;
+  bonus_started_at: string | null;
 }
 
 export interface Answer {
   id: string;
   team_id: string;
-  zone_id: string;
+  zone_id: string | null;
   challenge_id: string;
   answer: string;
+  status: ReviewStatus;
   points_awarded: number;
   created_at: string;
 }
@@ -51,10 +65,11 @@ export interface Answer {
 export interface QuizAnswer {
   id: string;
   team_id: string;
-  zone_id: string;
+  zone_id: string | null;
   challenge_id: string;
   selected_option: string;
   is_correct: boolean | null;
+  status: ReviewStatus;
   points_awarded: number;
   created_at: string;
 }
@@ -62,10 +77,11 @@ export interface QuizAnswer {
 export interface Photo {
   id: string;
   team_id: string;
-  zone_id: string;
+  zone_id: string | null;
   challenge_id: string;
   photo_url: string;
   storage_path: string | null;
+  status: ReviewStatus;
   points_awarded: number;
   created_at: string;
 }

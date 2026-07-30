@@ -2,14 +2,22 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2, LogOut, Send, Trash2 } from "lucide-react";
+import { Check, Loader2, LogOut, Send, Timer, Trash2, X } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ConfigNotice } from "@/components/ConfigNotice";
+import { StatusPill } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -18,8 +26,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  useAllChallenges,
   useAnswers,
-  useChallenges,
   usePhotos,
   usePointActions,
   useProgress,
@@ -30,12 +38,14 @@ import {
   useZones,
   useNotifications,
 } from "@/hooks/useGame";
-import { addPoints, sortZones, verifyAdminPassword, zoneNeedsPassword } from "@/lib/api";
+import { addPoints, bonusRemainingMs, sortZones, verifyAdminPassword } from "@/lib/api";
 import {
-  createNotification,
-  deleteNotification,
-  setNotificationActive,
-} from "@/lib/notifications";
+  approveSubmission,
+  rejectSubmission,
+  setBonusActive,
+  updateBonusChallenge,
+} from "@/lib/review";
+import { deleteNotification, createNotification, setNotificationActive } from "@/lib/notifications";
 import { clearAdminSession, saveAdminSession, useAdminSession } from "@/lib/admin-session";
 import {
   clearAllAnswers,
@@ -47,16 +57,17 @@ import {
   setChallengeActive,
 } from "@/lib/admin";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import type { Challenge, ReviewStatus } from "@/lib/types";
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
   head: () => ({
     meta: [
       { title: "Admin — BOW in Tanzania" },
-      { name: "description", content: "Beheer teams, punten, antwoorden en zones van de expeditie." },
+      { name: "description", content: "Beheer teams, punten, antwoorden en opdrachten van de expeditie." },
       { name: "robots", content: "noindex" },
       { property: "og:title", content: "Admin — BOW in Tanzania" },
-      { property: "og:description", content: "Beheer teams, punten, antwoorden en zones." },
+      { property: "og:description", content: "Beheer teams, punten, antwoorden en opdrachten." },
     ],
   }),
   component: AdminPage,
@@ -95,12 +106,7 @@ function AdminPage() {
             placeholder="Adminwachtwoord"
             className="h-12 rounded-2xl text-base"
           />
-          <Button
-            size="lg"
-            className="h-12 w-full rounded-2xl"
-            disabled={busy || !password}
-            onClick={login}
-          >
+          <Button size="lg" className="h-12 w-full rounded-2xl" disabled={busy || !password} onClick={login}>
             {busy ? <Loader2 className="size-4 animate-spin" /> : "Inloggen"}
           </Button>
         </div>
@@ -111,12 +117,27 @@ function AdminPage() {
   return <AdminDashboard onLogout={clearAdminSession} />;
 }
 
+/* ------------------------------ review-item ------------------------------ */
+
+interface ReviewItem {
+  table: "answers" | "quiz_answers" | "photos";
+  id: string;
+  teamId: string;
+  zoneId: string | null;
+  challengeId: string;
+  value: string;
+  photoUrl?: string;
+  status: ReviewStatus;
+  points: number;
+  createdAt: string;
+}
+
 function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const queryClient = useQueryClient();
   const { data: ranking } = useRanking();
   const { data: teams } = useTeams();
   const { data: zones } = useZones();
-  const { data: challenges } = useChallenges();
+  const { data: challenges } = useAllChallenges();
   const { data: actions } = usePointActions();
   const { data: answers } = useAnswers();
   const { data: quiz } = useQuizAnswers();
@@ -136,46 +157,100 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [noteTitle, setNoteTitle] = useState("");
   const [noteBody, setNoteBody] = useState("");
   const [noteTarget, setNoteTarget] = useState("all");
+  const [queue, setQueue] = useState<{ items: ReviewItem[]; index: number } | null>(null);
 
   const refresh = () => queryClient.invalidateQueries();
   const teamName = (id: string) => teams?.find((t) => t.id === id)?.name ?? id;
-  const challengeTitle = (id: string) => challenges?.find((c) => c.id === id)?.title ?? id;
-  const zoneName = (id: string) => zones?.find((z) => z.id === id)?.name ?? id;
+  const challenge = (id: string) => challenges?.find((c) => c.id === id);
+  const challengeTitle = (id: string) => challenge(id)?.title ?? id;
+  const zoneName = (id: string | null) => (id ? (zones?.find((z) => z.id === id)?.name ?? id) : "Bonus");
   const fmt = (iso: string) => new Date(iso).toLocaleString("nl-BE");
 
-  const match = (row: { team_id: string; zone_id: string }) =>
-    (teamFilter === "all" || row.team_id === teamFilter) &&
-    (zoneFilter === "all" || row.zone_id === zoneFilter);
-
-  const filteredAnswers = useMemo(() => (answers ?? []).filter(match), [answers, teamFilter, zoneFilter]);
-  const filteredQuiz = useMemo(() => (quiz ?? []).filter(match), [quiz, teamFilter, zoneFilter]);
-  const filteredPhotos = useMemo(() => (photos ?? []).filter(match), [photos, teamFilter, zoneFilter]);
-
   const sortedZones = sortZones(zones ?? []);
-  const nextZone =
-    zoneFilter === "all"
-      ? null
-      : (sortedZones[sortedZones.findIndex((z) => z.id === zoneFilter) + 1] ?? null);
+  const bonusChallenges = (challenges ?? []).filter((c) => c.is_bonus);
+  const regularChallenges = (challenges ?? []).filter((c) => !c.is_bonus);
 
-  async function sendNextZoneCode() {
-    if (!nextZone || teamFilter === "all") return;
-    if (!zoneNeedsPassword(nextZone)) {
-      toast.info(`${nextZone.name} heeft geen wachtwoord en opent automatisch.`);
-      return;
-    }
+  const items: ReviewItem[] = useMemo(
+    () => [
+      ...(answers ?? []).map((a) => ({
+        table: "answers" as const,
+        id: a.id,
+        teamId: a.team_id,
+        zoneId: a.zone_id,
+        challengeId: a.challenge_id,
+        value: a.answer,
+        status: a.status,
+        points: a.points_awarded,
+        createdAt: a.created_at,
+      })),
+      ...(quiz ?? []).map((q) => ({
+        table: "quiz_answers" as const,
+        id: q.id,
+        teamId: q.team_id,
+        zoneId: q.zone_id,
+        challengeId: q.challenge_id,
+        value: q.selected_option,
+        status: q.status,
+        points: q.points_awarded,
+        createdAt: q.created_at,
+      })),
+    ],
+    [answers, quiz],
+  );
+
+  const photoItems: ReviewItem[] = useMemo(
+    () =>
+      (photos ?? []).map((p) => ({
+        table: "photos" as const,
+        id: p.id,
+        teamId: p.team_id,
+        zoneId: p.zone_id,
+        challengeId: p.challenge_id,
+        value: "foto",
+        photoUrl: p.photo_url,
+        status: p.status,
+        points: p.points_awarded,
+        createdAt: p.created_at,
+      })),
+    [photos],
+  );
+
+  const matches = (row: ReviewItem) =>
+    (teamFilter === "all" || row.teamId === teamFilter) &&
+    (zoneFilter === "all" || row.zoneId === zoneFilter);
+
+  const filteredItems = items.filter(matches);
+  const filteredPhotos = photoItems.filter(matches);
+  const pendingAnswers = filteredItems.filter((r) => r.status === "pending");
+  const pendingPhotos = filteredPhotos.filter((r) => r.status === "pending");
+
+  async function decide(item: ReviewItem, approve: boolean) {
+    const input = {
+      table: item.table,
+      id: item.id,
+      teamId: item.teamId,
+      zoneId: item.zoneId,
+      currentPoints: item.points,
+      challenge: challenge(item.challengeId),
+    };
     try {
-      await createNotification({
-        title: "📢 Zone ontgrendeld",
-        body: `Gebruik deze code voor ${nextZone.name}:\n\n${(nextZone.unlock_password ?? "").trim()}`,
-        audience: "team",
-        teamId: teamFilter,
-        kind: "zone_code",
-      });
-      toast.success(`Code voor ${nextZone.name} verstuurd naar ${teamName(teamFilter)}.`);
+      if (approve) await approveSubmission(input);
+      else await rejectSubmission(input);
+      toast.success(approve ? "Goedgekeurd." : "Afgekeurd.");
       await refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Versturen mislukt.");
+      toast.error(error instanceof Error ? error.message : "Beoordelen mislukt.");
     }
+  }
+
+  async function decideInQueue(approve: boolean) {
+    if (!queue) return;
+    const item = queue.items[queue.index];
+    if (!item) return;
+    await decide(item, approve);
+    const next = queue.index + 1;
+    if (next >= queue.items.length) setQueue(null);
+    else setQueue({ ...queue, index: next });
   }
 
   async function sendNotification() {
@@ -207,6 +282,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     }
   }
 
+  const current = queue?.items[queue.index];
+
   return (
     <AppShell
       title="Admin"
@@ -217,58 +294,13 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         </Button>
       }
     >
-      <Tabs defaultValue="scores" className="mt-4">
-        <TabsList className="grid w-full grid-cols-5 rounded-2xl text-xs">
-          <TabsTrigger value="scores">Punten</TabsTrigger>
+      <Tabs defaultValue="answers" className="mt-4">
+        <TabsList className="grid w-full grid-cols-4 rounded-2xl text-xs">
           <TabsTrigger value="answers">Antwoorden</TabsTrigger>
-          <TabsTrigger value="zones">Zones</TabsTrigger>
+          <TabsTrigger value="opdrachten">Opdrachten</TabsTrigger>
           <TabsTrigger value="meldingen">Meldingen</TabsTrigger>
           <TabsTrigger value="beheer">Beheer</TabsTrigger>
         </TabsList>
-
-        {/* ---------------- punten ---------------- */}
-        <TabsContent value="scores" className="mt-4 space-y-3">
-          {(ranking ?? []).map((row) => (
-            <div key={row.team.id} className="rounded-3xl border border-border bg-card p-4 shadow-card">
-              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-                <div className="min-w-0">
-                  <p className="truncate text-lg font-semibold">
-                    #{row.rank} {row.team.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Laatste punt: {fmt(row.lastScoredAt)}</p>
-                </div>
-                <p className="shrink-0 text-3xl font-bold text-primary">{row.points}</p>
-              </div>
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                {(actions ?? []).map((action) => (
-                  <Button
-                    key={action.id}
-                    size="lg"
-                    variant={action.points >= 0 ? "default" : "destructive"}
-                    className="h-12 min-w-16 flex-1 rounded-2xl text-base"
-                    onClick={async () => {
-                      await addPoints(row.team.id, action.points);
-                      await refresh();
-                    }}
-                  >
-                    {action.label}
-                  </Button>
-                ))}
-              </div>
-
-              <div className="mt-3">
-                <Button
-                  variant="secondary"
-                  className="h-11 w-full rounded-2xl"
-                  onClick={() => guarded(`Reset voortgang van ${row.team.name}.`, () => resetTeamProgress(row.team.id))}
-                >
-                  Reset team
-                </Button>
-              </div>
-            </div>
-          ))}
-        </TabsContent>
 
         {/* ---------------- antwoorden ---------------- */}
         <TabsContent value="answers" className="mt-4 space-y-4">
@@ -300,81 +332,182 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                   ))}
                 </SelectContent>
               </Select>
-              {teamFilter !== "all" && zoneFilter !== "all" ? (
-                <Button className="h-12 rounded-2xl" disabled={!nextZone} onClick={sendNextZoneCode}>
-                  <Send className="size-4" />
-                  {nextZone ? `Code volgende zone sturen (${nextZone.name})` : "Geen volgende zone"}
-                </Button>
+            </div>
+          </Section>
+
+          {teamFilter !== "all" ? (
+            <Section title={`Punten — ${teamName(teamFilter)}`}>
+              <p className="text-sm text-muted-foreground">
+                Huidige stand:{" "}
+                <span className="font-bold text-primary">
+                  {ranking?.find((r) => r.team.id === teamFilter)?.points ?? 0} pt
+                </span>
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(actions ?? []).map((action) => (
+                  <Button
+                    key={action.id}
+                    size="lg"
+                    variant={action.points >= 0 ? "default" : "destructive"}
+                    className="h-12 min-w-16 flex-1 rounded-2xl text-base"
+                    onClick={async () => {
+                      await addPoints(teamFilter, action.points);
+                      await refresh();
+                    }}
+                  >
+                    {action.label}
+                  </Button>
+                ))}
+              </div>
+            </Section>
+          ) : null}
+
+          <Section title="Nakijken">
+            <div className="grid gap-2">
+              <Button
+                className="h-12 rounded-2xl"
+                disabled={pendingAnswers.length === 0}
+                onClick={() => setQueue({ items: pendingAnswers, index: 0 })}
+              >
+                Antwoorden nakijken ({pendingAnswers.length})
+              </Button>
+              <Button
+                variant="secondary"
+                className="h-12 rounded-2xl"
+                disabled={pendingPhotos.length === 0}
+                onClick={() => setQueue({ items: pendingPhotos, index: 0 })}
+              >
+                Foto's nakijken ({pendingPhotos.length})
+              </Button>
+            </div>
+          </Section>
+
+          <Section title={`Antwoorden (${filteredItems.length})`}>
+            {filteredItems.map((row) => (
+              <ReviewRow
+                key={row.id}
+                title={`${teamName(row.teamId)} — ${challengeTitle(row.challengeId)}`}
+                subtitle={`${row.value} · ${zoneName(row.zoneId)} · ${fmt(row.createdAt)}`}
+                status={row.status}
+                onApprove={() => decide(row, true)}
+                onReject={() => decide(row, false)}
+              />
+            ))}
+            {filteredItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Geen antwoorden.</p>
+            ) : null}
+          </Section>
+
+          <Section title={`Foto's (${filteredPhotos.length})`}>
+            <div className="grid grid-cols-2 gap-3">
+              {filteredPhotos.map((row) => (
+                <div key={row.id} className="space-y-1 rounded-2xl bg-muted p-2">
+                  <a href={row.photoUrl} target="_blank" rel="noreferrer">
+                    <img
+                      src={row.photoUrl}
+                      alt={`${teamName(row.teamId)} — ${challengeTitle(row.challengeId)}`}
+                      loading="lazy"
+                      className="aspect-square w-full rounded-xl object-cover"
+                    />
+                  </a>
+                  <p className="truncate text-[11px] font-semibold">{teamName(row.teamId)}</p>
+                  <p className="truncate text-[11px] text-muted-foreground">
+                    {challengeTitle(row.challengeId)}
+                  </p>
+                  <StatusPill status={row.status} />
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      className="h-9 flex-1 rounded-xl"
+                      onClick={() => decide(row, true)}
+                      aria-label="Goedkeuren"
+                    >
+                      <Check className="size-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-9 flex-1 rounded-xl"
+                      onClick={() => decide(row, false)}
+                      aria-label="Afkeuren"
+                    >
+                      <X className="size-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {filteredPhotos.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Geen foto's.</p>
+            ) : null}
+          </Section>
+        </TabsContent>
+
+        {/* ---------------- opdrachten ---------------- */}
+        <TabsContent value="opdrachten" className="mt-4 space-y-4">
+          <Section title="Bonusopdrachten">
+            <p className="text-sm text-muted-foreground">
+              Activeren stuurt meteen een melding naar alle teams en start de klok.
+            </p>
+            <div className="mt-2 space-y-3">
+              {bonusChallenges.map((c) => (
+                <BonusRow key={c.id} challenge={c} onDone={refresh} />
+              ))}
+              {bonusChallenges.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Nog geen bonusopdrachten in de database.
+                </p>
               ) : null}
             </div>
           </Section>
 
-          <Section title={`Antwoorden (${filteredAnswers.length})`}>
-            {filteredAnswers.map((a) => (
-              <Row
-                key={a.id}
-                title={`${teamName(a.team_id)} — ${challengeTitle(a.challenge_id)}`}
-                subtitle={`${a.answer} · ${fmt(a.created_at)}`}
-              />
-            ))}
-          </Section>
-
-          <Section title={`Quizantwoorden (${filteredQuiz.length})`}>
-            {filteredQuiz.map((q) => (
-              <Row
-                key={q.id}
-                title={`${teamName(q.team_id)} — ${challengeTitle(q.challenge_id)}`}
-                subtitle={`${q.selected_option} ${q.is_correct === null ? "" : q.is_correct ? "✅" : "❌"} · ${fmt(q.created_at)}`}
-              />
-            ))}
-          </Section>
-
-          <Section title={`Foto's (${filteredPhotos.length})`}>
-            <div className="grid grid-cols-3 gap-2">
-              {filteredPhotos.map((p) => (
-                <a key={p.id} href={p.photo_url} target="_blank" rel="noreferrer">
-                  <img
-                    src={p.photo_url}
-                    alt={teamName(p.team_id)}
-                    loading="lazy"
-                    className="aspect-square w-full rounded-2xl object-cover"
-                  />
-                  <span className="block truncate text-[11px]">{teamName(p.team_id)}</span>
-                </a>
-              ))}
-            </div>
-          </Section>
-        </TabsContent>
-
-        {/* ---------------- zones ---------------- */}
-        <TabsContent value="zones" className="mt-4 space-y-4">
-          <div className="flex gap-2">
-            <Button className="h-12 flex-1 rounded-2xl" onClick={() => guarded("Alle zones openen.", () => setAllZones(true))}>
-              Alles ontgrendelen
-            </Button>
-            <Button
-              variant="secondary"
-              className="h-12 flex-1 rounded-2xl"
-              onClick={() => guarded("Alle zones sluiten.", () => setAllZones(false))}
-            >
-              Alles vergrendelen
-            </Button>
-          </div>
+          {(teams ?? []).map((team) => {
+            const rows = (progress ?? []).filter((p) => p.team_id === team.id);
+            const doneIds = new Set([
+              ...(answers ?? []).filter((a) => a.team_id === team.id).map((a) => a.challenge_id),
+              ...(quiz ?? []).filter((a) => a.team_id === team.id).map((a) => a.challenge_id),
+              ...(photos ?? []).filter((p) => p.team_id === team.id).map((p) => p.challenge_id),
+            ]);
+            return (
+              <Section key={team.id} title={team.name}>
+                <p className="text-sm text-muted-foreground">
+                  Opdrachten voltooid: {doneIds.size}/{regularChallenges.filter((c) => c.active).length}
+                </p>
+                <ul className="mt-2 space-y-1 text-sm">
+                  {rows.map((p) => (
+                    <li key={p.id} className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 truncate">{zoneName(p.zone_id)}</span>
+                      <span className="shrink-0">
+                        {p.unlocked ? "🔑" : "🔒"} {p.completed ? "✅" : ""}
+                      </span>
+                    </li>
+                  ))}
+                  {rows.length === 0 ? <li className="text-muted-foreground">Geen voortgang.</li> : null}
+                </ul>
+              </Section>
+            );
+          })}
 
           <Section title="Opdrachten aan/uit">
             <p className="text-sm text-muted-foreground">
-              Uitgeschakelde opdrachten verdwijnen meteen uit de zone bij de teams.
+              Uitgeschakelde opdrachten verdwijnen meteen bij de teams, maar blijven hier zichtbaar.
             </p>
             <div className="mt-2 space-y-3">
               {sortedZones.map((zone) => (
                 <div key={zone.id}>
                   <p className="text-sm font-semibold">{zone.name}</p>
                   <ul className="mt-1 space-y-1">
-                    {(challenges ?? [])
+                    {regularChallenges
                       .filter((c) => c.zone_id === zone.id)
                       .map((c) => (
-                        <li key={c.id} className="flex items-center justify-between gap-3 rounded-2xl bg-muted px-3 py-2">
-                          <span className="min-w-0 truncate text-sm">{c.title}</span>
+                        <li
+                          key={c.id}
+                          className="flex items-center justify-between gap-3 rounded-2xl bg-muted px-3 py-2"
+                        >
+                          <span className="min-w-0 truncate text-sm">
+                            {c.active ? "" : "💤 "}
+                            {c.title}
+                          </span>
                           <Switch
                             checked={c.active}
                             aria-label={`${c.title} activeren`}
@@ -391,32 +524,21 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             </div>
           </Section>
 
-          {(teams ?? []).map((team) => {
-            const rows = (progress ?? []).filter((p) => p.team_id === team.id);
-            const doneIds = new Set([
-              ...(answers ?? []).filter((a) => a.team_id === team.id).map((a) => a.challenge_id),
-              ...(quiz ?? []).filter((a) => a.team_id === team.id).map((a) => a.challenge_id),
-              ...(photos ?? []).filter((p) => p.team_id === team.id).map((p) => p.challenge_id),
-            ]);
-            return (
-              <Section key={team.id} title={team.name}>
-                <p className="text-sm text-muted-foreground">
-                  Opdrachten voltooid: {doneIds.size}/{challenges?.length ?? 0}
-                </p>
-                <ul className="mt-2 space-y-1 text-sm">
-                  {rows.map((p) => (
-                    <li key={p.id} className="flex items-center justify-between gap-2">
-                      <span className="min-w-0 truncate">{zoneName(p.zone_id)}</span>
-                      <span className="shrink-0">
-                        {p.unlocked ? "🔑" : "🔒"} {p.completed ? "✅" : ""}
-                      </span>
-                    </li>
-                  ))}
-                  {rows.length === 0 ? <li className="text-muted-foreground">Geen voortgang.</li> : null}
-                </ul>
-              </Section>
-            );
-          })}
+          <div className="flex gap-2">
+            <Button
+              className="h-12 flex-1 rounded-2xl"
+              onClick={() => guarded("Alle zones openen.", () => setAllZones(true))}
+            >
+              Alles ontgrendelen
+            </Button>
+            <Button
+              variant="secondary"
+              className="h-12 flex-1 rounded-2xl"
+              onClick={() => guarded("Alle zones sluiten.", () => setAllZones(false))}
+            >
+              Alles vergrendelen
+            </Button>
+          </div>
         </TabsContent>
 
         {/* ---------------- meldingen ---------------- */}
@@ -461,7 +583,9 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">{n.title}</p>
-                    {n.body ? <p className="whitespace-pre-line text-xs text-muted-foreground">{n.body}</p> : null}
+                    {n.body ? (
+                      <p className="whitespace-pre-line text-xs text-muted-foreground">{n.body}</p>
+                    ) : null}
                     <p className="mt-1 text-[11px] text-muted-foreground">
                       {n.audience === "all"
                         ? "Alle teams"
@@ -501,32 +625,42 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 
         {/* ---------------- beheer ---------------- */}
         <TabsContent value="beheer" className="mt-4 space-y-3">
+          <Section title="Teams resetten">
+            <div className="grid gap-2">
+              {(teams ?? []).map((team) => (
+                <Button
+                  key={team.id}
+                  variant="secondary"
+                  className="h-11 rounded-2xl"
+                  onClick={() =>
+                    guarded(`Reset voortgang van ${team.name}.`, () => resetTeamProgress(team.id))
+                  }
+                >
+                  Reset {team.name}
+                </Button>
+              ))}
+            </div>
+          </Section>
+
           <Section title="Exporteren">
             <div className="grid gap-2">
               <Button
                 variant="secondary"
                 className="h-12 rounded-2xl"
                 onClick={() =>
-                  downloadCsv("antwoorden.csv", [
-                    ...(answers ?? []).map((a) => ({
-                      type: "antwoord",
-                      team: teamName(a.team_id),
-                      zone: zoneName(a.zone_id),
-                      opdracht: challengeTitle(a.challenge_id),
-                      antwoord: a.answer,
-                      punten: a.points_awarded,
-                      tijdstip: a.created_at,
+                  downloadCsv(
+                    "antwoorden.csv",
+                    items.map((row) => ({
+                      type: row.table,
+                      team: teamName(row.teamId),
+                      zone: zoneName(row.zoneId),
+                      opdracht: challengeTitle(row.challengeId),
+                      antwoord: row.value,
+                      status: row.status,
+                      punten: row.points,
+                      tijdstip: row.createdAt,
                     })),
-                    ...(quiz ?? []).map((q) => ({
-                      type: "quiz",
-                      team: teamName(q.team_id),
-                      zone: zoneName(q.zone_id),
-                      opdracht: challengeTitle(q.challenge_id),
-                      antwoord: q.selected_option,
-                      punten: q.points_awarded,
-                      tijdstip: q.created_at,
-                    })),
-                  ])
+                  )
                 }
               >
                 Antwoorden → CSV
@@ -554,13 +688,14 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 onClick={() =>
                   downloadCsv(
                     "fotos.csv",
-                    (photos ?? []).map((p) => ({
-                      team: teamName(p.team_id),
-                      zone: zoneName(p.zone_id),
-                      opdracht: challengeTitle(p.challenge_id),
-                      url: p.photo_url,
-                      pad: p.storage_path,
-                      tijdstip: p.created_at,
+                    photoItems.map((p) => ({
+                      team: teamName(p.teamId),
+                      zone: zoneName(p.zoneId),
+                      opdracht: challengeTitle(p.challengeId),
+                      status: p.status,
+                      punten: p.points,
+                      url: p.photoUrl,
+                      tijdstip: p.createdAt,
                     })),
                   )
                 }
@@ -597,7 +732,128 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
           </Section>
         </TabsContent>
       </Tabs>
+
+      {/* ---------------- review-modal ---------------- */}
+      <Dialog open={current !== undefined} onOpenChange={(open) => !open && setQueue(null)}>
+        <DialogContent className="max-w-sm rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">
+              {current ? challengeTitle(current.challengeId) : ""}
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              {current ? `${teamName(current.teamId)} · ${zoneName(current.zoneId)}` : ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          {current?.photoUrl ? (
+            <img
+              src={current.photoUrl}
+              alt="Inzending"
+              className="max-h-80 w-full rounded-2xl object-contain"
+            />
+          ) : (
+            <p className="whitespace-pre-line rounded-2xl bg-muted p-4 text-lg font-semibold">
+              {current?.value}
+            </p>
+          )}
+
+          <p className="text-center text-xs text-muted-foreground">
+            {queue ? `${queue.index + 1} van ${queue.items.length}` : ""} ·{" "}
+            {challenge(current?.challengeId ?? "")?.points ?? 0} punten
+          </p>
+
+          <div className="grid grid-cols-2 gap-2">
+            <Button className="h-12 rounded-2xl" onClick={() => decideInQueue(true)}>
+              <Check className="size-4" /> Goedkeuren
+            </Button>
+            <Button variant="destructive" className="h-12 rounded-2xl" onClick={() => decideInQueue(false)}>
+              <X className="size-4" /> Afkeuren
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppShell>
+  );
+}
+
+/* ------------------------------ onderdelen ------------------------------ */
+
+function BonusRow({ challenge, onDone }: { challenge: Challenge; onDone: () => void }) {
+  const [minutes, setMinutes] = useState(String(challenge.duration_minutes));
+  const [points, setPoints] = useState(String(challenge.points));
+  const [busy, setBusy] = useState(false);
+  const remaining = bonusRemainingMs(challenge);
+
+  async function save() {
+    setBusy(true);
+    try {
+      await updateBonusChallenge(challenge.id, {
+        duration_minutes: Math.max(1, Number(minutes) || challenge.duration_minutes),
+        points: Number(points) || challenge.points,
+      });
+      toast.success("Opgeslagen.");
+      onDone();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Opslaan mislukt.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2 rounded-2xl bg-muted p-3">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold">{challenge.title}</p>
+          {challenge.description ? (
+            <p className="truncate text-xs text-muted-foreground">{challenge.description}</p>
+          ) : null}
+          {remaining > 0 ? (
+            <p className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-primary">
+              <Timer className="size-3.5" /> nog {Math.ceil(remaining / 60000)} min
+            </p>
+          ) : null}
+        </div>
+        <Switch
+          checked={challenge.bonus_active}
+          aria-label={`${challenge.title} activeren`}
+          onCheckedChange={async (checked) => {
+            try {
+              await setBonusActive(challenge, checked);
+              toast.success(checked ? "Bonusopdracht gestart." : "Bonusopdracht gestopt.");
+              onDone();
+            } catch (error) {
+              toast.error(error instanceof Error ? error.message : "Actie mislukt.");
+            }
+          }}
+        />
+      </div>
+      <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
+        <label className="text-xs font-semibold">
+          Minuten
+          <Input
+            type="number"
+            inputMode="numeric"
+            value={minutes}
+            onChange={(e) => setMinutes(e.target.value)}
+            className="h-10 rounded-xl"
+          />
+        </label>
+        <label className="text-xs font-semibold">
+          Punten
+          <Input
+            type="number"
+            inputMode="numeric"
+            value={points}
+            onChange={(e) => setPoints(e.target.value)}
+            className="h-10 rounded-xl"
+          />
+        </label>
+        <Button className="mt-4 h-10 rounded-xl" disabled={busy} onClick={save}>
+          {busy ? <Loader2 className="size-4 animate-spin" /> : "Opslaan"}
+        </Button>
+      </div>
+    </div>
   );
 }
 
@@ -610,11 +866,36 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Row({ title, subtitle }: { title: string; subtitle: string }) {
+function ReviewRow({
+  title,
+  subtitle,
+  status,
+  onApprove,
+  onReject,
+}: {
+  title: string;
+  subtitle: string;
+  status: ReviewStatus;
+  onApprove: () => void;
+  onReject: () => void;
+}) {
   return (
     <div className="rounded-2xl bg-muted px-3 py-2">
-      <p className="truncate text-sm font-semibold">{title}</p>
-      <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold">{title}</p>
+          <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
+        </div>
+        <StatusPill status={status} />
+      </div>
+      <div className="mt-2 flex gap-2">
+        <Button size="sm" className="h-9 flex-1 rounded-xl" onClick={onApprove}>
+          <Check className="size-4" /> Goed
+        </Button>
+        <Button size="sm" variant="destructive" className="h-9 flex-1 rounded-xl" onClick={onReject}>
+          <X className="size-4" /> Af
+        </Button>
+      </div>
     </div>
   );
 }

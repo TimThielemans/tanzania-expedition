@@ -1,12 +1,21 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { LogOut, Loader2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { ZoneCard } from "@/components/ZoneCard";
+import { BonusChallengeCard } from "@/components/BonusChallengeCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -21,13 +30,24 @@ import {
   useProgress,
   useQuizAnswers,
   useRanking,
+  useRealtime,
   useSettings,
   useTeams,
   useZones,
 } from "@/hooks/useGame";
-import { loginTeam, unlockedZoneIds } from "@/lib/api";
+import {
+  activeBonusChallenges,
+  loginTeam,
+  unlockZoneWithPassword,
+  unlockedZoneIds,
+  zoneNeedsPassword,
+} from "@/lib/api";
+import { fireConfetti } from "@/lib/confetti";
+import type { ReviewStatus, Zone } from "@/lib/types";
 import { clearSession, saveSession, useTeamSession } from "@/lib/session";
 import { isSupabaseConfigured } from "@/lib/supabase";
+
+const MEDALS = ["🥇", "🥈", "🥉"];
 
 export const Route = createFileRoute("/")({
   ssr: false,
@@ -137,6 +157,8 @@ function LoginScreen() {
 /* -------------------------------- home -------------------------------- */
 
 function HomeScreen({ teamId }: { teamId: string }) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: settings } = useSettings();
   const { data: zones } = useZones();
   const { data: challenges } = useChallenges();
@@ -146,18 +168,49 @@ function HomeScreen({ teamId }: { teamId: string }) {
   const { data: quiz } = useQuizAnswers(teamId);
   const { data: photos } = usePhotos(teamId);
 
-  const done = useMemo(
-    () =>
-      new Set<string>([
-        ...(answers ?? []).map((a) => a.challenge_id),
-        ...(quiz ?? []).map((a) => a.challenge_id),
-        ...(photos ?? []).map((p) => p.challenge_id),
-      ]),
-    [answers, quiz, photos],
-  );
+  const [lockedZone, setLockedZone] = useState<Zone | null>(null);
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [tick, setTick] = useState(0);
+
+  useRealtime(["scores", "challenges", "team_progress", "notifications"], () => {
+    void queryClient.invalidateQueries();
+  });
+
+  const submissions = useMemo(() => {
+    const map = new Map<string, { status: ReviewStatus; points: number }>();
+    (answers ?? []).forEach((a) => map.set(a.challenge_id, { status: a.status, points: a.points_awarded }));
+    (quiz ?? []).forEach((a) => map.set(a.challenge_id, { status: a.status, points: a.points_awarded }));
+    (photos ?? []).forEach((p) => map.set(p.challenge_id, { status: p.status, points: p.points_awarded }));
+    return map;
+  }, [answers, quiz, photos]);
 
   const me = ranking?.find((r) => r.team.id === teamId);
   const unlockedIds = unlockedZoneIds(zones ?? [], progress ?? []);
+  const bonus = useMemo(
+    () => activeBonusChallenges(challenges ?? []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [challenges, tick],
+  );
+
+  async function handleUnlock() {
+    if (!lockedZone) return;
+    setBusy(true);
+    try {
+      await unlockZoneWithPassword(teamId, lockedZone, password);
+      fireConfetti();
+      toast.success(`${lockedZone.name} ontgrendeld!`);
+      const id = lockedZone.id;
+      setLockedZone(null);
+      setPassword("");
+      await queryClient.invalidateQueries();
+      void navigate({ to: "/zone/$zoneId", params: { zoneId: id } });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Ontgrendelen mislukt.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <AppShell
@@ -177,23 +230,60 @@ function HomeScreen({ teamId }: { teamId: string }) {
         </Button>
       }
     >
-      <section className="grid grid-cols-3 gap-3 rounded-3xl border border-border bg-card p-4 shadow-card">
-        <Stat label="Team" value={me?.team.name ?? "—"} />
-        <Stat label="Punten" value={String(me?.points ?? 0)} />
-        <Stat label="Plaats" value={me ? `#${me.rank}` : "—"} />
-      </section>
+      <Link
+        to="/scorebord"
+        className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-3xl border border-border bg-card p-4 shadow-card transition-transform active:scale-[0.99]"
+      >
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Team</p>
+          <p className="truncate text-xl font-bold">{me?.team.name ?? "—"}</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 rounded-2xl bg-secondary px-3 py-2">
+          {me && me.rank <= 3 ? <span className="text-xl">{MEDALS[me.rank - 1]}</span> : null}
+          <span className="text-2xl font-bold text-primary">{me?.points ?? 0}</span>
+          <span className="text-xs font-semibold text-muted-foreground">pt</span>
+        </div>
+      </Link>
+
+      {bonus.length > 0 ? (
+        <section className="mt-6 space-y-3">
+          <h2 className="text-2xl">Bonusopdrachten</h2>
+          {bonus.map((challenge) => (
+            <BonusChallengeCard
+              key={challenge.id}
+              challenge={challenge}
+              teamId={teamId}
+              submitted={submissions.has(challenge.id)}
+              status={submissions.get(challenge.id)?.status}
+              awardedPoints={submissions.get(challenge.id)?.points}
+              onSubmitted={() => queryClient.invalidateQueries()}
+              onExpired={() => setTick((t) => t + 1)}
+            />
+          ))}
+        </section>
+      ) : null}
 
       <h2 className="mt-6 text-2xl">Zones</h2>
       <div className="mt-3 space-y-3">
         {(zones ?? []).map((zone) => {
-          const zoneChallenges = (challenges ?? []).filter((c) => c.zone_id === zone.id && c.active);
+          const zoneChallenges = (challenges ?? []).filter(
+            (c) => c.zone_id === zone.id && c.active && !c.is_bonus,
+          );
+          const unlocked = unlockedIds.has(zone.id);
           return (
             <ZoneCard
               key={zone.id}
               zone={zone}
-              unlocked={unlockedIds.has(zone.id)}
-              completed={zoneChallenges.filter((c) => done.has(c.id)).length}
+              unlocked={unlocked}
+              completed={zoneChallenges.filter((c) => submissions.has(c.id)).length}
               total={zoneChallenges.length}
+              onClick={() => {
+                if (unlocked) void navigate({ to: "/zone/$zoneId", params: { zoneId: zone.id } });
+                else {
+                  setPassword("");
+                  setLockedZone(zone);
+                }
+              }}
             />
           );
         })}
@@ -201,17 +291,40 @@ function HomeScreen({ teamId }: { teamId: string }) {
           <p className="text-sm text-muted-foreground">Er zijn nog geen zones aangemaakt.</p>
         ) : null}
       </div>
-    </AppShell>
-  );
-}
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0 text-center">
-      <p className="truncate text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
-      <p className="truncate text-xl font-bold">{value}</p>
-    </div>
+      <Dialog open={lockedZone !== null} onOpenChange={(open) => !open && setLockedZone(null)}>
+        <DialogContent className="max-w-sm rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">
+              {lockedZone?.icon} {lockedZone?.name}
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              {lockedZone && zoneNeedsPassword(lockedZone)
+                ? "Vul het zonewachtwoord in dat je van de spelleiding kreeg."
+                : "Deze zone opent automatisch zodra jullie de vorige zone volledig hebben afgerond."}
+            </DialogDescription>
+          </DialogHeader>
+          {lockedZone && zoneNeedsPassword(lockedZone) ? (
+            <div className="space-y-3">
+              <Input
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && password && handleUnlock()}
+                placeholder="Zonewachtwoord"
+                className="h-12 rounded-2xl text-base"
+              />
+              <Button
+                size="lg"
+                className="h-12 w-full rounded-2xl text-base"
+                disabled={busy || !password}
+                onClick={handleUnlock}
+              >
+                {busy ? <Loader2 className="size-4 animate-spin" /> : "Ontgrendelen"}
+              </Button>
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
+    </AppShell>
   );
 }

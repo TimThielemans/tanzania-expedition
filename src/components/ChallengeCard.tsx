@@ -1,10 +1,11 @@
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Camera, Check, Loader2 } from "lucide-react";
+import { Camera, ImageIcon, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageLightbox } from "@/components/ImageLightbox";
+import { PointsBadge, type ChallengeState } from "@/components/StatusBadge";
 import { OfflineQueuedError, submitQuizAnswer, submitTextAnswer, uploadPhoto } from "@/lib/api";
 import type { Challenge } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -14,21 +15,34 @@ interface ChallengeCardProps {
   teamId: string;
   submitted: boolean;
   submittedValue?: string;
+  state?: ChallengeState;
+  awardedPoints?: number;
   onSubmitted: () => void;
 }
+
+const stateHint: Record<ChallengeState, string> = {
+  todo: "",
+  pending: "Ingezonden — de spelleiding kijkt dit na.",
+  approved: "Goedgekeurd — punten toegekend.",
+  rejected: "Afgekeurd — geen punten.",
+};
 
 export function ChallengeCard({
   challenge,
   teamId,
   submitted,
   submittedValue,
+  state = "todo",
+  awardedPoints,
   onSubmitted,
 }: ChallengeCardProps) {
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [lightbox, setLightbox] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
   const ctx = { teamId, zoneId: challenge.zone_id, challenge };
 
   async function run(action: () => Promise<unknown>) {
@@ -45,10 +59,13 @@ export function ChallengeCard({
     }
   }
 
-  async function handleFile(file: File) {
+  function pickFile(file: File) {
+    setPendingFile(file);
     setPreview(URL.createObjectURL(file));
-    await run(() => uploadPhoto(ctx, file));
   }
+
+  const isPhoto =
+    challenge.challenge_type === "photo_upload" || challenge.challenge_type === "bonus_photo_upload";
 
   return (
     <article className="rounded-3xl border border-border bg-card p-4 shadow-card">
@@ -59,9 +76,7 @@ export function ChallengeCard({
             <p className="mt-1 text-sm text-muted-foreground">{challenge.description}</p>
           ) : null}
         </div>
-        <span className="shrink-0 rounded-full bg-gold-gradient px-3 py-1 text-xs font-bold text-accent-foreground">
-          {challenge.points} pt
-        </span>
+        <PointsBadge state={state} points={challenge.points} awarded={awardedPoints} />
       </div>
 
       {challenge.image_url ? (
@@ -88,11 +103,17 @@ export function ChallengeCard({
         </>
       ) : null}
 
-
       {submitted ? (
-        <div className="mt-4 flex items-center gap-2 rounded-2xl bg-secondary px-4 py-3 text-sm font-semibold text-secondary-foreground">
-          <Check className="size-4 shrink-0" />
-          <span className="min-w-0 truncate">Ingezonden{submittedValue ? `: ${submittedValue}` : ""}</span>
+        <div className="mt-4 space-y-1 rounded-2xl bg-secondary px-4 py-3 text-sm font-semibold text-secondary-foreground">
+          <div className="flex items-center gap-2">
+            <Check className="size-4 shrink-0" />
+            <span className="min-w-0 truncate">
+              Ingezonden{submittedValue ? `: ${submittedValue}` : ""}
+            </span>
+          </div>
+          {state !== "todo" ? (
+            <p className="text-xs font-medium opacity-80">{stateHint[state]}</p>
+          ) : null}
         </div>
       ) : (
         <div className="mt-4 space-y-3">
@@ -172,37 +193,75 @@ export function ChallengeCard({
             </div>
           )}
 
-          {challenge.challenge_type === "photo_upload" && (
+          {isPhoto && (
             <>
               {preview ? (
-                <img src={preview} alt="Voorbeeld" className="w-full rounded-2xl object-cover" />
+                <img
+                  src={preview}
+                  alt="Voorbeeld van de gekozen foto"
+                  className="max-h-72 w-full rounded-2xl object-contain"
+                />
               ) : null}
+
               <input
-                ref={fileRef}
+                ref={cameraRef}
                 type="file"
                 accept="image/*"
                 capture="environment"
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
-                  if (file) void handleFile(file);
+                  if (file) pickFile(file);
+                  e.target.value = "";
                 }}
               />
+              <input
+                ref={galleryRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) pickFile(file);
+                  e.target.value = "";
+                }}
+              />
+
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="h-12 rounded-2xl text-sm"
+                  disabled={busy}
+                  onClick={() => cameraRef.current?.click()}
+                >
+                  <Camera className="size-4" /> Foto maken
+                </Button>
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="h-12 rounded-2xl text-sm"
+                  disabled={busy}
+                  onClick={() => galleryRef.current?.click()}
+                >
+                  <ImageIcon className="size-4" /> Uit galerij
+                </Button>
+              </div>
+
               <Button
                 size="lg"
-                variant="secondary"
                 className="h-12 w-full rounded-2xl text-base"
-                disabled={busy}
-                onClick={() => fileRef.current?.click()}
+                disabled={busy || !pendingFile}
+                onClick={() => {
+                  if (!pendingFile) return;
+                  void run(() => uploadPhoto(ctx, pendingFile));
+                }}
               >
-                {busy ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <>
-                    <Camera className="size-4" /> Foto maken of kiezen
-                  </>
-                )}
+                {busy ? <Loader2 className="size-4 animate-spin" /> : "Foto versturen"}
               </Button>
+              <p className="text-center text-xs text-muted-foreground">
+                Foto's leveren punten op zodra de spelleiding ze goedkeurt.
+              </p>
             </>
           )}
         </div>
