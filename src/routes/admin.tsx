@@ -320,29 +320,24 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     >
       <Tabs defaultValue="answers" className="mt-4">
         <TabsList className="grid w-full grid-cols-5 rounded-2xl">
-          <TabsTrigger value="answers" className="flex flex-col gap-1">
-            <Trophy className="h-4 w-4" />
-            <span className="text-[10px]">Score</span>
+          <TabsTrigger value="answers">
+            <Trophy className="h-5 w-5" />
           </TabsTrigger>
 
-          <TabsTrigger value="opdrachten" className="flex flex-col gap-1">
-            <ClipboardList className="h-4 w-4" />
-            <span className="text-[10px]">Taken</span>
+          <TabsTrigger value="opdrachten">
+            <ClipboardList className="h-5 w-5" />
           </TabsTrigger>
 
-          <TabsTrigger value="meldingen" className="flex flex-col gap-1">
-            <Bell className="h-4 w-4" />
-            <span className="text-[10px]">Meld.</span>
+          <TabsTrigger value="meldingen">
+            <Bell className="h-5 w-5" />
           </TabsTrigger>
 
-          <TabsTrigger value="map" className="flex flex-col gap-1">
-            <MapPin className="h-4 w-4" />
-            <span className="text-[10px]">Kaart</span>
+          <TabsTrigger value="map">
+            <MapPin className="h-5 w-5" />
           </TabsTrigger>
 
-          <TabsTrigger value="beheer" className="flex flex-col gap-1">
-            <Settings className="h-4 w-4" />
-            <span className="text-[10px]">Beheer</span>
+          <TabsTrigger value="beheer">
+            <Settings className="h-5 w-5" />
           </TabsTrigger>
         </TabsList>
 
