@@ -11,20 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   useAllChallenges,
   useAnswers,
@@ -70,7 +58,6 @@ import {
 } from "@/lib/admin";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import type { Challenge, ReviewStatus, Team } from "@/lib/types";
-
 
 export const Route = createFileRoute("/admin")({
   ssr: false,
@@ -147,7 +134,6 @@ interface ReviewItem {
   createdAt: string;
 }
 
-
 function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const queryClient = useQueryClient();
   const { data: ranking } = useRanking();
@@ -162,13 +148,9 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const { data: notifications } = useNotifications();
   const { data: locations } = useTeamLocations();
 
-
-  useRealtime(
-    ["scores", "answers", "quiz_answers", "photos", "team_progress", "notifications", "challenges"],
-    () => {
-      void queryClient.invalidateQueries();
-    },
-  );
+  useRealtime(["scores", "answers", "quiz_answers", "photos", "team_progress", "notifications", "challenges"], () => {
+    void queryClient.invalidateQueries();
+  });
 
   const [teamFilter, setTeamFilter] = useState("all");
   const [zoneFilter, setZoneFilter] = useState("all");
@@ -249,10 +231,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     [photos],
   );
 
-
   const matches = (row: ReviewItem) =>
-    (teamFilter === "all" || row.teamId === teamFilter) &&
-    (zoneFilter === "all" || row.zoneId === zoneFilter);
+    (teamFilter === "all" || row.teamId === teamFilter) && (zoneFilter === "all" || row.zoneId === zoneFilter);
 
   const filteredItems = items.filter(matches);
   const filteredPhotos = photoItems.filter(matches);
@@ -295,7 +275,6 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     if (next >= queue.items.length) setQueue(null);
     else setQueue({ ...queue, index: next });
   }
-
 
   async function sendNotification() {
     if (!noteTitle.trim()) return;
@@ -340,13 +319,12 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     >
       <Tabs defaultValue="answers" className="mt-4">
         <TabsList className="grid w-full grid-cols-5 rounded-2xl text-[11px]">
-          <TabsTrigger value="answers">Antwoorden</TabsTrigger>
+          <TabsTrigger value="answers">Score</TabsTrigger>
           <TabsTrigger value="opdrachten">Opdrachten</TabsTrigger>
           <TabsTrigger value="meldingen">Meldingen</TabsTrigger>
-          <TabsTrigger value="kaart">🗺 Kaart</TabsTrigger>
+          <TabsTrigger value="map">Map</TabsTrigger>
           <TabsTrigger value="beheer">Beheer</TabsTrigger>
         </TabsList>
-
 
         {/* ---------------- antwoorden ---------------- */}
         <TabsContent value="answers" className="mt-4 space-y-4">
@@ -442,9 +420,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 onExcellent={() => decide(row, "excellent")}
               />
             ))}
-            {filteredItems.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Geen antwoorden.</p>
-            ) : null}
+            {filteredItems.length === 0 ? <p className="text-sm text-muted-foreground">Geen antwoorden.</p> : null}
           </Section>
 
           <Section title={`Foto's (${filteredPhotos.length})`}>
@@ -460,9 +436,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                     />
                   </a>
                   <p className="truncate text-[11px] font-semibold">{teamName(row.teamId)}</p>
-                  <p className="truncate text-[11px] text-muted-foreground">
-                    {challengeTitle(row.challengeId)}
-                  </p>
+                  <p className="truncate text-[11px] text-muted-foreground">{challengeTitle(row.challengeId)}</p>
                   <StatusPill status={row.status} creativity={row.creativity} />
                   <label className="flex items-center justify-between gap-2 text-[11px] font-semibold">
                     Teamfoto
@@ -508,11 +482,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 </div>
               ))}
             </div>
-            {filteredPhotos.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Geen foto's.</p>
-            ) : null}
+            {filteredPhotos.length === 0 ? <p className="text-sm text-muted-foreground">Geen foto's.</p> : null}
           </Section>
-
         </TabsContent>
 
         {/* ---------------- opdrachten ---------------- */}
@@ -526,9 +497,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 <BonusRow key={c.id} challenge={c} onDone={refresh} />
               ))}
               {bonusChallenges.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Nog geen bonusopdrachten in de database.
-                </p>
+                <p className="text-sm text-muted-foreground">Nog geen bonusopdrachten in de database.</p>
               ) : null}
             </div>
           </Section>
@@ -654,12 +623,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               variant="destructive"
               className="h-11 w-full rounded-2xl"
               disabled={(notifications ?? []).length === 0}
-              onClick={() =>
-                guarded(
-                  "Alle meldingen en leesstatussen verwijderen.",
-                  deleteAllNotifications,
-                )
-              }
+              onClick={() => guarded("Alle meldingen en leesstatussen verwijderen.", deleteAllNotifications)}
             >
               <Trash2 className="size-4" /> Alle meldingen verwijderen
             </Button>
@@ -669,9 +633,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold">{n.title}</p>
-                    {n.body ? (
-                      <p className="whitespace-pre-line text-xs text-muted-foreground">{n.body}</p>
-                    ) : null}
+                    {n.body ? <p className="whitespace-pre-line text-xs text-muted-foreground">{n.body}</p> : null}
                     <p className="mt-1 text-[11px] text-muted-foreground">
                       {n.audience === "all"
                         ? "Alle teams"
@@ -709,8 +671,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
           </Section>
         </TabsContent>
 
-        {/* ---------------- kaart ---------------- */}
-        <TabsContent value="kaart" className="mt-4">
+        {/* ---------------- map ---------------- */}
+        <TabsContent value="map" className="mt-4">
           <AdminMapPanel />
         </TabsContent>
 
@@ -726,8 +688,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               {(teams ?? []).map((team) => {
                 const unlocked = (progress ?? []).filter((p) => p.team_id === team.id && p.unlocked);
                 const currentZone =
-                  sortedZones.filter((z) => unlocked.some((p) => p.zone_id === z.id)).at(-1)?.name ??
-                  "—";
+                  sortedZones.filter((z) => unlocked.some((p) => p.zone_id === z.id)).at(-1)?.name ?? "—";
                 const activity = [...items, ...photoItems]
                   .filter((r) => r.teamId === team.id)
                   .map((r) => r.createdAt)
@@ -738,18 +699,15 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                   <li key={team.id} className="rounded-2xl bg-muted px-3 py-2 text-sm">
                     <p className="font-semibold">{team.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      Zone: {currentZone} · Laatste activiteit: {activity ? fmt(activity) : "—"} ·
-                      GPS: {gps ? fmt(gps) : "—"}
+                      Zone: {currentZone} · Laatste activiteit: {activity ? fmt(activity) : "—"} · GPS:{" "}
+                      {gps ? fmt(gps) : "—"}
                     </p>
                   </li>
                 );
               })}
-              {(teams ?? []).length === 0 ? (
-                <li className="text-sm text-muted-foreground">Nog geen teams.</li>
-              ) : null}
+              {(teams ?? []).length === 0 ? <li className="text-sm text-muted-foreground">Nog geen teams.</li> : null}
             </ul>
           </Section>
-
 
           <Section title="Exporteren">
             <div className="grid gap-2">
@@ -845,15 +803,12 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               <Button
                 variant="destructive"
                 className="h-12 rounded-2xl"
-                onClick={() =>
-                  guarded("Alle teams én al hun gegevens verwijderen.", deleteAllTeams)
-                }
+                onClick={() => guarded("Alle teams én al hun gegevens verwijderen.", deleteAllTeams)}
               >
                 Alle teams verwijderen
               </Button>
             </div>
           </Section>
-
         </TabsContent>
       </Tabs>
 
@@ -861,24 +816,16 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       <Dialog open={current !== undefined} onOpenChange={(open) => !open && setQueue(null)}>
         <DialogContent className="max-w-sm rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl">
-              {current ? challengeTitle(current.challengeId) : ""}
-            </DialogTitle>
+            <DialogTitle className="text-2xl">{current ? challengeTitle(current.challengeId) : ""}</DialogTitle>
             <DialogDescription className="text-base">
               {current ? `${teamName(current.teamId)} · ${zoneName(current.zoneId)}` : ""}
             </DialogDescription>
           </DialogHeader>
 
           {current?.photoUrl ? (
-            <img
-              src={current.photoUrl}
-              alt="Inzending"
-              className="max-h-80 w-full rounded-2xl object-contain"
-            />
+            <img src={current.photoUrl} alt="Inzending" className="max-h-80 w-full rounded-2xl object-contain" />
           ) : (
-            <p className="whitespace-pre-line rounded-2xl bg-muted p-4 text-lg font-semibold">
-              {current?.value}
-            </p>
+            <p className="whitespace-pre-line rounded-2xl bg-muted p-4 text-lg font-semibold">{current?.value}</p>
           )}
 
           <p className="text-center text-xs text-muted-foreground">
@@ -907,11 +854,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             <Button className="h-12 rounded-2xl" onClick={() => decideInQueue("approved")}>
               <Check className="size-4" /> Goedkeuren
             </Button>
-            <Button
-              variant="destructive"
-              className="h-12 rounded-2xl"
-              onClick={() => decideInQueue("rejected")}
-            >
+            <Button variant="destructive" className="h-12 rounded-2xl" onClick={() => decideInQueue("rejected")}>
               <X className="size-4" /> Afkeuren
             </Button>
             {supportsCreativity(challenge(current?.challengeId ?? "")) ? (
@@ -924,7 +867,6 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               </Button>
             ) : null}
           </div>
-
         </DialogContent>
       </Dialog>
     </AppShell>
@@ -1072,7 +1014,6 @@ function ReviewRow({
   );
 }
 
-
 /** Teams aanmaken, hernoemen, wachtwoord wijzigen en verwijderen. */
 function TeamManager({ onDone }: { onDone: () => void }) {
   const { data: teams } = useTeams();
@@ -1126,9 +1067,7 @@ function TeamManager({ onDone }: { onDone: () => void }) {
       {(teams ?? []).map((team) => (
         <TeamRow key={team.id} team={team} busy={busy} onRun={run} />
       ))}
-      {(teams ?? []).length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nog geen teams.</p>
-      ) : null}
+      {(teams ?? []).length === 0 ? <p className="text-sm text-muted-foreground">Nog geen teams.</p> : null}
     </div>
   );
 }
@@ -1148,11 +1087,7 @@ function TeamRow({
   return (
     <div className="grid gap-2 rounded-2xl bg-muted p-3">
       <Input value={name} onChange={(e) => setName(e.target.value)} className="h-11 rounded-xl" />
-      <Input
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="h-11 rounded-xl"
-      />
+      <Input value={password} onChange={(e) => setPassword(e.target.value)} className="h-11 rounded-xl" />
       <div className="flex gap-2">
         <Button
           className="h-11 flex-1 rounded-xl"
