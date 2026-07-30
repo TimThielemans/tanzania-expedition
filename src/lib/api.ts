@@ -126,15 +126,23 @@ export async function fetchPointActions(): Promise<PointAction[]> {
 export async function fetchRanking(): Promise<RankedTeam[]> {
   const [teams, scores] = await Promise.all([fetchTeams(), fetchScores()]);
   const byTeam = new Map(scores.map((s) => [s.team_id, s]));
-  const rows = teams.map((team) => ({
-    team,
-    points: byTeam.get(team.id)?.points ?? 0,
-    lastScoredAt: byTeam.get(team.id)?.last_scored_at ?? new Date().toISOString(),
-  }));
-  // Gelijke stand: wie er als eerste kwam, staat eerst.
-  rows.sort((a, b) => b.points - a.points || a.lastScoredAt.localeCompare(b.lastScoredAt));
+  const rows: RankedTeam[] = teams.map((team) => {
+    const score = byTeam.get(team.id);
+    return {
+      team,
+      points: score?.points ?? 0,
+      regularPoints: score?.regular_points ?? 0,
+      bonusPoints: score?.bonus_points ?? 0,
+      creativityPoints: score?.creativity_points ?? 0,
+      lastScoredAt: score?.last_scored_at ?? new Date().toISOString(),
+      rank: 0,
+    };
+  });
+  // Volgorde + gelijke stand: zie src/lib/scoring.ts (TIEBREAKERS).
+  rows.sort(compareTeams);
   return rows.map((row, index) => ({ ...row, rank: index + 1 }));
 }
+
 
 /* ------------------------------ login ------------------------------ */
 
