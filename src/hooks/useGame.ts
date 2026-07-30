@@ -14,7 +14,9 @@ import {
   fetchQuizAnswers,
 } from "@/lib/api";
 import { fetchNotifications, fetchNotificationReads } from "@/lib/notifications";
+import { fetchLocationEvents, fetchLocationTriggers, fetchTeamLocations } from "@/lib/locations";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+
 
 const enabled = isSupabaseConfigured;
 
