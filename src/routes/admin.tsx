@@ -173,50 +173,67 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const bonusChallenges = (challenges ?? []).filter((c) => c.is_bonus);
   const regularChallenges = (challenges ?? []).filter((c) => !c.is_bonus);
 
+  // Wachtende inzendingen staan altijd bovenaan.
+  const pendingFirst = (rows: ReviewItem[]) =>
+    [...rows].sort((a, b) => {
+      if (a.status === b.status) return a.createdAt.localeCompare(b.createdAt);
+      return a.status === "pending" ? -1 : b.status === "pending" ? 1 : 0;
+    });
+
   const items: ReviewItem[] = useMemo(
-    () => [
-      ...(answers ?? []).map((a) => ({
-        table: "answers" as const,
-        id: a.id,
-        teamId: a.team_id,
-        zoneId: a.zone_id,
-        challengeId: a.challenge_id,
-        value: a.answer,
-        status: a.status,
-        points: a.points_awarded,
-        createdAt: a.created_at,
-      })),
-      ...(quiz ?? []).map((q) => ({
-        table: "quiz_answers" as const,
-        id: q.id,
-        teamId: q.team_id,
-        zoneId: q.zone_id,
-        challengeId: q.challenge_id,
-        value: q.selected_option,
-        status: q.status,
-        points: q.points_awarded,
-        createdAt: q.created_at,
-      })),
-    ],
+    () =>
+      pendingFirst([
+        ...(answers ?? []).map((a) => ({
+          table: "answers" as const,
+          id: a.id,
+          teamId: a.team_id,
+          zoneId: a.zone_id,
+          challengeId: a.challenge_id,
+          value: a.answer,
+          status: a.status,
+          points: a.points_awarded,
+          creativity: a.creativity_points ?? 0,
+          isGroupPhoto: false,
+          createdAt: a.created_at,
+        })),
+        ...(quiz ?? []).map((q) => ({
+          table: "quiz_answers" as const,
+          id: q.id,
+          teamId: q.team_id,
+          zoneId: q.zone_id,
+          challengeId: q.challenge_id,
+          value: q.selected_option,
+          status: q.status,
+          points: q.points_awarded,
+          creativity: q.creativity_points ?? 0,
+          isGroupPhoto: false,
+          createdAt: q.created_at,
+        })),
+      ]),
     [answers, quiz],
   );
 
   const photoItems: ReviewItem[] = useMemo(
     () =>
-      (photos ?? []).map((p) => ({
-        table: "photos" as const,
-        id: p.id,
-        teamId: p.team_id,
-        zoneId: p.zone_id,
-        challengeId: p.challenge_id,
-        value: "foto",
-        photoUrl: p.photo_url,
-        status: p.status,
-        points: p.points_awarded,
-        createdAt: p.created_at,
-      })),
+      pendingFirst(
+        (photos ?? []).map((p) => ({
+          table: "photos" as const,
+          id: p.id,
+          teamId: p.team_id,
+          zoneId: p.zone_id,
+          challengeId: p.challenge_id,
+          value: "foto",
+          photoUrl: p.photo_url,
+          status: p.status,
+          points: p.points_awarded,
+          creativity: p.creativity_points ?? 0,
+          isGroupPhoto: p.is_group_photo ?? false,
+          createdAt: p.created_at,
+        })),
+      ),
     [photos],
   );
+
 
   const matches = (row: ReviewItem) =>
     (teamFilter === "all" || row.teamId === teamFilter) &&
