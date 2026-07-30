@@ -8,6 +8,9 @@ export type ChallengeType =
 export type ReviewStatus = "pending" | "approved" | "rejected";
 export type UnlockType = "password" | "automatic_after_completion" | "open";
 
+/** De drie puntensoorten. Het totaal is altijd de som van de drie. */
+export type PointKind = "regular" | "bonus" | "creativity";
+
 export interface Team {
   id: string;
   name: string;
@@ -15,6 +18,7 @@ export interface Team {
   color: string | null;
   sort_order: number;
   active: boolean;
+  group_photo_url: string | null;
   created_at: string;
 }
 
@@ -42,6 +46,8 @@ export interface Challenge {
   options: string[];
   correct_answer: string | null;
   points: number;
+  /** > 0 → de reisleider kan ⭐ Uitstekend geven met deze extra creativiteitspunten. */
+  creativity_bonus_points: number;
   sort_order: number;
   active: boolean;
   is_bonus: boolean;
@@ -49,6 +55,10 @@ export interface Challenge {
   duration_minutes: number;
   bonus_active: boolean;
   bonus_started_at: string | null;
+  /** Locatieopdracht: aangemaakt door een locatie-event, enkel voor één team. */
+  is_location: boolean;
+  target_team_id: string | null;
+  location_event_id: string | null;
 }
 
 export interface Answer {
@@ -59,6 +69,7 @@ export interface Answer {
   answer: string;
   status: ReviewStatus;
   points_awarded: number;
+  creativity_points: number;
   created_at: string;
 }
 
@@ -71,6 +82,7 @@ export interface QuizAnswer {
   is_correct: boolean | null;
   status: ReviewStatus;
   points_awarded: number;
+  creativity_points: number;
   created_at: string;
 }
 
@@ -83,6 +95,8 @@ export interface Photo {
   storage_path: string | null;
   status: ReviewStatus;
   points_awarded: number;
+  creativity_points: number;
+  is_group_photo: boolean;
   created_at: string;
 }
 
@@ -90,6 +104,9 @@ export interface Score {
   id: string;
   team_id: string;
   points: number;
+  regular_points: number;
+  bonus_points: number;
+  creativity_points: number;
   last_scored_at: string;
 }
 
@@ -114,6 +131,9 @@ export interface PointAction {
 export interface RankedTeam {
   team: Team;
   points: number;
+  regularPoints: number;
+  bonusPoints: number;
+  creativityPoints: number;
   lastScoredAt: string;
   rank: number;
 }
@@ -142,5 +162,48 @@ export interface ZoneFirstUnlock {
   id: string;
   zone_id: string;
   team_id: string;
+  created_at: string;
+}
+
+/* ------------------------------ locatie ------------------------------ */
+
+export interface TeamLocation {
+  team_id: string;
+  latitude: number;
+  longitude: number;
+  accuracy: number | null;
+  updated_at: string;
+}
+
+export type LocationTriggerMode = "every" | "first";
+export type LocationTriggerType =
+  | "team_notification"
+  | "admin_notification"
+  | "global_notification"
+  | "location_challenge";
+
+export interface LocationEvent {
+  id: string;
+  name: string;
+  description: string | null;
+  latitude: number;
+  longitude: number;
+  radius_meters: number;
+  trigger_mode: LocationTriggerMode;
+  trigger_type: LocationTriggerType;
+  notification_message: string | null;
+  challenge_title: string | null;
+  challenge_description: string | null;
+  challenge_type: "text_answer" | "photo_upload";
+  points: number;
+  active: boolean;
+  created_at: string;
+}
+
+export interface LocationEventTrigger {
+  id: string;
+  event_id: string;
+  team_id: string;
+  is_first: boolean;
   created_at: string;
 }
