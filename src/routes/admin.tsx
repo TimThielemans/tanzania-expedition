@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, Loader2, LogOut, Send, Star, Timer, Trash2, X } from "lucide-react";
+import { Check, Loader2, LogOut, Plus, Send, Star, Timer, Trash2, X } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { StatusPill } from "@/components/StatusBadge";
@@ -27,6 +27,8 @@ import {
   useTeams,
   useZones,
   useNotifications,
+  useLocationEvents,
+  useTrackingDevices,
 } from "@/hooks/useGame";
 import { addPoints, bonusRemainingMs, sortZones, verifyAdminPassword } from "@/lib/api";
 import {
@@ -45,6 +47,8 @@ import {
 } from "@/lib/notifications";
 import { clearAdminSession, saveAdminSession, useAdminSession } from "@/lib/admin-session";
 import { AdminMapPanel } from "@/components/AdminMapPanel";
+import { ChallengeEditor, emptyChallenge, toInput } from "@/components/ChallengeEditor";
+import type { ChallengeInput } from "@/lib/admin";
 import {
   clearAllAnswers,
   clearAllPhotos,
@@ -148,6 +152,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const { data: progress } = useProgress();
   const { data: notifications } = useNotifications();
   const { data: locations } = useTeamLocations();
+  const { data: locationEvents } = useLocationEvents();
+  const { data: trackingDevices } = useTrackingDevices();
 
   useRealtime(["scores", "answers", "quiz_answers", "photos", "team_progress", "notifications", "challenges"], () => {
     void queryClient.invalidateQueries();
@@ -159,6 +165,11 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [noteBody, setNoteBody] = useState("");
   const [noteTarget, setNoteTarget] = useState("all");
   const [queue, setQueue] = useState<{ items: ReviewItem[]; index: number } | null>(null);
+  const [draft, setDraft] = useState<
+    { kind: "bonus"; value: ChallengeInput } | { kind: "zone"; zoneId: string; value: ChallengeInput } | null
+  >(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<ChallengeInput | null>(null);
 
   const refresh = () => queryClient.invalidateQueries();
   const teamName = (id: string) => teams?.find((t) => t.id === id)?.name ?? id;
@@ -168,6 +179,26 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const fmt = (iso: string) => new Date(iso).toLocaleString("nl-BE");
 
   const sortedZones = sortZones(zones ?? []);
+
+  /** Locatieopdrachten horen bij de zone van hun locatie-event (zone_id op de opdracht blijft leeg). */
+  const locationChallengesByZone = (zoneId: string) =>
+    (challenges ?? []).filter((c) => {
+      if (!c.is_location) return false;
+      if (c.zone_id === zoneId) return true;
+      const event = (locationEvents ?? []).find((e) => e.id === c.location_event_id);
+      return event?.zone_id === zoneId;
+    });
+
+  /** 🟢 recent · 🟠 vertraagd · 🔴 oud · ⚪ nooit doorgegeven */
+  const gpsIndicator = (teamId: string) => {
+    const claimed = (trackingDevices ?? []).some((d) => d.team_id === teamId);
+    const last = (locations ?? []).find((l) => l.team_id === teamId)?.updated_at;
+    if (!last) return claimed ? "🔴" : "⚪";
+    const ageMin = (Date.now() - new Date(last).getTime()) / 60000;
+    if (ageMin < 3) return "🟢";
+    if (ageMin < 15) return "🟠";
+    return "🔴";
+  };
   const bonusChallenges = (challenges ?? []).filter((c) => c.is_bonus);
   const regularChallenges = (challenges ?? []).filter((c) => !c.is_bonus);
 
@@ -564,9 +595,11 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                           <button
                             type="button"
                             className="min-w-0 flex-1 truncate text-left text-sm"
-                            onClick={() =>
-                              setEditing((prev) => (prev === c.id ? null : c.id))
-                            }
+                            onClick={() => {
+                              const next = editing === c.id ? null : c.id;
+                              setEditing(next);
+                              setEditValue(next ? toInput(c) : null);
+                            }}
                           >
                             {c.is_location ? "📍 " : ""}
                             {c.active ? "" : "💤 "}
