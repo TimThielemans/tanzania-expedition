@@ -826,12 +826,9 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             <TeamManager onDone={refresh} />
           </Section>
 
-          <Section title="Teamoverzicht">
+          <Section title="Activiteit per team">
             <ul className="space-y-2">
               {(teams ?? []).map((team) => {
-                const unlocked = (progress ?? []).filter((p) => p.team_id === team.id && p.unlocked);
-                const currentZone =
-                  sortedZones.filter((z) => unlocked.some((p) => p.zone_id === z.id)).at(-1)?.name ?? "—";
                 const activity = [...items, ...photoItems]
                   .filter((r) => r.teamId === team.id)
                   .map((r) => r.createdAt)
@@ -840,10 +837,11 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                 const gps = (locations ?? []).find((l) => l.team_id === team.id)?.updated_at;
                 return (
                   <li key={team.id} className="rounded-2xl bg-muted px-3 py-2 text-sm">
-                    <p className="font-semibold">{team.name}</p>
+                    <p className="font-semibold">
+                      <span aria-hidden>{gpsIndicator(team.id)}</span> {team.name}
+                    </p>
                     <p className="text-xs text-muted-foreground">
-                      Zone: {currentZone} · Laatste activiteit: {activity ? fmt(activity) : "—"} · GPS:{" "}
-                      {gps ? fmt(gps) : "—"}
+                      Laatste activiteit: {activity ? fmt(activity) : "—"} · GPS: {gps ? fmt(gps) : "—"}
                     </p>
                   </li>
                 );
@@ -851,6 +849,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               {(teams ?? []).length === 0 ? <li className="text-sm text-muted-foreground">Nog geen teams.</li> : null}
             </ul>
           </Section>
+
+
 
           <Section title="Exporteren">
             <div className="grid gap-2">
