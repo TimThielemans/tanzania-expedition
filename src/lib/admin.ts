@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 import { fetchTeams, fetchZones } from "./api";
-import type { Team } from "./types";
+import type { Challenge, Team } from "./types";
 
 /* ------------------------------ admin acties ------------------------------ */
 
@@ -116,5 +116,41 @@ export function downloadCsv(filename: string, rows: Record<string, unknown>[]) {
 
 export async function setChallengeActive(challengeId: string, active: boolean) {
   const { error } = await supabase.from("challenges").update({ active }).eq("id", challengeId);
+  if (error) throw error;
+}
+
+/* ------------------------------ opdrachten ------------------------------ */
+
+export type ChallengeInput = Pick<
+  Challenge,
+  | "title"
+  | "description"
+  | "image_url"
+  | "challenge_type"
+  | "options"
+  | "correct_answer"
+  | "points"
+  | "creativity_bonus_points"
+  | "sort_order"
+  | "active"
+  | "zone_id"
+  | "is_bonus"
+  | "duration_minutes"
+  | "notification_message"
+  | "is_location"
+>;
+
+export async function createChallenge(input: ChallengeInput) {
+  const { error } = await supabase.from("challenges").insert(input);
+  if (error) throw error;
+}
+
+export async function updateChallenge(id: string, values: Partial<ChallengeInput>) {
+  const { error } = await supabase.from("challenges").update(values).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteChallenge(id: string) {
+  const { error } = await supabase.from("challenges").delete().eq("id", id);
   if (error) throw error;
 }
