@@ -514,56 +514,65 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               {bonusChallenges.length === 0 ? (
                 <p className="text-sm text-muted-foreground">Nog geen bonusopdrachten in de database.</p>
               ) : null}
+              {draft?.kind === "bonus" ? (
+                <div className="rounded-2xl bg-muted p-3">
+                  <ChallengeEditor
+                    value={draft.value}
+                    onChange={(value) => setDraft({ ...draft, value })}
+                    onSaved={() => {
+                      setDraft(null);
+                      void refresh();
+                    }}
+                    onCancel={() => setDraft(null)}
+                  />
+                </div>
+              ) : (
+                <Button
+                  variant="secondary"
+                  className="h-11 w-full rounded-2xl"
+                  onClick={() =>
+                    setDraft({
+                      kind: "bonus",
+                      value: emptyChallenge({ isBonus: true, sortOrder: bonusChallenges.length }),
+                    })
+                  }
+                >
+                  <Plus className="mr-1 size-4" /> Bonusopdracht toevoegen
+                </Button>
+              )}
             </div>
           </Section>
 
-          {(teams ?? []).map((team) => {
-            const rows = (progress ?? []).filter((p) => p.team_id === team.id);
-            const doneIds = new Set([
-              ...(answers ?? []).filter((a) => a.team_id === team.id).map((a) => a.challenge_id),
-              ...(quiz ?? []).filter((a) => a.team_id === team.id).map((a) => a.challenge_id),
-              ...(photos ?? []).filter((p) => p.team_id === team.id).map((p) => p.challenge_id),
-            ]);
-            return (
-              <Section key={team.id} title={team.name}>
-                <p className="text-sm text-muted-foreground">
-                  Opdrachten voltooid: {doneIds.size}/{regularChallenges.filter((c) => c.active).length}
-                </p>
-                <ul className="mt-2 space-y-1 text-sm">
-                  {rows.map((p) => (
-                    <li key={p.id} className="flex items-center justify-between gap-2">
-                      <span className="min-w-0 truncate">{zoneName(p.zone_id)}</span>
-                      <span className="shrink-0">
-                        {p.unlocked ? "🔑" : "🔒"} {p.completed ? "✅" : ""}
-                      </span>
-                    </li>
-                  ))}
-                  {rows.length === 0 ? <li className="text-muted-foreground">Geen voortgang.</li> : null}
-                </ul>
-              </Section>
-            );
-          })}
-
-          <Section title="Opdrachten aan/uit">
+          <Section title="Opdrachten beheren">
             <p className="text-sm text-muted-foreground">
-              Uitgeschakelde opdrachten verdwijnen meteen bij de teams, maar blijven hier zichtbaar.
+              Tik op een opdracht om ze te bewerken. Locatieopdrachten (📍) staan bij hun zone.
             </p>
-            <div className="mt-2 space-y-3">
-              {sortedZones.map((zone) => (
-                <div key={zone.id}>
-                  <p className="text-sm font-semibold">{zone.name}</p>
-                  <ul className="mt-1 space-y-1">
-                    {regularChallenges
-                      .filter((c) => c.zone_id === zone.id)
-                      .map((c) => (
-                        <li
-                          key={c.id}
-                          className="flex items-center justify-between gap-3 rounded-2xl bg-muted px-3 py-2"
-                        >
-                          <span className="min-w-0 truncate text-sm">
+            <div className="mt-2 space-y-4">
+              {sortedZones.map((zone) => {
+                const zoneChallenges = [
+                  ...regularChallenges.filter((c) => c.zone_id === zone.id && !c.is_location),
+                  ...locationChallengesByZone(zone.id),
+                ].sort((a, b) => a.sort_order - b.sort_order);
+                return (
+                  <div key={zone.id} className="space-y-1">
+                    <p className="text-sm font-semibold">
+                      {zone.name} <span className="text-muted-foreground">({zoneChallenges.length})</span>
+                    </p>
+                    {zoneChallenges.map((c) => (
+                      <div key={c.id} className="rounded-2xl bg-muted px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            className="min-w-0 flex-1 truncate text-left text-sm"
+                            onClick={() =>
+                              setEditing((prev) => (prev === c.id ? null : c.id))
+                            }
+                          >
+                            {c.is_location ? "📍 " : ""}
                             {c.active ? "" : "💤 "}
                             {c.title}
-                          </span>
+                            <span className="ml-1 text-xs text-muted-foreground">{c.points}p</span>
+                          </button>
                           <Switch
                             checked={c.active}
                             aria-label={`${c.title} activeren`}
@@ -572,12 +581,97 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                               await refresh();
                             }}
                           />
-                        </li>
-                      ))}
-                  </ul>
-                </div>
-              ))}
+                        </div>
+                        {editing === c.id ? (
+                          <div className="mt-2">
+                            <ChallengeEditor
+                              challengeId={c.id}
+                              value={editValue ?? toInput(c)}
+                              onChange={setEditValue}
+                              onSaved={() => {
+                                setEditing(null);
+                                setEditValue(null);
+                                void refresh();
+                              }}
+                              onCancel={() => {
+                                setEditing(null);
+                                setEditValue(null);
+                              }}
+                            />
+                          </div>
+                        ) : null}
+                      </div>
+                    ))}
+                    {draft?.kind === "zone" && draft.zoneId === zone.id ? (
+                      <div className="rounded-2xl bg-muted p-3">
+                        <ChallengeEditor
+                          value={draft.value}
+                          onChange={(value) => setDraft({ ...draft, value })}
+                          onSaved={() => {
+                            setDraft(null);
+                            void refresh();
+                          }}
+                          onCancel={() => setDraft(null)}
+                        />
+                      </div>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        className="h-10 w-full rounded-2xl text-xs"
+                        onClick={() =>
+                          setDraft({
+                            kind: "zone",
+                            zoneId: zone.id,
+                            value: emptyChallenge({
+                              zoneId: zone.id,
+                              sortOrder: zoneChallenges.length,
+                            }),
+                          })
+                        }
+                      >
+                        <Plus className="mr-1 size-4" /> Opdracht toevoegen aan {zone.name}
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
+          </Section>
+
+          <Section title="Teamoverzicht">
+            <ul className="space-y-2">
+              {(teams ?? []).map((team) => {
+                const rows = (progress ?? []).filter((p) => p.team_id === team.id);
+                const doneIds = new Set([
+                  ...(answers ?? []).filter((a) => a.team_id === team.id).map((a) => a.challenge_id),
+                  ...(quiz ?? []).filter((a) => a.team_id === team.id).map((a) => a.challenge_id),
+                  ...(photos ?? []).filter((p) => p.team_id === team.id).map((p) => p.challenge_id),
+                ]);
+                return (
+                  <li key={team.id} className="rounded-2xl bg-muted px-3 py-2">
+                    <p className="flex items-center gap-2 text-sm font-semibold">
+                      <span aria-hidden>{gpsIndicator(team.id)}</span>
+                      <span className="min-w-0 truncate">{team.name}</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {doneIds.size}/{regularChallenges.filter((c) => c.active).length} opdrachten ·{" "}
+                      {rows.filter((p) => p.unlocked).length} zones open
+                    </p>
+                    <p className="mt-1 flex flex-wrap gap-1 text-xs">
+                      {rows.map((p) => (
+                        <span key={p.id} className="rounded-lg bg-background px-2 py-0.5">
+                          {zoneName(p.zone_id)} {p.unlocked ? "🔑" : "🔒"}
+                          {p.completed ? "✅" : ""}
+                        </span>
+                      ))}
+                    </p>
+                  </li>
+                );
+              })}
+              {(teams ?? []).length === 0 ? (
+                <li className="text-sm text-muted-foreground">Nog geen teams.</li>
+              ) : null}
+            </ul>
           </Section>
 
           <div className="flex gap-2">
@@ -596,6 +690,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             </Button>
           </div>
         </TabsContent>
+
 
         {/* ---------------- meldingen ---------------- */}
         <TabsContent value="meldingen" className="mt-4 space-y-4">
