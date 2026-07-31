@@ -85,12 +85,12 @@ insert into public.location_events
   (name, description, latitude, longitude, radius_meters, trigger_mode, notification_target, notification_message, zone_id, active)
 values
   ('Bibliotheek-checkpoint', 'Eerste team dat de bibliotheek bereikt krijgt een exclusieve opdracht.',
-   -3.366700, 36.680000, 60, 'first', 'team', 'Jullie zijn er als eerste! Er staat een opdracht klaar.', null, false),
+   50.8798, 4.680000, 60, 'first', 'team', 'Jullie zijn er als eerste! Er staat een opdracht klaar.', null, false),
   ('Marktplein', 'Elk team dat het marktplein bereikt maakt een teamfoto.',
-   -3.370000, 36.690000, 75, 'every', 'team', 'Welkom op het marktplein — er staat een opdracht klaar.',
+   50.9011, 4.690000, 75, 'every', 'team', 'Welkom op het marktplein — er staat een opdracht klaar.',
    (select id from public.zones where name = 'Safari'), false),
   ('Aankomst finale', 'Melding aan de reisleider zodra een team de finale bereikt.',
-   -3.386925, 36.682995, 100, 'every', 'admin', 'Een team is aangekomen op de finalelocatie.', null, false);
+   50.8798, 4.7005, 100, 'every', 'admin', 'Een team is aangekomen op de finalelocatie.', null, false);
 
 -- ---------- locatieopdrachten (één-op-één aan een event gekoppeld) ----------
 insert into public.challenges
