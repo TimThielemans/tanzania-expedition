@@ -12,7 +12,7 @@ interface AppShellProps {
 
 export function AppShell({ title, subtitle, action, children, hideNav }: AppShellProps) {
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-[100dvh] bg-background pb-[max(6rem,calc(5rem+env(safe-area-inset-bottom)))]">
       <header className="bg-hero px-4 pb-8 pt-[calc(env(safe-area-inset-top)+1.25rem)] text-primary-foreground">
         <div className="mx-auto grid max-w-lg grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <div className="min-w-0">
