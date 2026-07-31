@@ -55,11 +55,11 @@ export interface Challenge {
   duration_minutes: number;
   bonus_active: boolean;
   bonus_started_at: string | null;
-  /** Locatieopdracht: aangemaakt door een locatie-event, enkel voor één team. */
+  /** Locatieopdracht: strikt één-op-één gekoppeld aan een locatie-event. */
   is_location: boolean;
-  target_team_id: string | null;
   location_event_id: string | null;
 }
+
 
 export interface Answer {
   id: string;
@@ -176,11 +176,8 @@ export interface TeamLocation {
 }
 
 export type LocationTriggerMode = "every" | "first";
-export type LocationTriggerType =
-  | "team_notification"
-  | "admin_notification"
-  | "global_notification"
-  | "location_challenge";
+/** Wie krijgt de melding wanneer het event vuurt? */
+export type NotificationTarget = "team" | "admin" | "all";
 
 export interface LocationEvent {
   id: string;
@@ -190,12 +187,10 @@ export interface LocationEvent {
   longitude: number;
   radius_meters: number;
   trigger_mode: LocationTriggerMode;
-  trigger_type: LocationTriggerType;
+  notification_target: NotificationTarget;
   notification_message: string | null;
-  challenge_title: string | null;
-  challenge_description: string | null;
-  challenge_type: "text_answer" | "photo_upload";
-  points: number;
+  /** null = geldt in alle zones; anders enkel voor teams die in deze zone bezig zijn. */
+  zone_id: string | null;
   active: boolean;
   created_at: string;
 }
@@ -207,3 +202,22 @@ export interface LocationEventTrigger {
   is_first: boolean;
   created_at: string;
 }
+
+/** Per team: staat de locatieopdracht open, is ze ingezonden of afgewezen? */
+export type LocationChallengeStateValue = "open" | "submitted" | "dismissed";
+
+export interface LocationChallengeState {
+  id: string;
+  team_id: string;
+  challenge_id: string;
+  state: LocationChallengeStateValue;
+  created_at: string;
+}
+
+/** Het ene toestel per team dat gps-updates mag versturen. */
+export interface TeamTrackingDevice {
+  team_id: string;
+  device_id: string;
+  claimed_at: string;
+}
+

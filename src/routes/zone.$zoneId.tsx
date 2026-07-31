@@ -11,13 +11,17 @@ import { Input } from "@/components/ui/input";
 import {
   useAnswers,
   useChallenges,
+  useLocationChallengeStates,
+  useLocationEvents,
   usePhotos,
   useProgress,
   useQuizAnswers,
   useZones,
 } from "@/hooks/useGame";
 import {
+  locationChallengesOfZone,
   refreshZoneCompletion,
+  zoneProgressChallenges,
   unlockZoneWithPassword,
   unlockedZoneIds,
   zoneNeedsPassword,
@@ -32,6 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { ReviewStatus } from "@/lib/types";
+import { setLocationChallengeState } from "@/lib/locations";
 import { fireConfetti } from "@/lib/confetti";
 import { useTeamSession } from "@/lib/session";
 import { isSupabaseConfigured } from "@/lib/supabase";
@@ -60,15 +65,32 @@ function ZonePage() {
   const { data: answers } = useAnswers(session?.teamId);
   const { data: quiz } = useQuizAnswers(session?.teamId);
   const { data: photos } = usePhotos(session?.teamId);
+  const { data: locationEvents } = useLocationEvents();
+  const { data: locationStates } = useLocationChallengeStates(session?.teamId);
 
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [completion, setCompletion] = useState<ZoneCompletionEvent | null>(null);
 
   const zone = zones?.find((z) => z.id === zoneId);
+  /** Vaste zoneopdrachten plus de al geactiveerde locatieopdrachten van deze zone. */
   const zoneChallenges = useMemo(
-    () => (challenges ?? []).filter((c) => c.zone_id === zoneId && c.active && !c.is_bonus),
-    [challenges, zoneId],
+    () =>
+      zoneProgressChallenges(challenges ?? [], locationEvents ?? [], zoneId, locationStates ?? []),
+    [challenges, locationEvents, locationStates, zoneId],
+  );
+
+  /** Nog open locatieopdrachten van deze zone (om apart te tonen met 📍-badge). */
+  const openLocationIds = useMemo(
+    () =>
+      new Set(
+        locationChallengesOfZone(challenges ?? [], locationEvents ?? [], zoneId)
+          .filter((c) =>
+            (locationStates ?? []).some((s) => s.challenge_id === c.id && s.state === "open"),
+          )
+          .map((c) => c.id),
+      ),
+    [challenges, locationEvents, locationStates, zoneId],
   );
 
   const submittedValue = useMemo(() => {
@@ -189,6 +211,17 @@ function ZonePage() {
                 submittedValue={submittedValue.get(challenge.id)?.value}
                 state={submittedValue.get(challenge.id)?.status ?? "todo"}
                 awardedPoints={submittedValue.get(challenge.id)?.points}
+                isLocation={challenge.is_location}
+                onDismiss={
+                  openLocationIds.has(challenge.id)
+                    ? async () => {
+                        if (!session) return;
+                        await setLocationChallengeState(session.teamId, challenge.id, "dismissed");
+                        toast.info("Opdracht overgeslagen.");
+                        await queryClient.invalidateQueries();
+                      }
+                    : undefined
+                }
                 onSubmitted={handleSubmitted}
               />
             ))}
