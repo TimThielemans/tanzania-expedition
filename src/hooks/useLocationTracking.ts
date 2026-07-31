@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { distanceMeters, processGeofences, saveTeamLocation } from "@/lib/locations";
+import {
+  claimTrackingDevice,
+  distanceMeters,
+  fetchTrackingDevice,
+  processGeofences,
+  saveTeamLocation,
+} from "@/lib/locations";
+import { getDeviceId } from "@/lib/device";
 import type { LocationEvent } from "@/lib/types";
 
 const MIN_INTERVAL_MS = 20_000;
@@ -14,6 +21,8 @@ interface Options {
   /** Team gaf toestemming op dit toestel. */
   consented: boolean;
   events: LocationEvent[];
+  /** Zones waarmee het team nu bezig is — bepaalt welke events kunnen vuren. */
+  activeZoneIds?: string[];
   onTriggered?: () => void;
 }
 
@@ -27,17 +36,40 @@ export function useLocationTracking({
   trackingEnabled,
   consented,
   events,
+  activeZoneIds,
   onTriggered,
 }: Options) {
   const [permission, setPermission] = useState<LocationPermission>("unknown");
+  const [isTracker, setIsTracker] = useState<boolean | null>(null);
+  const deviceId = typeof window === "undefined" ? "server" : getDeviceId();
+  const zonesRef = useRef(activeZoneIds ?? []);
+  zonesRef.current = activeZoneIds ?? [];
   const last = useRef<{ latitude: number; longitude: number; at: number } | null>(null);
   const eventsRef = useRef(events);
   eventsRef.current = events;
   const triggeredRef = useRef(onTriggered);
   triggeredRef.current = onTriggered;
 
+  // Het eerste toestel dat meedoet wordt automatisch de locatiedeler.
   useEffect(() => {
     if (!team || !trackingEnabled || !consented) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        await claimTrackingDevice(team.id, deviceId, false);
+        const current = await fetchTrackingDevice(team.id);
+        if (!cancelled) setIsTracker(current?.device_id === deviceId);
+      } catch {
+        if (!cancelled) setIsTracker(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [team?.id, trackingEnabled, consented, deviceId]);
+
+  useEffect(() => {
+    if (!team || !trackingEnabled || !consented || isTracker !== true) return;
     if (typeof navigator === "undefined" || !navigator.geolocation) {
       setPermission("unsupported");
       return;
@@ -58,7 +90,11 @@ export function useLocationTracking({
       void (async () => {
         try {
           await saveTeamLocation(team.id, { ...next, accuracy: pos.coords.accuracy });
-          const fired = await processGeofences(team, next, eventsRef.current);
+          const fired = await processGeofences(
+            { ...team, activeZoneIds: zonesRef.current },
+            next,
+            eventsRef.current,
+          );
           if (fired > 0) triggeredRef.current?.();
         } catch {
           /* offline of geweigerd: stil negeren */
@@ -91,9 +127,17 @@ export function useLocationTracking({
       stop();
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [team?.id, team?.name, trackingEnabled, consented]);
+  }, [team?.id, team?.name, trackingEnabled, consented, isTracker]);
 
-  return { permission };
+  /** Dit toestel de rol van locatiedeler laten overnemen. */
+  const takeOver = async () => {
+    if (!team) return false;
+    await claimTrackingDevice(team.id, deviceId, true);
+    setIsTracker(true);
+    return true;
+  };
+
+  return { permission, isTracker, deviceId, takeOver };
 }
 
 /** Vraagt eenmalig toestemming; het antwoord onthouden we in localStorage. */

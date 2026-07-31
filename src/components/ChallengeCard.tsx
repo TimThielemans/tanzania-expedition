@@ -18,6 +18,9 @@ interface ChallengeCardProps {
   state?: ChallengeState;
   awardedPoints?: number;
   onSubmitted: () => void;
+  /** Locatieopdracht: extra badge en de mogelijkheid om niet deel te nemen. */
+  isLocation?: boolean;
+  onDismiss?: () => void;
 }
 
 const stateHint: Record<ChallengeState, string> = {
@@ -35,6 +38,8 @@ export function ChallengeCard({
   state = "todo",
   awardedPoints,
   onSubmitted,
+  isLocation = false,
+  onDismiss,
 }: ChallengeCardProps) {
   const [value, setValue] = useState("");
   const [busy, setBusy] = useState(false);
@@ -71,6 +76,18 @@ export function ChallengeCard({
     <article className="rounded-3xl border border-border bg-card p-4 shadow-card">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
         <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            {isLocation ? (
+              <span className="rounded-full bg-accent px-2 py-0.5 text-[11px] font-bold text-accent-foreground">
+                📍 Locatieopdracht
+              </span>
+            ) : null}
+            {challenge.creativity_bonus_points > 0 ? (
+              <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-bold text-secondary-foreground">
+                ⭐ Creativiteit
+              </span>
+            ) : null}
+          </div>
           <h3 className="text-xl leading-tight">{challenge.title}</h3>
           {challenge.description ? (
             <p className="mt-1 text-sm text-muted-foreground">{challenge.description}</p>
@@ -101,6 +118,16 @@ export function ChallengeCard({
             onClose={() => setLightbox(false)}
           />
         </>
+      ) : null}
+
+      {!submitted && isLocation && onDismiss ? (
+        <Button
+          variant="ghost"
+          className="mt-2 h-9 w-full rounded-xl text-xs text-muted-foreground"
+          onClick={onDismiss}
+        >
+          Niet deelnemen
+        </Button>
       ) : null}
 
       {submitted ? (

@@ -14,7 +14,13 @@ import {
   fetchQuizAnswers,
 } from "@/lib/api";
 import { fetchNotifications, fetchNotificationReads } from "@/lib/notifications";
-import { fetchLocationEvents, fetchLocationTriggers, fetchTeamLocations } from "@/lib/locations";
+import {
+  fetchLocationChallengeStates,
+  fetchLocationEvents,
+  fetchLocationTriggers,
+  fetchTeamLocations,
+  fetchTrackingDevices,
+} from "@/lib/locations";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 
@@ -93,3 +99,13 @@ export const useLocationEvents = () =>
 
 export const useLocationTriggers = () =>
   useQuery({ queryKey: ["location-triggers"], queryFn: fetchLocationTriggers, enabled });
+
+export const useTrackingDevices = () =>
+  useQuery({ queryKey: ["tracking-devices"], queryFn: fetchTrackingDevices, enabled });
+
+export const useLocationChallengeStates = (teamId?: string) =>
+  useQuery({
+    queryKey: ["location-challenge-states", teamId ?? "all"],
+    queryFn: () => fetchLocationChallengeStates(teamId),
+    enabled,
+  });

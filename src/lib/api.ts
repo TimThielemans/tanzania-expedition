@@ -2,9 +2,16 @@ import { supabase, PHOTO_BUCKET } from "./supabase";
 import { enqueue } from "./offline";
 import { createNotification } from "./notifications";
 import { compareTeams } from "./scoring";
+import {
+  fetchLocationChallengeStates,
+  fetchLocationEvents,
+  setLocationChallengeState,
+} from "./locations";
 import type {
   Answer,
   Challenge,
+  LocationChallengeState,
+  LocationEvent,
   PointAction,
   PointKind,
   Photo,
@@ -15,6 +22,7 @@ import type {
   TeamProgress,
   Zone,
 } from "./types";
+
 
 
 /* ------------------------------ reads ------------------------------ */
@@ -78,15 +86,52 @@ export function activeBonusChallenges(challenges: Challenge[], now = Date.now())
   return challenges.filter((c) => c.is_bonus && c.active && bonusRemainingMs(c, now) > 0);
 }
 
-/** Locatieopdrachten die specifiek voor dit team zijn aangemaakt. */
-export function locationChallengesFor(challenges: Challenge[], teamId: string): Challenge[] {
-  return challenges.filter((c) => c.is_location && c.active && c.target_team_id === teamId);
+/** Locatieopdrachten die voor dit team zijn vrijgekomen en nog open staan. */
+export function openLocationChallenges(
+  challenges: Challenge[],
+  states: LocationChallengeState[],
+): Challenge[] {
+  const open = new Set(states.filter((s) => s.state === "open").map((s) => s.challenge_id));
+  return challenges.filter((c) => c.is_location && c.active && open.has(c.id));
+}
+
+/** Locatieopdrachten die bij een zone horen via hun locatie-event. */
+export function locationChallengesOfZone(
+  challenges: Challenge[],
+  events: LocationEvent[],
+  zoneId: string,
+): Challenge[] {
+  const eventIds = new Set(events.filter((e) => e.zone_id === zoneId).map((e) => e.id));
+  return challenges.filter(
+    (c) => c.is_location && c.active && c.location_event_id && eventIds.has(c.location_event_id),
+  );
 }
 
 /** Opdrachten die in een zone horen (dus geen bonus- of locatieopdracht). */
 export function zoneChallengesOf(challenges: Challenge[], zoneId: string): Challenge[] {
   return challenges.filter((c) => c.zone_id === zoneId && c.active && !c.is_bonus && !c.is_location);
 }
+
+/**
+ * Alle opdrachten die meetellen voor de X/Y-voortgang van een zone: de vaste
+ * zoneopdrachten plus de locatieopdrachten van die zone die dit team al
+ * geactiveerd heeft (afgewezen opdrachten tellen niet mee).
+ */
+export function zoneProgressChallenges(
+  challenges: Challenge[],
+  events: LocationEvent[],
+  zoneId: string,
+  states: LocationChallengeState[],
+): Challenge[] {
+  const counted = new Set(
+    states.filter((s) => s.state !== "dismissed").map((s) => s.challenge_id),
+  );
+  return [
+    ...zoneChallengesOf(challenges, zoneId),
+    ...locationChallengesOfZone(challenges, events, zoneId).filter((c) => counted.has(c.id)),
+  ];
+}
+
 
 
 export async function fetchProgress(teamId?: string): Promise<TeamProgress[]> {
@@ -279,12 +324,14 @@ export async function refreshZoneCompletion(
   zones: Zone[],
   challenges: Challenge[],
 ): Promise<{ completedZones: string[]; events: ZoneCompletionEvent[] }> {
-  const [answers, quiz, photos, existing, teamRow] = await Promise.all([
+  const [answers, quiz, photos, existing, teamRow, locEvents, locStates] = await Promise.all([
     fetchAnswers(teamId),
     fetchQuizAnswers(teamId),
     fetchPhotos(teamId),
     fetchProgress(teamId),
     supabase.from("teams").select("name").eq("id", teamId).maybeSingle(),
+    fetchLocationEvents(),
+    fetchLocationChallengeStates(teamId),
   ]);
   const teamName = teamRow.data?.name ?? "Een team";
   const done = new Set<string>([
@@ -299,9 +346,10 @@ export async function refreshZoneCompletion(
   const events: ZoneCompletionEvent[] = [];
 
   for (const [index, zone] of sorted.entries()) {
-    const zoneChallenges = zoneChallengesOf(challenges, zone.id);
+    const zoneChallenges = zoneProgressChallenges(challenges, locEvents, zone.id, locStates);
     const complete = zoneChallenges.length > 0 && zoneChallenges.every((c) => done.has(c.id));
     if (!complete) continue;
+
     completedZones.push(zone.id);
     const isNew = !alreadyCompleted.has(zone.id);
 
@@ -352,6 +400,12 @@ export interface SubmitContext {
   challenge: Challenge;
 }
 
+/** Een ingezonden locatieopdracht verdwijnt uit de open lijst. */
+async function markLocationSubmitted(teamId: string, challenge: Challenge) {
+  if (!challenge.is_location) return;
+  await setLocationChallengeState(teamId, challenge.id, "submitted");
+}
+
 export async function submitTextAnswer({ teamId, zoneId, challenge }: SubmitContext, answer: string) {
   // Met een correct antwoord in de database keuren we automatisch; anders kijkt de reisleider na.
   const expected = (challenge.correct_answer ?? "").trim();
@@ -370,6 +424,7 @@ export async function submitTextAnswer({ teamId, zoneId, challenge }: SubmitCont
     const { error } = await supabase.from("answers").upsert(payload, { onConflict: "team_id,challenge_id" });
     if (error) throw error;
     if (points !== 0) await addPoints(teamId, points);
+    await markLocationSubmitted(teamId, challenge);
   } catch (err) {
     enqueue({ kind: "answer", payload, points, teamId });
     throw new OfflineQueuedError(err);
@@ -394,6 +449,7 @@ export async function submitQuizAnswer({ teamId, zoneId, challenge }: SubmitCont
       .upsert(payload, { onConflict: "team_id,challenge_id" });
     if (error) throw error;
     if (points !== 0) await addPoints(teamId, points);
+    await markLocationSubmitted(teamId, challenge);
   } catch (err) {
     enqueue({ kind: "quiz", payload, points, teamId });
     throw new OfflineQueuedError(err);
@@ -419,6 +475,7 @@ export async function uploadPhoto({ teamId, zoneId, challenge }: SubmitContext, 
     points_awarded: 0,
   });
   if (error) throw error;
+  await markLocationSubmitted(teamId, challenge);
   // Foto's leveren pas punten op na goedkeuring door de reisleider.
   return data.publicUrl;
 }

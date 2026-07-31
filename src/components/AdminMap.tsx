@@ -28,7 +28,10 @@ export default function AdminMap({ teams, locations, events, finale }: Props) {
       await import("leaflet/dist/leaflet.css");
       if (cancelled || !containerRef.current || mapRef.current) return;
       leafletRef.current = L;
-      const map = L.map(containerRef.current).setView([50.8754, 4.6919], 10);
+      const map = L.map(containerRef.current).setView(
+        finale ? [finale.latitude, finale.longitude] : [50.8754, 4.6919],
+        finale ? 13 : 10,
+      );
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19,
         attribution: "© OpenStreetMap",
