@@ -19,7 +19,7 @@ on conflict (key) do update set value = excluded.value;
 
 -- ---------- admin_settings ----------
 insert into public.admin_settings (key, value) values
-  ('admin_password', 'kilimanjaro2026')
+  ('admin_password', 'kili')
 on conflict (key) do update set value = excluded.value;
 
 -- ---------- point_actions ----------
