@@ -24,7 +24,12 @@ export async function clearAllAnswers() {
   await supabase.from("quiz_answers").delete().not("id", "is", null);
   console.log("BEFORE RPC");
   const result = await supabase.rpc("test_rpc");
-  console.log(result);
+
+  toast({
+    title: "RPC RESULT",
+
+    description: JSON.stringify(result),
+  });
 }
 
 export async function clearAllPhotos() {
