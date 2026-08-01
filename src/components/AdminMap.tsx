@@ -101,7 +101,7 @@ export default function AdminMap({ teams, locations, events, finale }: Props) {
       map.fitBounds(L.latLngBounds(points).pad(0.3), { maxZoom: 16 });
       map.invalidateSize();
     }
-  }, [teams, locations, events, finale]);
+  }, [mapReady, teams, locations, events, finale]);
 
   return <div ref={containerRef} className="h-80 w-full rounded-2xl" />;
 }
