@@ -22,14 +22,6 @@ export async function setAllZones(unlocked: boolean) {
 export async function clearAllAnswers() {
   await supabase.from("answers").delete().not("id", "is", null);
   await supabase.from("quiz_answers").delete().not("id", "is", null);
-  console.log("BEFORE RPC");
-  const result = await supabase.rpc("test_rpc");
-
-  toast({
-    title: "RPC RESULT",
-
-    description: JSON.stringify(result),
-  });
 }
 
 export async function clearAllPhotos() {
@@ -67,7 +59,7 @@ export async function fullGameReset() {
 
 /** Verwijdert alle teams én alles wat eraan hangt. */
 export async function deleteAllTeams() {
-  const result = await supabase.rpc("delete_all_teams");
+  const result = await supabase.rpc("test_rpc");
   logRpc("delete_all_teams", result);
 }
 
