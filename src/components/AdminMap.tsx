@@ -1,5 +1,5 @@
-import { useEffect, useRef } from "react";
-import type { LocationEvent, Team, TeamLocation } from "@/lib/types";
+import { useEffect, useRef, useState } from "react";
+2import type { LocationEvent, Team, TeamLocation } from "@/lib/types";
 
 interface Props {
   teams: Team[];
