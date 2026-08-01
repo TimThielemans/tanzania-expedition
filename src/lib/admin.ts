@@ -58,8 +58,8 @@ export async function fullGameReset() {
 
 /** Verwijdert alle teams én alles wat eraan hangt. */
 export async function deleteAllTeams() {
-  const result = await supabase.rpc("test_delete");
-  logRpc("test_delete", result);
+  const result = await supabase.rpc("deleteAllTeams");
+  logRpc("delete_all_teams", result);
 }
 
 /* ------------------------------ teambeheer ------------------------------ */
