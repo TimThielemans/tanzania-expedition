@@ -52,6 +52,7 @@ export default function AdminMap({ teams, locations, events, finale }: Props) {
   }, []);
 
   useEffect(() => {
+    alert(`teams=${teams.length}, locations=${locations.length}, events=${events.length}`);
     const L = leafletRef.current;
     const layer = layerRef.current;
     const map = mapRef.current;
