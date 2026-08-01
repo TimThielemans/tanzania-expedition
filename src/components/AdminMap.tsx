@@ -40,6 +40,8 @@ export default function AdminMap({ teams, locations, events, finale }: Props) {
       mapRef.current = map;
       // Eerste tekening meteen na het initialiseren.
       map.invalidateSize();
+
+      setTimeout(() => map.invalidateSize(), 100);
     })();
     return () => {
       cancelled = true;
@@ -95,6 +97,12 @@ export default function AdminMap({ teams, locations, events, finale }: Props) {
 
     if (points.length > 0) map.fitBounds(L.latLngBounds(points).pad(0.3), { maxZoom: 16 });
   }, [teams, locations, events, finale]);
+
+  if (points.length > 0) {
+    map.fitBounds(L.latLngBounds(points).pad(0.3), { maxZoom: 16 });
+
+    map.invalidateSize();
+  }
 
   return <div ref={containerRef} className="h-80 w-full rounded-2xl" />;
 }

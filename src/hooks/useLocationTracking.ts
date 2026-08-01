@@ -11,7 +11,6 @@ import { getDeviceId } from "@/lib/device";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { LocationEvent } from "@/lib/types";
 
-
 const MIN_INTERVAL_MS = 20_000;
 const MIN_DISTANCE_M = 20;
 
@@ -34,14 +33,7 @@ interface Options {
  * ingelogd + toestemming gegeven + tabblad actief + tracking aan door de reisleider.
  * Schrijft maximaal één update per 20 seconden en enkel na 20 meter verplaatsing.
  */
-export function useLocationTracking({
-  team,
-  trackingEnabled,
-  consented,
-  events,
-  activeZoneIds,
-  onTriggered,
-}: Options) {
+export function useLocationTracking({ team, trackingEnabled, consented, events, activeZoneIds, onTriggered }: Options) {
   const [permission, setPermission] = useState<LocationPermission>("unknown");
   const [isTracker, setIsTracker] = useState<boolean | null>(null);
   /** Was dit toestel de locatiedeler? Bepaalt of we een overnamemelding tonen. */
@@ -119,8 +111,6 @@ export function useLocationTracking({
     };
   }, [team?.id, consented, deviceId]);
 
-
-
   useEffect(() => {
     if (!team || !trackingEnabled || !consented || isTracker !== true) return;
     if (typeof navigator === "undefined" || !navigator.geolocation) {
@@ -143,11 +133,7 @@ export function useLocationTracking({
       void (async () => {
         try {
           await saveTeamLocation(team.id, { ...next, accuracy: pos.coords.accuracy });
-          const fired = await processGeofences(
-            { ...team, activeZoneIds: zonesRef.current },
-            next,
-            eventsRef.current,
-          );
+          const fired = await processGeofences({ ...team, activeZoneIds: zonesRef.current }, next, eventsRef.current);
           if (fired > 0) triggeredRef.current?.();
         } catch {
           /* offline of geweigerd: stil negeren */
