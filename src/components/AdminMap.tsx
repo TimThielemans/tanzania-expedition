@@ -52,7 +52,6 @@ export default function AdminMap({ teams, locations, events, finale }: Props) {
   }, []);
 
   useEffect(() => {
-    alert(`teams=${teams.length}, locations=${locations.length}, events=${events.length}`);
     const L = leafletRef.current;
     const layer = layerRef.current;
     const map = mapRef.current;
@@ -96,14 +95,11 @@ export default function AdminMap({ teams, locations, events, finale }: Props) {
       L.marker([finale.latitude, finale.longitude]).bindPopup("🏁 Finale").addTo(layer);
     }
 
-    if (points.length > 0) map.fitBounds(L.latLngBounds(points).pad(0.3), { maxZoom: 16 });
+    if (points.length > 0) {
+      map.fitBounds(L.latLngBounds(points).pad(0.3), { maxZoom: 16 });
+      map.invalidateSize();
+    }
   }, [teams, locations, events, finale]);
-
-  if (points.length > 0) {
-    map.fitBounds(L.latLngBounds(points).pad(0.3), { maxZoom: 16 });
-
-    map.invalidateSize();
-  }
 
   return <div ref={containerRef} className="h-80 w-full rounded-2xl" />;
 }
