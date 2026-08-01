@@ -37,14 +37,34 @@ export async function clearAllPhotos() {
  * leesstatussen, voortgang, zonecodes, eerste-team-prestaties, teamfoto's,
  * locaties, locatietriggers en locatieopdrachten, en zet bonusopdrachten uit.
  */
-export async function fullGameReset() {
-  // Eerst de bestanden uit Storage, daarna de databasekant in één transactie.
-  const { data } = await supabase.from("photos").select("storage_path");
-  const paths = (data ?? []).map((p) => p.storage_path).filter(Boolean) as string[];
-  if (paths.length > 0) await supabase.storage.from("photos").remove(paths);
+//export async function fullGameReset() {
+// Eerst de bestanden uit Storage, daarna de databasekant in één transactie.
+//const { data } = await supabase.from("photos").select("storage_path");
+//const paths = (data ?? []).map((p) => p.storage_path).filter(Boolean) as string[];
+//if (paths.length > 0) await supabase.storage.from("photos").remove(paths);
 
-  const { error } = await supabase.rpc("full_game_reset");
-  if (error) throw error;
+//const { error } = await supabase.rpc("full_game_reset");
+//if (error) throw error;
+//}
+
+export async function fullGameReset() {
+  const { data } = await supabase.from("photos").select("storage_path");
+
+  const paths = (data ?? []).map((p) => p.storage_path).filter(Boolean) as string[];
+
+  if (paths.length > 0) {
+    const { error: storageError } = await supabase.storage.from("photos").remove(paths);
+
+    console.log("STORAGE ERROR", storageError);
+
+    if (storageError) throw storageError;
+  }
+
+  const { error: rpcError } = await supabase.rpc("full_game_reset");
+
+  console.log("RPC ERROR", rpcError);
+
+  if (rpcError) throw rpcError;
 }
 
 /** Verwijdert alle teams én alles wat eraan hangt. */
@@ -89,9 +109,7 @@ export async function deleteTeam(id: string) {
 /* ------------------------------ instellingen ------------------------------ */
 
 export async function setSetting(key: string, value: string) {
-  const { error } = await supabase
-    .from("game_settings")
-    .upsert({ key, value }, { onConflict: "key" });
+  const { error } = await supabase.from("game_settings").upsert({ key, value }, { onConflict: "key" });
   if (error) throw error;
 }
 
