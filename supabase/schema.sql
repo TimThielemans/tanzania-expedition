@@ -433,9 +433,9 @@ begin
   delete from public.location_event_triggers
   where id is not null;
   delete from public.team_tracking_devices
-  where id is not null;
+  where team_id is not null;
   delete from public.team_locations
-  where id is not null;
+  where team_id is not null;
   delete from public.zone_completion_notices
   where id is not null;
   delete from public.zone_first_unlocks
