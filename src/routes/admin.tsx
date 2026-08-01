@@ -2,7 +2,22 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, Loader2, LogOut, Plus, Send, Star, Timer, Trash2, X } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  ChevronRight,
+  Loader2,
+  LogOut,
+  Pencil,
+  Plus,
+  Send,
+  Star,
+  Timer,
+  Trash2,
+  X,
+} from "lucide-react";
+import { describeError } from "@/lib/errors";
+
 import { AppShell } from "@/components/AppShell";
 import { ConfigNotice } from "@/components/ConfigNotice";
 import { StatusPill } from "@/components/StatusBadge";
@@ -36,7 +51,7 @@ import {
   reviewSubmission,
   setBonusActive,
   supportsCreativity,
-  updateBonusChallenge,
+  
 } from "@/lib/review";
 import type { ReviewVerdict } from "@/lib/review";
 import {
@@ -170,6 +185,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   >(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<ChallengeInput | null>(null);
+  const [detailTeamId, setDetailTeamId] = useState<string | null>(null);
+
 
   const refresh = () => queryClient.invalidateQueries();
   const teamName = (id: string) => teams?.find((t) => t.id === id)?.name ?? id;
@@ -201,6 +218,18 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   };
   const bonusChallenges = (challenges ?? []).filter((c) => c.is_bonus);
   const regularChallenges = (challenges ?? []).filter((c) => !c.is_bonus);
+
+  /* ---- teamdetail ---- */
+  const detailTeam = (teams ?? []).find((t) => t.id === detailTeamId);
+  const detailRank = (ranking ?? []).find((r) => r.team.id === detailTeamId);
+  const detailProgress = (progress ?? []).filter((p) => p.team_id === detailTeamId);
+  const detailGps = (locations ?? []).find((l) => l.team_id === detailTeamId)?.updated_at ?? null;
+  const detailDone = new Set([
+    ...(answers ?? []).filter((a) => a.team_id === detailTeamId).map((a) => a.challenge_id),
+    ...(quiz ?? []).filter((a) => a.team_id === detailTeamId).map((a) => a.challenge_id),
+    ...(photos ?? []).filter((p) => p.team_id === detailTeamId).map((p) => p.challenge_id),
+  ]).size;
+
 
   // Wachtende inzendingen staan altijd bovenaan.
   const pendingFirst = (rows: ReviewItem[]) =>
@@ -333,9 +362,11 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
       toast.success("Klaar.");
       await refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Actie mislukt.");
+      console.error("[admin] actie mislukt", error);
+      toast.error(describeError(error));
     }
   }
+
 
   const current = queue?.items[queue.index];
 
@@ -672,40 +703,27 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
           </Section>
 
           <Section title="Teamoverzicht">
-            <ul className="space-y-2">
-              {(teams ?? []).map((team) => {
-                const rows = (progress ?? []).filter((p) => p.team_id === team.id);
-                const doneIds = new Set([
-                  ...(answers ?? []).filter((a) => a.team_id === team.id).map((a) => a.challenge_id),
-                  ...(quiz ?? []).filter((a) => a.team_id === team.id).map((a) => a.challenge_id),
-                  ...(photos ?? []).filter((p) => p.team_id === team.id).map((p) => p.challenge_id),
-                ]);
-                return (
-                  <li key={team.id} className="rounded-2xl bg-muted px-3 py-2">
-                    <p className="flex items-center gap-2 text-sm font-semibold">
-                      <span aria-hidden>{gpsIndicator(team.id)}</span>
-                      <span className="min-w-0 truncate">{team.name}</span>
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {doneIds.size}/{regularChallenges.filter((c) => c.active).length} opdrachten ·{" "}
-                      {rows.filter((p) => p.unlocked).length} zones open
-                    </p>
-                    <p className="mt-1 flex flex-wrap gap-1 text-xs">
-                      {rows.map((p) => (
-                        <span key={p.id} className="rounded-lg bg-background px-2 py-0.5">
-                          {zoneName(p.zone_id)} {p.unlocked ? "🔑" : "🔒"}
-                          {p.completed ? "✅" : ""}
-                        </span>
-                      ))}
-                    </p>
-                  </li>
-                );
-              })}
+            <p className="text-sm text-muted-foreground">Tik op een team voor alle details.</p>
+            <ul className="mt-2 space-y-1">
+              {(teams ?? []).map((team) => (
+                <li key={team.id}>
+                  <button
+                    type="button"
+                    className="flex w-full items-center gap-2 rounded-2xl bg-muted px-3 py-2 text-left"
+                    onClick={() => setDetailTeamId(team.id)}
+                  >
+                    <span aria-hidden>{gpsIndicator(team.id)}</span>
+                    <span className="min-w-0 flex-1 truncate text-sm font-semibold">{team.name}</span>
+                    <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                  </button>
+                </li>
+              ))}
               {(teams ?? []).length === 0 ? (
                 <li className="text-sm text-muted-foreground">Nog geen teams.</li>
               ) : null}
             </ul>
           </Section>
+
 
           <div className="flex gap-2">
             <Button
@@ -955,7 +973,70 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         </TabsContent>
       </Tabs>
 
+      {/* ---------------- teamdetail-modal ---------------- */}
+      <Dialog open={detailTeam !== undefined} onOpenChange={(open) => !open && setDetailTeamId(null)}>
+        <DialogContent className="max-w-sm rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">{detailTeam?.name ?? ""}</DialogTitle>
+            <DialogDescription className="text-base">
+              GPS {detailTeam ? gpsIndicator(detailTeam.id) : ""} ·{" "}
+              {detailGps ? `laatste update ${fmt(detailGps)}` : "nog geen locatie doorgegeven"}
+            </DialogDescription>
+          </DialogHeader>
+
+          {detailTeam?.group_photo_url ? (
+            <img
+              src={detailTeam.group_photo_url}
+              alt={`Teamfoto van ${detailTeam.name}`}
+              className="max-h-56 w-full rounded-2xl object-cover"
+            />
+          ) : (
+            <p className="rounded-2xl bg-muted p-3 text-sm text-muted-foreground">Nog geen teamfoto.</p>
+          )}
+
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="rounded-2xl bg-muted p-3">
+              <p className="text-xs text-muted-foreground">Totaal</p>
+              <p className="text-xl font-bold">{detailRank?.points ?? 0}</p>
+            </div>
+            <div className="rounded-2xl bg-muted p-3">
+              <p className="text-xs text-muted-foreground">Plaats</p>
+              <p className="text-xl font-bold">{detailRank?.rank ?? "—"}</p>
+            </div>
+            <div className="rounded-2xl bg-muted p-3">
+              <p className="text-xs text-muted-foreground">Gewoon · bonus</p>
+              <p className="font-semibold">
+                {detailRank?.regularPoints ?? 0} · {detailRank?.bonusPoints ?? 0}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-muted p-3">
+              <p className="text-xs text-muted-foreground">⭐ Creativiteit</p>
+              <p className="font-semibold">{detailRank?.creativityPoints ?? 0}</p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-muted p-3">
+            <p className="text-xs text-muted-foreground">Zones</p>
+            <p className="mt-1 flex flex-wrap gap-1 text-xs">
+              {detailProgress.map((p) => (
+                <span key={p.id} className="rounded-lg bg-background px-2 py-0.5">
+                  {zoneName(p.zone_id)} {p.unlocked ? "🔑" : "🔒"}
+                  {p.completed ? "✅" : ""}
+                </span>
+              ))}
+              {detailProgress.length === 0 ? (
+                <span className="text-muted-foreground">Nog geen zonevoortgang.</span>
+              ) : null}
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {detailDone}/{regularChallenges.filter((c) => c.active).length} opdrachten ingestuurd
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* ---------------- review-modal ---------------- */}
+
       <Dialog open={current !== undefined} onOpenChange={(open) => !open && setQueue(null)}>
         <DialogContent className="max-w-sm rounded-3xl">
           <DialogHeader>
@@ -1018,42 +1099,38 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 
 /* ------------------------------ onderdelen ------------------------------ */
 
+/** Compacte rij: titel + schakelaar; uitklappen geeft de volledige editor. */
 function BonusRow({ challenge, onDone }: { challenge: Challenge; onDone: () => void }) {
-  const [minutes, setMinutes] = useState(String(challenge.duration_minutes));
-  const [points, setPoints] = useState(String(challenge.points));
-  const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState<ChallengeInput | null>(null);
   const remaining = bonusRemainingMs(challenge);
 
-  async function save() {
-    setBusy(true);
-    try {
-      await updateBonusChallenge(challenge.id, {
-        duration_minutes: Math.max(1, Number(minutes) || challenge.duration_minutes),
-        points: Number(points) || challenge.points,
-      });
-      toast.success("Opgeslagen.");
-      onDone();
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Opslaan mislukt.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return (
-    <div className="space-y-2 rounded-2xl bg-muted p-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">{challenge.title}</p>
-          {challenge.description ? (
-            <p className="truncate text-xs text-muted-foreground">{challenge.description}</p>
-          ) : null}
+    <div className="rounded-2xl bg-muted px-3 py-2">
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          className="min-w-0 flex-1 text-left"
+          onClick={() => {
+            const next = !open;
+            setOpen(next);
+            setValue(next ? toInput(challenge) : null);
+          }}
+        >
+          <p className="truncate text-sm font-semibold">
+            {challenge.active ? "" : "💤 "}
+            {challenge.title}
+            <span className="ml-1 text-xs text-muted-foreground">{challenge.points}p</span>
+          </p>
           {remaining > 0 ? (
-            <p className="mt-1 inline-flex items-center gap-1 text-xs font-bold text-primary">
+            <p className="inline-flex items-center gap-1 text-xs font-bold text-primary">
               <Timer className="size-3.5" /> nog {Math.ceil(remaining / 60000)} min
             </p>
           ) : null}
-        </div>
+        </button>
+        <ChevronDown
+          className={`size-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`}
+        />
         <Switch
           checked={challenge.bonus_active}
           aria-label={`${challenge.title} activeren`}
@@ -1063,39 +1140,34 @@ function BonusRow({ challenge, onDone }: { challenge: Challenge; onDone: () => v
               toast.success(checked ? "Bonusopdracht gestart." : "Bonusopdracht gestopt.");
               onDone();
             } catch (error) {
-              toast.error(error instanceof Error ? error.message : "Actie mislukt.");
+              toast.error(describeError(error));
             }
           }}
         />
       </div>
-      <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
-        <label className="text-xs font-semibold">
-          Minuten
-          <Input
-            type="number"
-            inputMode="numeric"
-            value={minutes}
-            onChange={(e) => setMinutes(e.target.value)}
-            className="h-10 rounded-xl"
+
+      {open && value ? (
+        <div className="mt-2 border-t border-border pt-2">
+          <ChallengeEditor
+            challengeId={challenge.id}
+            value={value}
+            onChange={setValue}
+            onSaved={() => {
+              setOpen(false);
+              setValue(null);
+              onDone();
+            }}
+            onCancel={() => {
+              setOpen(false);
+              setValue(null);
+            }}
           />
-        </label>
-        <label className="text-xs font-semibold">
-          Punten
-          <Input
-            type="number"
-            inputMode="numeric"
-            value={points}
-            onChange={(e) => setPoints(e.target.value)}
-            className="h-10 rounded-xl"
-          />
-        </label>
-        <Button className="mt-4 h-10 rounded-xl" disabled={busy} onClick={save}>
-          {busy ? <Loader2 className="size-4 animate-spin" /> : "Opslaan"}
-        </Button>
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 }
+
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -1157,11 +1229,13 @@ function ReviewRow({
   );
 }
 
-/** Teams aanmaken, hernoemen, wachtwoord wijzigen en verwijderen. */
+/** Teams aanmaken, hernoemen, wachtwoord wijzigen en verwijderen — compact. */
 function TeamManager({ onDone }: { onDone: () => void }) {
   const { data: teams } = useTeams();
+  const [adding, setAdding] = useState(false);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function run(action: () => Promise<unknown>) {
@@ -1171,44 +1245,63 @@ function TeamManager({ onDone }: { onDone: () => void }) {
       toast.success("Klaar.");
       onDone();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Actie mislukt.");
+      toast.error(describeError(error));
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <div className="space-y-3">
-      <div className="grid gap-2 rounded-2xl bg-muted p-3">
-        <Input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Teamnaam"
-          className="h-11 rounded-xl"
-        />
-        <Input
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Teamwachtwoord"
-          className="h-11 rounded-xl"
-        />
-        <Button
-          className="h-11 rounded-xl"
-          disabled={busy || !name.trim() || !password.trim()}
-          onClick={() =>
-            run(async () => {
-              await createTeam({ name, password, sortOrder: (teams?.length ?? 0) + 1 });
-              setName("");
-              setPassword("");
-            })
-          }
-        >
-          Team toevoegen
+    <div className="space-y-2">
+      {adding ? (
+        <div className="grid gap-2 rounded-2xl bg-muted p-3">
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Teamnaam"
+            className="h-11 rounded-xl"
+          />
+          <Input
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Teamwachtwoord"
+            className="h-11 rounded-xl"
+          />
+          <div className="flex gap-2">
+            <Button
+              className="h-11 flex-1 rounded-xl"
+              disabled={busy || !name.trim() || !password.trim()}
+              onClick={() =>
+                run(async () => {
+                  await createTeam({ name, password, sortOrder: (teams?.length ?? 0) + 1 });
+                  setName("");
+                  setPassword("");
+                  setAdding(false);
+                })
+              }
+            >
+              Team toevoegen
+            </Button>
+            <Button variant="secondary" className="h-11 rounded-xl" onClick={() => setAdding(false)}>
+              Sluiten
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Button variant="secondary" className="h-11 w-full rounded-2xl" onClick={() => setAdding(true)}>
+          <Plus className="mr-1 size-4" /> Team toevoegen
         </Button>
-      </div>
+      )}
 
       {(teams ?? []).map((team) => (
-        <TeamRow key={team.id} team={team} busy={busy} onRun={run} />
+        <TeamRow
+          key={team.id}
+          team={team}
+          busy={busy}
+          open={editingId === team.id}
+          onToggle={() => setEditingId(editingId === team.id ? null : team.id)}
+          onRun={run}
+        />
       ))}
       {(teams ?? []).length === 0 ? <p className="text-sm text-muted-foreground">Nog geen teams.</p> : null}
     </div>
@@ -1218,30 +1311,36 @@ function TeamManager({ onDone }: { onDone: () => void }) {
 function TeamRow({
   team,
   busy,
+  open,
+  onToggle,
   onRun,
 }: {
   team: Team;
   busy: boolean;
+  open: boolean;
+  onToggle: () => void;
   onRun: (action: () => Promise<unknown>) => Promise<void>;
 }) {
   const [name, setName] = useState(team.name);
   const [password, setPassword] = useState(team.password);
 
   return (
-    <div className="grid gap-2 rounded-2xl bg-muted p-3">
-      <Input value={name} onChange={(e) => setName(e.target.value)} className="h-11 rounded-xl" />
-      <Input value={password} onChange={(e) => setPassword(e.target.value)} className="h-11 rounded-xl" />
-      <div className="flex gap-2">
+    <div className="rounded-2xl bg-muted px-3 py-2">
+      <div className="flex items-center gap-2">
+        <p className="min-w-0 flex-1 truncate text-sm font-semibold">{team.name}</p>
         <Button
-          className="h-11 flex-1 rounded-xl"
-          disabled={busy}
-          onClick={() => onRun(() => updateTeam(team.id, { name: name.trim(), password: password.trim() }))}
+          size="icon"
+          variant="secondary"
+          className="size-9 rounded-xl"
+          aria-label={`${team.name} bewerken`}
+          onClick={onToggle}
         >
-          Opslaan
+          <Pencil className="size-4" />
         </Button>
         <Button
+          size="icon"
           variant="destructive"
-          className="h-11 rounded-xl"
+          className="size-9 rounded-xl"
           disabled={busy}
           aria-label={`${team.name} verwijderen`}
           onClick={() => {
@@ -1252,6 +1351,26 @@ function TeamRow({
           <Trash2 className="size-4" />
         </Button>
       </div>
+
+      {open ? (
+        <div className="mt-2 grid gap-2 border-t border-border pt-2">
+          <Input value={name} onChange={(e) => setName(e.target.value)} className="h-11 rounded-xl" />
+          <Input value={password} onChange={(e) => setPassword(e.target.value)} className="h-11 rounded-xl" />
+          <div className="flex gap-2">
+            <Button
+              className="h-11 flex-1 rounded-xl"
+              disabled={busy}
+              onClick={() => onRun(() => updateTeam(team.id, { name: name.trim(), password: password.trim() }))}
+            >
+              Opslaan
+            </Button>
+            <Button variant="secondary" className="h-11 rounded-xl" onClick={onToggle}>
+              Sluiten
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
+

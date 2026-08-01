@@ -1,5 +1,7 @@
 import { supabase } from "./supabase";
+import { logRpc } from "./errors";
 import type { AppNotification, NotificationAudience, NotificationRead } from "./types";
+
 
 export const ADMIN_READER = "admin";
 
@@ -62,9 +64,10 @@ export async function deleteNotification(id: string) {
 
 /** Wist álle meldingen én alle leesstatussen. */
 export async function deleteAllNotifications() {
-  const { error } = await supabase.rpc("delete_all_notifications");
-  if (error) throw error;
+  const result = await supabase.rpc("delete_all_notifications");
+  logRpc("delete_all_notifications", result);
 }
+
 
 
 export async function setNotificationActive(id: string, active: boolean) {

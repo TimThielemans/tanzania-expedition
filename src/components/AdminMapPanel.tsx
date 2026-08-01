@@ -356,23 +356,49 @@ export function AdminMapPanel() {
       </Section>
 
       <Section title="Nieuw locatie-event">
-        <EventForm
-          draft={draft}
-          setDraft={setDraft}
-          center={finale}
-          zones={zones ?? []}
-          locationChallenges={candidatesFor(null)}
-          linkedChallengeId={draftChallenge}
-          onLinkChange={setDraftChallenge}
-        />
-        <Button
-          className="h-12 w-full rounded-2xl"
-          disabled={busy || !draft.name.trim()}
-          onClick={saveNewEvent}
-        >
-          {busy ? <Loader2 className="size-4 animate-spin" /> : "Locatie-event toevoegen"}
-        </Button>
+        {showNew ? (
+          <>
+            <EventForm
+              draft={draft}
+              setDraft={setDraft}
+              center={finale}
+              zones={zones ?? []}
+              locationChallenges={candidatesFor(null)}
+              linkedChallengeId={draftChallenge}
+              onLinkChange={setDraftChallenge}
+            />
+            <div className="flex gap-2">
+              <Button
+                className="h-12 flex-1 rounded-2xl"
+                disabled={busy || !draft.name.trim()}
+                onClick={saveNewEvent}
+              >
+                {busy ? <Loader2 className="size-4 animate-spin" /> : "Locatie-event toevoegen"}
+              </Button>
+              <Button
+                variant="secondary"
+                className="h-12 rounded-2xl"
+                onClick={() => {
+                  setShowNew(false);
+                  setDraft(emptyLocationEvent);
+                  setDraftChallenge("none");
+                }}
+              >
+                Sluiten
+              </Button>
+            </div>
+          </>
+        ) : (
+          <Button
+            variant="secondary"
+            className="h-11 w-full rounded-2xl"
+            onClick={() => setShowNew(true)}
+          >
+            <Plus className="mr-1 size-4" /> Locatie-event toevoegen
+          </Button>
+        )}
       </Section>
+
 
       <Section title={`Locatie-events (${events?.length ?? 0})`}>
         {(events ?? []).map((event) => {
