@@ -2,7 +2,7 @@ import { lazy, Suspense, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ChevronDown, Loader2, Trash2 } from "lucide-react";
+import { ChevronDown, Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -227,7 +227,9 @@ export function AdminMapPanel() {
   const { data: challenges } = useAllChallenges();
   const { data: settings } = useSettings();
   const [draft, setDraft] = useState<LocationEventInput>(emptyLocationEvent);
+  const [showNew, setShowNew] = useState(false);
   const [draftChallenge, setDraftChallenge] = useState("none");
+
   const [openId, setOpenId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<LocationEventInput | null>(null);
   const [busy, setBusy] = useState(false);
@@ -272,6 +274,8 @@ export function AdminMapPanel() {
       await applyLink(id, draftChallenge, "none");
       setDraft(emptyLocationEvent);
       setDraftChallenge("none");
+      setShowNew(false);
+
       toast.success("Locatie-event aangemaakt.");
       await refresh();
     } catch (error) {
@@ -356,23 +360,49 @@ export function AdminMapPanel() {
       </Section>
 
       <Section title="Nieuw locatie-event">
-        <EventForm
-          draft={draft}
-          setDraft={setDraft}
-          center={finale}
-          zones={zones ?? []}
-          locationChallenges={candidatesFor(null)}
-          linkedChallengeId={draftChallenge}
-          onLinkChange={setDraftChallenge}
-        />
-        <Button
-          className="h-12 w-full rounded-2xl"
-          disabled={busy || !draft.name.trim()}
-          onClick={saveNewEvent}
-        >
-          {busy ? <Loader2 className="size-4 animate-spin" /> : "Locatie-event toevoegen"}
-        </Button>
+        {showNew ? (
+          <>
+            <EventForm
+              draft={draft}
+              setDraft={setDraft}
+              center={finale}
+              zones={zones ?? []}
+              locationChallenges={candidatesFor(null)}
+              linkedChallengeId={draftChallenge}
+              onLinkChange={setDraftChallenge}
+            />
+            <div className="flex gap-2">
+              <Button
+                className="h-12 flex-1 rounded-2xl"
+                disabled={busy || !draft.name.trim()}
+                onClick={saveNewEvent}
+              >
+                {busy ? <Loader2 className="size-4 animate-spin" /> : "Locatie-event toevoegen"}
+              </Button>
+              <Button
+                variant="secondary"
+                className="h-12 rounded-2xl"
+                onClick={() => {
+                  setShowNew(false);
+                  setDraft(emptyLocationEvent);
+                  setDraftChallenge("none");
+                }}
+              >
+                Sluiten
+              </Button>
+            </div>
+          </>
+        ) : (
+          <Button
+            variant="secondary"
+            className="h-11 w-full rounded-2xl"
+            onClick={() => setShowNew(true)}
+          >
+            <Plus className="mr-1 size-4" /> Locatie-event toevoegen
+          </Button>
+        )}
       </Section>
+
 
       <Section title={`Locatie-events (${events?.length ?? 0})`}>
         {(events ?? []).map((event) => {

@@ -1,6 +1,8 @@
 import { supabase } from "./supabase";
+import { describeError, logRpc } from "./errors";
 import { fetchTeams, fetchZones } from "./api";
 import type { Challenge, Team } from "./types";
+
 
 /* ------------------------------ admin acties ------------------------------ */
 
@@ -37,41 +39,31 @@ export async function clearAllPhotos() {
  * leesstatussen, voortgang, zonecodes, eerste-team-prestaties, teamfoto's,
  * locaties, locatietriggers en locatieopdrachten, en zet bonusopdrachten uit.
  */
-//export async function fullGameReset() {
-// Eerst de bestanden uit Storage, daarna de databasekant in één transactie.
-//const { data } = await supabase.from("photos").select("storage_path");
-//const paths = (data ?? []).map((p) => p.storage_path).filter(Boolean) as string[];
-//if (paths.length > 0) await supabase.storage.from("photos").remove(paths);
-
-//const { error } = await supabase.rpc("full_game_reset");
-//if (error) throw error;
-//}
-
 export async function fullGameReset() {
-  const { data } = await supabase.from("photos").select("storage_path");
-
-  const paths = (data ?? []).map((p) => p.storage_path).filter(Boolean) as string[];
-
-  if (paths.length > 0) {
-    const { error: storageError } = await supabase.storage.from("photos").remove(paths);
-
-    console.log("STORAGE ERROR", storageError);
-
-    if (storageError) throw storageError;
+  // Eerst de bestanden uit Storage, daarna de databasekant in één transactie.
+  const { data, error: readError } = await supabase.from("photos").select("storage_path");
+  if (readError) {
+    console.info("[reset] fotopaden lezen mislukt", JSON.stringify(readError));
+    throw new Error(`Fotopaden lezen: ${describeError(readError)}`);
   }
 
-  const { error: rpcError } = await supabase.rpc("full_game_reset");
+  const paths = (data ?? []).map((p) => p.storage_path).filter(Boolean) as string[];
+  if (paths.length > 0) {
+    const { error: storageError } = await supabase.storage.from("photos").remove(paths);
+    console.info("[reset] storage", { count: paths.length, error: storageError ? JSON.stringify(storageError) : null });
+    if (storageError) throw new Error(`Storage opruimen: ${describeError(storageError)}`);
+  }
 
-  console.log("RPC ERROR", rpcError);
-
-  if (rpcError) throw rpcError;
+  const result = await supabase.rpc("full_game_reset");
+  logRpc("full_game_reset", result);
 }
 
 /** Verwijdert alle teams én alles wat eraan hangt. */
 export async function deleteAllTeams() {
-  const { error } = await supabase.rpc("delete_all_teams");
-  if (error) throw error;
+  const result = await supabase.rpc("delete_all_teams");
+  logRpc("delete_all_teams", result);
 }
+
 
 /* ------------------------------ teambeheer ------------------------------ */
 

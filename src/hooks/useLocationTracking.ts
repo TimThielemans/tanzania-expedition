@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import {
   claimTrackingDevice,
   distanceMeters,
@@ -7,7 +8,9 @@ import {
   saveTeamLocation,
 } from "@/lib/locations";
 import { getDeviceId } from "@/lib/device";
+import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { LocationEvent } from "@/lib/types";
+
 
 const MIN_INTERVAL_MS = 20_000;
 const MIN_DISTANCE_M = 20;
@@ -41,7 +44,11 @@ export function useLocationTracking({
 }: Options) {
   const [permission, setPermission] = useState<LocationPermission>("unknown");
   const [isTracker, setIsTracker] = useState<boolean | null>(null);
+  /** Was dit toestel de locatiedeler? Bepaalt of we een overnamemelding tonen. */
+  const wasTrackerRef = useRef(false);
+  if (isTracker === true) wasTrackerRef.current = true;
   const deviceId = typeof window === "undefined" ? "server" : getDeviceId();
+
   const zonesRef = useRef(activeZoneIds ?? []);
   zonesRef.current = activeZoneIds ?? [];
   const last = useRef<{ latitude: number; longitude: number; at: number } | null>(null);
@@ -67,6 +74,52 @@ export function useLocationTracking({
       cancelled = true;
     };
   }, [team?.id, trackingEnabled, consented, deviceId]);
+
+  // Neemt een ander toestel het over? Dan meldt dit toestel dat het stopt.
+  useEffect(() => {
+    if (!team || !isSupabaseConfigured || !consented) return;
+    const teamId = team.id;
+
+    const apply = (owner: string | null | undefined) => {
+      const mine = owner === deviceId;
+      setIsTracker(mine);
+      if (!mine && wasTrackerRef.current) {
+        toast("📍 Een ander toestel deelt nu de locatie voor jouw team.", { duration: 8000 });
+      }
+      wasTrackerRef.current = mine;
+    };
+
+    const channel = supabase
+      .channel(`tracking-owner-${teamId}-${deviceId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "team_tracking_devices",
+          filter: `team_id=eq.${teamId}`,
+        },
+        (payload) => {
+          const row = (payload.new ?? payload.old) as { device_id?: string } | null;
+          apply(row?.device_id);
+        },
+      )
+      .subscribe();
+
+    // Vangnet als realtime even niet doorkomt.
+    const interval = window.setInterval(() => {
+      void fetchTrackingDevice(teamId)
+        .then((current) => apply(current?.device_id))
+        .catch(() => undefined);
+    }, 30_000);
+
+    return () => {
+      window.clearInterval(interval);
+      void supabase.removeChannel(channel);
+    };
+  }, [team?.id, consented, deviceId]);
+
+
 
   useEffect(() => {
     if (!team || !trackingEnabled || !consented || isTracker !== true) return;
