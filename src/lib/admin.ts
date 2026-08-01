@@ -31,7 +31,6 @@ export async function clearAllPhotos() {
   await supabase.from("photos").delete().not("id", "is", null);
   await supabase.from("teams").update({ group_photo_url: null }).not("id", "is", null);
 }
-
 /**
  * Volledige reset: het spel staat daarna exact zoals bij een verse opstart.
  * Wist antwoorden, quizantwoorden, foto's (ook uit Storage), meldingen en
@@ -59,8 +58,8 @@ export async function fullGameReset() {
 
 /** Verwijdert alle teams én alles wat eraan hangt. */
 export async function deleteAllTeams() {
-  const result = await supabase.rpc("test_rpc");
-  logRpc("test_rpc", result);
+  const result = await supabase.rpc("test_delete");
+  logRpc("test_delete", result);
 }
 
 /* ------------------------------ teambeheer ------------------------------ */
