@@ -2,7 +2,7 @@ import { lazy, Suspense, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ChevronDown, Loader2, Trash2 } from "lucide-react";
+import { ChevronDown, Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -227,7 +227,9 @@ export function AdminMapPanel() {
   const { data: challenges } = useAllChallenges();
   const { data: settings } = useSettings();
   const [draft, setDraft] = useState<LocationEventInput>(emptyLocationEvent);
+  const [showNew, setShowNew] = useState(false);
   const [draftChallenge, setDraftChallenge] = useState("none");
+
   const [openId, setOpenId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<LocationEventInput | null>(null);
   const [busy, setBusy] = useState(false);
