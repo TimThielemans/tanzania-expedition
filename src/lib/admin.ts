@@ -22,7 +22,7 @@ export async function setAllZones(unlocked: boolean) {
 export async function clearAllAnswers() {
   await supabase.from("answers").delete().not("id", "is", null);
   await supabase.from("quiz_answers").delete().not("id", "is", null);
-
+  console.log("BEFORE RPC");
   const result = await supabase.rpc("test_rpc");
   console.log(result);
 }
