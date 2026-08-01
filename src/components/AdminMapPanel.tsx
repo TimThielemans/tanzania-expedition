@@ -274,6 +274,8 @@ export function AdminMapPanel() {
       await applyLink(id, draftChallenge, "none");
       setDraft(emptyLocationEvent);
       setDraftChallenge("none");
+      setShowNew(false);
+
       toast.success("Locatie-event aangemaakt.");
       await refresh();
     } catch (error) {
