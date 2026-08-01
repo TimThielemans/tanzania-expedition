@@ -388,15 +388,18 @@ $$;
 -- ============================================================
 -- RPC: alle meldingen wissen
 -- ============================================================
-create or replace function public.delete_all_notifications()
+    create or replace function public.delete_all_notifications()
 returns void
 language plpgsql
 security definer
 set search_path = public
 as $$
 begin
-  delete from public.notification_reads;
-  delete from public.notifications;
+  delete from public.notification_reads
+   where id is not null;
+
+  delete from public.notifications
+   where id is not null;
 end;
 $$;
 
@@ -416,17 +419,29 @@ set search_path = public
 as $$
 begin
   delete from public.notification_reads;
+   where id is not null;
   delete from public.notifications;
+   where id is not null;
   delete from public.answers;
+   where id is not null;
   delete from public.quiz_answers;
+   where id is not null;
   delete from public.photos;
+   where id is not null;
   delete from public.location_challenge_states;
+   where id is not null;
   delete from public.location_event_triggers;
+   where id is not null;
   delete from public.team_tracking_devices;
+   where id is not null;
   delete from public.team_locations;
+   where id is not null;
   delete from public.zone_completion_notices;
+   where id is not null;
   delete from public.zone_first_unlocks;
+   where id is not null;
   delete from public.team_progress;
+   where id is not null;
 
   update public.scores
      set points = 0, regular_points = 0, bonus_points = 0, creativity_points = 0,
@@ -463,8 +478,11 @@ set search_path = public
 as $$
 begin
   delete from public.notification_reads;
+   where id is not null;
   delete from public.notifications;
+   where id is not null;
   delete from public.teams;  -- cascade ruimt de rest op
+   where id is not null;
 end;
 $$;
 
