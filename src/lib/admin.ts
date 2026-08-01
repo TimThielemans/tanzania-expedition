@@ -3,7 +3,6 @@ import { describeError, logRpc } from "./errors";
 import { fetchTeams, fetchZones } from "./api";
 import type { Challenge, Team } from "./types";
 
-
 /* ------------------------------ admin acties ------------------------------ */
 
 export async function setAllZones(unlocked: boolean) {
@@ -23,6 +22,9 @@ export async function setAllZones(unlocked: boolean) {
 export async function clearAllAnswers() {
   await supabase.from("answers").delete().not("id", "is", null);
   await supabase.from("quiz_answers").delete().not("id", "is", null);
+
+  const result = await supabase.rpc("test_rpc");
+  console.log(result);
 }
 
 export async function clearAllPhotos() {
@@ -63,7 +65,6 @@ export async function deleteAllTeams() {
   const result = await supabase.rpc("delete_all_teams");
   logRpc("delete_all_teams", result);
 }
-
 
 /* ------------------------------ teambeheer ------------------------------ */
 
