@@ -20,6 +20,7 @@ export default function AdminMap({ teams, locations, events, finale }: Props) {
   const mapRef = useRef<import("leaflet").Map | null>(null);
   const layerRef = useRef<import("leaflet").LayerGroup | null>(null);
   const leafletRef = useRef<typeof import("leaflet") | null>(null);
+  const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -38,6 +39,7 @@ export default function AdminMap({ teams, locations, events, finale }: Props) {
       }).addTo(map);
       layerRef.current = L.layerGroup().addTo(map);
       mapRef.current = map;
+      setMapReady(true);
       // Eerste tekening meteen na het initialiseren.
       map.invalidateSize();
 
