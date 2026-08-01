@@ -445,7 +445,8 @@ begin
 
   update public.scores
      set points = 0, regular_points = 0, bonus_points = 0, creativity_points = 0,
-         last_scored_at = now(), updated_at = now();
+         last_scored_at = now(), updated_at = now()
+    where team_id is not null;;
 
   update public.teams set group_photo_url = null where group_photo_url is not null;
 
