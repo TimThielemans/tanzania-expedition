@@ -11,7 +11,7 @@ insert into public.game_settings (key, value) values
   ('show_scoreboard',           'true'),
   ('show_statistics',           'true'),
   ('show_gallery',              'true'),
-  ('location_tracking_enabled', 'false'),
+  ('location_tracking_enabled', 'true'),
   ('finale_latitude',           '50.8798'),
   ('finale_longitude',          '4.7005'),
   ('finale_label',              'Finale')
