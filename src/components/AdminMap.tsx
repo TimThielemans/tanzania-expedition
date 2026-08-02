@@ -98,22 +98,23 @@ export default function AdminMap({ teams, locations, events, finale }: Props) {
       const finaleIcon = L.divIcon({
         html: `
     <div style="
-      background:#f59e0b;
-      color:white;
-      padding:6px 12px;
-      border-radius:999px;
-      border:3px solid white;
-      font-weight:bold;
-      box-shadow:0 2px 8px rgba(0,0,0,.35);
-      white-space:nowrap;
-      font-size:14px;
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      background:#CA8F45;
+      border:2px solid white;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:16px;
+      box-shadow:0 2px 6px rgba(0,0,0,.3);
     ">
       🏁
     </div>
   `,
         className: "",
-        iconSize: [90, 40],
-        iconAnchor: [45, 20],
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
       });
 
       L.marker([finale.latitude, finale.longitude], { icon: finaleIcon }).bindPopup("🏁 Finale").addTo(layer);
