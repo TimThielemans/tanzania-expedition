@@ -46,7 +46,13 @@ import {
   useTrackingDevices,
 } from "@/hooks/useGame";
 import { addPoints, bonusRemainingMs, sortZones, verifyAdminPassword } from "@/lib/api";
-import { markPhotoAsGroupPhoto, reviewSubmission, setBonusActive, supportsCreativity } from "@/lib/review";
+import {
+  markPhotoAsGroupPhoto,
+  reviewSubmission,
+  setBonusActive,
+  supportsCreativity,
+  
+} from "@/lib/review";
 import type { ReviewVerdict } from "@/lib/review";
 import {
   deleteAllNotifications,
@@ -181,6 +187,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [editValue, setEditValue] = useState<ChallengeInput | null>(null);
   const [detailTeamId, setDetailTeamId] = useState<string | null>(null);
 
+
   const refresh = () => queryClient.invalidateQueries();
   const teamName = (id: string) => teams?.find((t) => t.id === id)?.name ?? id;
   const challenge = (id: string) => challenges?.find((c) => c.id === id);
@@ -222,6 +229,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     ...(quiz ?? []).filter((a) => a.team_id === detailTeamId).map((a) => a.challenge_id),
     ...(photos ?? []).filter((p) => p.team_id === detailTeamId).map((p) => p.challenge_id),
   ]).size;
+
 
   // Wachtende inzendingen staan altijd bovenaan.
   const pendingFirst = (rows: ReviewItem[]) =>
@@ -359,6 +367,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     }
   }
 
+
   const current = queue?.items[queue.index];
 
   return (
@@ -395,28 +404,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
         </TabsList>
 
         {/* ---------------- antwoorden ---------------- */}
-
         <TabsContent value="answers" className="mt-4 space-y-4">
-          <Section title="Nakijken">
-            <div className="grid gap-2">
-              <Button
-                className="h-12 rounded-2xl"
-                disabled={pendingAnswers.length === 0}
-                onClick={() => setQueue({ items: pendingAnswers, index: 0 })}
-              >
-                Antwoorden nakijken ({pendingAnswers.length})
-              </Button>
-              <Button
-                variant="secondary"
-                className="h-12 rounded-2xl"
-                disabled={pendingPhotos.length === 0}
-                onClick={() => setQueue({ items: pendingPhotos, index: 0 })}
-              >
-                Foto's nakijken ({pendingPhotos.length})
-              </Button>
-            </div>
-          </Section>
-
           <Section title="Filters">
             <div className="grid gap-2">
               <Select value={teamFilter} onValueChange={setTeamFilter}>
@@ -474,6 +462,26 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               </div>
             </Section>
           ) : null}
+
+          <Section title="Nakijken">
+            <div className="grid gap-2">
+              <Button
+                className="h-12 rounded-2xl"
+                disabled={pendingAnswers.length === 0}
+                onClick={() => setQueue({ items: pendingAnswers, index: 0 })}
+              >
+                Antwoorden nakijken ({pendingAnswers.length})
+              </Button>
+              <Button
+                variant="secondary"
+                className="h-12 rounded-2xl"
+                disabled={pendingPhotos.length === 0}
+                onClick={() => setQueue({ items: pendingPhotos, index: 0 })}
+              >
+                Foto's nakijken ({pendingPhotos.length})
+              </Button>
+            </div>
+          </Section>
 
           <Section title={`Antwoorden (${filteredItems.length})`}>
             {filteredItems.map((row) => (
@@ -710,9 +718,12 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
                   </button>
                 </li>
               ))}
-              {(teams ?? []).length === 0 ? <li className="text-sm text-muted-foreground">Nog geen teams.</li> : null}
+              {(teams ?? []).length === 0 ? (
+                <li className="text-sm text-muted-foreground">Nog geen teams.</li>
+              ) : null}
             </ul>
           </Section>
+
 
           <div className="flex gap-2">
             <Button
@@ -730,6 +741,7 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
             </Button>
           </div>
         </TabsContent>
+
 
         {/* ---------------- meldingen ---------------- */}
         <TabsContent value="meldingen" className="mt-4 space-y-4">
@@ -855,6 +867,8 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               {(teams ?? []).length === 0 ? <li className="text-sm text-muted-foreground">Nog geen teams.</li> : null}
             </ul>
           </Section>
+
+
 
           <Section title="Exporteren">
             <div className="grid gap-2">
@@ -1154,6 +1168,7 @@ function BonusRow({ challenge, onDone }: { challenge: Challenge; onDone: () => v
   );
 }
 
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="rounded-3xl border border-border bg-card p-4 shadow-card">
@@ -1358,3 +1373,4 @@ function TeamRow({
     </div>
   );
 }
+
