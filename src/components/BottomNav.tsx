@@ -29,8 +29,9 @@ export function BottomNav() {
         {items.map(({ to, label, icon: Icon }) => {
           const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
           return (
-            <li key={to}>
+            <li key={to} data-tour={to === "/meldingen" ? "nav-meldingen" : undefined}>
               <Link
+
                 to={to}
                 className={cn(
                   "flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors",
