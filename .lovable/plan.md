@@ -8,9 +8,16 @@ Een korte, speelse coach-mark tour van max. een minuut die nieuwe teams langs Me
    "👋 Welkom {Teamnaam} in Tanzania! Je hebt net een belangrijke melding ontvangen. Ga eerst naar het tabblad Meldingen." De Meldingen-tab in de bottom nav licht op (glow + pulse). Eén knop: **Naar Meldingen**. Rechtsboven een kleine "Overslaan".
 2. **Meldingen** — de knop "Alles gelezen" licht op. Kaartje onderaan: "Open je nieuwe bericht en markeer daarna alle meldingen als gelezen." Geen knop; de stap gaat verder zodra de gebruiker echt op "Alles gelezen" tikt.
 3. **Na "Alles gelezen"** — kaartje: "Goed bezig! 🎉 Ga nu naar Speluitleg om te ontdekken hoe het spel werkt." Eén knop: **Naar Speluitleg** (navigeert naar Info).
-4. **Speluitleg** — de uitleg-lijst licht op. Kaartje: "Lees rustig de uitleg en keer daarna terug naar het spel via home. Veel succes! 🇹🇿" Knop: **Aan de slag** → gaat naar home en sluit de tour definitief.
+4. **Speluitleg** — de uitleg-lijst licht op, de gebruiker mag vrij lezen (geen verplichte klik). Kaartje: "Lees rustig de speluitleg door. Wanneer je klaar bent, gaan we naar het startscherm." Knop: **Naar Home**.
+5. **Home guided tour** — drie puur informatieve highlights, telkens met een **Volgende**-knop (de echte UI hoeft niet aangeklikt te worden):
+   - *Teamoverzicht (de balk bovenaan)*: "Hier zie je jouw teaminformatie en voortgang tijdens het avontuur." → Volgende
+   - *Locatie delen (de locatiekaart)*: "Deel hier de locatie van je team. Zo kunnen locatie-opdrachten automatisch verschijnen wanneer jullie belangrijke plaatsen bereiken. Gebruik je later een ander toestel? Dan kan dat toestel de locatie-overdracht overnemen." → Volgende
+   - *Zonekaarten*: "Hier begint jullie avontuur. Open een zone, voltooi opdrachten en ontdek stap voor stap het verhaal. Je kan steeds terug naar home als er nieuwe zones zijn ontgrendeld. Veel succes en vooral veel plezier! 🇹🇿" → **Start het avontuur** (laatste stap: onboarding wordt afgerond en verdwijnt definitief).
+
+Als het locatieblok niet zichtbaar is (tracking uit), wordt die highlight overgeslagen en gaat de tour door naar de zonekaarten.
 
 Afgerond of overgeslagen = nooit meer tonen voor dat team op dat toestel. Ander team op hetzelfde toestel krijgt de tour opnieuw.
+
 
 ## Technische opzet
 
@@ -39,6 +46,8 @@ Een stap toevoegen/herordenen = een object in die array toevoegen of verplaatsen
 - `src/components/BottomNav.tsx`: `data-tour="nav-meldingen"` op het Meldingen-item.
 - `src/routes/meldingen.tsx`: `data-tour="mark-all-read"` op de knop; `emitTourEvent("notifications-all-read")` na een geslaagde `markAllRead()`.
 - `src/routes/info.tsx`: `data-tour="rules"` op de accordeon-container.
+- `src/routes/index.tsx`: `data-tour="team-bar"` op de teamsamenvatting, `data-tour="location-share"` op het locatieblok, `data-tour="zones"` op de zonelijst. Ontbrekende targets slaat de tour automatisch over.
 - `src/routes/__root.tsx`: `<OnboardingTour />` mounten.
+
 
 Geen databasewijzigingen, geen wijziging aan spel- of scorelogica.
