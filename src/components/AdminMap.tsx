@@ -108,7 +108,7 @@ export default function AdminMap({ teams, locations, events, finale }: Props) {
       white-space:nowrap;
       font-size:14px;
     ">
-      🏁 FINALE
+      🏁
     </div>
   `,
         className: "",
