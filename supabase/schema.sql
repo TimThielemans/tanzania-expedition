@@ -465,6 +465,19 @@ begin
   ) z
   on conflict (team_id, zone_id) do update
     set unlocked = true, unlocked_at = now();
+
+  insert into public.notifications (
+    title,
+    body,
+    audience,
+    kind
+  )
+  values (
+    'Welkom!',
+    '👋 Welkom bij BOW in Tanzania! Open eerst het tabblad Meldingen en volg de korte opstartgids.',
+    'all',
+    'info'
+  );
 end;
 $$;
 
