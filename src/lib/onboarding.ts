@@ -132,7 +132,9 @@ export function useOnboarding(teamId: string | null) {
     sync();
     setHydrated(true);
     listeners.add(sync);
-    return () => listeners.delete(sync);
+    return () => {
+      listeners.delete(sync);
+    };
   }, [teamId]);
 
   const index = ONBOARDING_STEPS.findIndex((s) => s.id === stepId);
@@ -155,7 +157,9 @@ export function useOnboarding(teamId: string | null) {
       if (name === step.advanceOn) next();
     };
     tourEvents.add(listener);
-    return () => tourEvents.delete(listener);
+    return () => {
+      tourEvents.delete(listener);
+    };
   }, [step?.advanceOn, step, next]);
 
   return { step, hydrated, next, skip };
