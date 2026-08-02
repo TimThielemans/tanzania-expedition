@@ -396,27 +396,27 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
 
         {/* ---------------- antwoorden ---------------- */}
 
-        <Section title="Nakijken">
-          <div className="grid gap-2">
-            <Button
-              className="h-12 rounded-2xl"
-              disabled={pendingAnswers.length === 0}
-              onClick={() => setQueue({ items: pendingAnswers, index: 0 })}
-            >
-              Antwoorden nakijken ({pendingAnswers.length})
-            </Button>
-            <Button
-              variant="secondary"
-              className="h-12 rounded-2xl"
-              disabled={pendingPhotos.length === 0}
-              onClick={() => setQueue({ items: pendingPhotos, index: 0 })}
-            >
-              Foto's nakijken ({pendingPhotos.length})
-            </Button>
-          </div>
-        </Section>
-
         <TabsContent value="answers" className="mt-4 space-y-4">
+          <Section title="Nakijken">
+            <div className="grid gap-2">
+              <Button
+                className="h-12 rounded-2xl"
+                disabled={pendingAnswers.length === 0}
+                onClick={() => setQueue({ items: pendingAnswers, index: 0 })}
+              >
+                Antwoorden nakijken ({pendingAnswers.length})
+              </Button>
+              <Button
+                variant="secondary"
+                className="h-12 rounded-2xl"
+                disabled={pendingPhotos.length === 0}
+                onClick={() => setQueue({ items: pendingPhotos, index: 0 })}
+              >
+                Foto's nakijken ({pendingPhotos.length})
+              </Button>
+            </div>
+          </Section>
+
           <Section title="Filters">
             <div className="grid gap-2">
               <Select value={teamFilter} onValueChange={setTeamFilter}>
