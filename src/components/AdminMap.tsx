@@ -11,6 +11,12 @@ interface Props {
 
 const TEAM_COLORS = ["#2563eb", "#dc2626", "#16a34a", "#d97706", "#7c3aed", "#0891b2", "#db2777"];
 
+const finaleIcon = L.divIcon({
+  html: "🏁",
+  className: "",
+  iconSize: [28, 28],
+});
+
 /**
  * Live kaart met alle teamposities. Leaflet raakt `window` aan, dus dit
  * onderdeel wordt enkel na hydratatie geladen (zie AdminMapPanel).
@@ -94,7 +100,7 @@ export default function AdminMap({ teams, locations, events, finale }: Props) {
 
     if (finale) {
       points.push([finale.latitude, finale.longitude]);
-      L.marker([finale.latitude, finale.longitude]).bindPopup("🏁 Finale").addTo(layer);
+      L.marker([finale.latitude, finale.longitude], { icon: finaleIcon }).bindPopup("🏁 Finale").addTo(layer);
     }
 
     if (points.length > 0) {
