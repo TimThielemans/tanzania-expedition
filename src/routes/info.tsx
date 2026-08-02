@@ -101,7 +101,7 @@ const SECTIONS = [
 function InfoPage() {
   return (
     <AppShell title="Spelinfo" subtitle="Alles wat jullie moeten weten">
-      <div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
+      <div data-tour="rules" className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
         <Accordion type="multiple" defaultValue={["spel"]}>
           {SECTIONS.map((section) => (
             <AccordionItem key={section.id} value={section.id}>

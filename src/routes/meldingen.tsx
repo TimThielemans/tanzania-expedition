@@ -5,6 +5,7 @@ import { ConfigNotice } from "@/components/ConfigNotice";
 import { Button } from "@/components/ui/button";
 import { useNotificationCenter } from "@/hooks/useNotificationCenter";
 import { useTeamSession } from "@/lib/session";
+import { emitTourEvent } from "@/lib/onboarding";
 import { useAdminSession } from "@/lib/admin-session";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
@@ -57,7 +58,15 @@ function NotificationsPage() {
       subtitle={unread > 0 ? `${unread} ongelezen` : "Alles gelezen"}
       action={
         unread > 0 ? (
-          <Button variant="secondary" size="sm" className="rounded-full" onClick={() => void markAllRead()}>
+          <Button
+            data-tour="mark-all-read"
+            variant="secondary"
+            size="sm"
+            className="rounded-full"
+            onClick={() => {
+              void markAllRead().then(() => emitTourEvent("notifications-all-read"));
+            }}
+          >
             <CheckCheck className="size-4" /> Alles gelezen
           </Button>
         ) : undefined
