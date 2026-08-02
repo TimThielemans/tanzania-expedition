@@ -306,6 +306,7 @@ function HomeScreen({ teamId }: { teamId: string }) {
       }
     >
       <Link
+        data-tour="team-bar"
         to="/scorebord"
         className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-3xl border border-border bg-card p-4 shadow-card transition-transform active:scale-[0.99]"
       >
@@ -321,7 +322,7 @@ function HomeScreen({ teamId }: { teamId: string }) {
       </Link>
 
       {trackingOn && !consented ? (
-        <div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
+        <div data-tour="location-share" className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
           <h2 className="text-xl">📍 Deel jullie locatie</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             De reisleider volgt de expeditie live. Locatie wordt enkel gedeeld zolang de app open is.
@@ -335,6 +336,7 @@ function HomeScreen({ teamId }: { teamId: string }) {
       {trackingOn && consented ? (
         <button
           type="button"
+          data-tour="location-share"
           className="mt-4 flex w-full items-center gap-3 rounded-3xl border border-border bg-card p-4 text-left shadow-card"
           onClick={async () => {
             if (isTracker) {
@@ -401,7 +403,7 @@ function HomeScreen({ teamId }: { teamId: string }) {
       ) : null}
 
       <h2 className="mt-6 text-2xl">Zones</h2>
-      <div className="mt-3 space-y-3">
+      <div data-tour="zones" className="mt-3 space-y-3">
         {(zones ?? []).map((zone) => {
           const zoneChallenges = zoneProgressChallenges(
             challenges ?? [],
