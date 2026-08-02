@@ -46,6 +46,8 @@ Een stap toevoegen/herordenen = een object in die array toevoegen of verplaatsen
 - `src/components/BottomNav.tsx`: `data-tour="nav-meldingen"` op het Meldingen-item.
 - `src/routes/meldingen.tsx`: `data-tour="mark-all-read"` op de knop; `emitTourEvent("notifications-all-read")` na een geslaagde `markAllRead()`.
 - `src/routes/info.tsx`: `data-tour="rules"` op de accordeon-container.
+- `src/routes/index.tsx`: `data-tour="team-bar"` op de teamsamenvatting, `data-tour="location-share"` op het locatieblok, `data-tour="zones"` op de zonelijst. Ontbrekende targets slaat de tour automatisch over.
 - `src/routes/__root.tsx`: `<OnboardingTour />` mounten.
+
 
 Geen databasewijzigingen, geen wijziging aan spel- of scorelogica.
