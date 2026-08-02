@@ -31,7 +31,6 @@ export function OnboardingTour() {
       setRect(null);
       return;
     }
-    let frame = 0;
     const measure = () => {
       const el = findTarget(step.target);
       if (el) {
@@ -40,10 +39,16 @@ export function OnboardingTour() {
       } else {
         setRect(null);
       }
-      frame = window.requestAnimationFrame(measure);
     };
     measure();
-    return () => window.cancelAnimationFrame(frame);
+    const timer = window.setInterval(measure, 250);
+    window.addEventListener("scroll", measure, true);
+    window.addEventListener("resize", measure);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("scroll", measure, true);
+      window.removeEventListener("resize", measure);
+    };
   }, [onRoute, step]);
 
   // Optionele stap overslaan wanneer het element niet op het scherm staat.
@@ -70,7 +75,7 @@ export function OnboardingTour() {
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[70]">
-      <div className="absolute inset-0 bg-foreground/60" />
+      {rect ? null : <div className="absolute inset-0 bg-foreground/60" />}
 
       {rect ? (
         <div
