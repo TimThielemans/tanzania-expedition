@@ -67,10 +67,10 @@ function StatsPage() {
     );
   }
   const completed = new Set([
-   ...(answers ?? []).map((a) => a.challenge_id),
-   ...(quiz ?? []).map((a) => a.challenge_id),
-   ...(photos ?? []).map((p) => p.challenge_id),
- ]).size;
+    ...(answers ?? []).map((a) => a.challenge_id),
+    ...(quiz ?? []).map((a) => a.challenge_id),
+    ...(photos ?? []).map((p) => p.challenge_id),
+  ]).size;
   const total = challenges?.length ?? 0;
   const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
   const me = ranking?.find((r) => r.team.id === session.teamId);
@@ -88,7 +88,6 @@ function StatsPage() {
     { label: "Huidige plaats", value: me ? `#${me.rank}` : "—" },
     { label: "Voltooiing", value: `${pct}%` },
   ];
- 
 
   return (
     <AppShell title="Locatie" subtitle={session.teamName}>
@@ -99,7 +98,7 @@ function StatsPage() {
         <p className="mt-2 text-sm text-muted-foreground">{pct}% van de expeditie voltooid</p>
       </div>
 
-      <p className="mt-1 text-sm text-muted-foreground">
+      {/*  <p className="mt-1 text-sm text-muted-foreground">
         De reisleider gebruikt jullie locatie om locatieopdrachten automatisch te activeren, en ook een beetje om het
         overzicht te bewaren. Hieronder kan je zien of die locatie goed wordt doorgegeven, en vind je ook een kaartje
         als je de weg zou moeten zoeken. Zaken die de nauwkeurigheid van je GPS beinvloeden zijn batterijbesparing, hoge
@@ -107,6 +106,7 @@ function StatsPage() {
 
         Vergeet niet dat er maar 1 device per team de locatie doorgeeft. Je positie wordt in dit spel sowieso maar om de ~15s of bij beweging doorgegeven om dataverkeer te besparen.
       </p>
+      */}
 
       <div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
         <h2 className="text-xl font-semibold">📍 Teamlocatie</h2>
@@ -205,7 +205,7 @@ function StatsPage() {
           <p className="mt-4 text-sm text-muted-foreground">Nog geen locatie ontvangen.</p>
         )}
       </div>
-
+      {/*
       {myLocation && (
   gpsAge == null || gpsAge > 120 ? (
     <p className="text-sm text-red-600">
@@ -218,9 +218,8 @@ function StatsPage() {
     </p>
   ) : null
 )} 
-      
+*/}
 
-      
       <div className="mt-4 grid grid-cols-2 gap-3">
         {tiles.map((tile) => (
           <div key={tile.label} className="rounded-3xl border border-border bg-card p-4 shadow-card">
