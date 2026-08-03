@@ -383,6 +383,22 @@ export function AdminMapPanel() {
         </ClientOnly>
       </Section>
 
+      <Section title="Overzicht triggers per team">
+        <p className="text-[11px] text-muted-foreground">
+          ● bereikt · ○ nog niet bereikt. Tik op een bolletje om te forceren of te resetten.
+        </p>
+        <AdminLocationMatrix
+          teams={teams ?? []}
+          zones={zones ?? []}
+          events={events ?? []}
+          triggers={triggers ?? []}
+          challenges={challenges ?? []}
+          locations={locations ?? []}
+        />
+      </Section>
+
+
+
       <Section title="Finalelocatie">
         <div className="grid grid-cols-2 gap-2">
           <label className="text-xs font-semibold">
