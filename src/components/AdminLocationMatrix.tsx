@@ -249,7 +249,7 @@ export function AdminLocationMatrix({
           <DialogHeader>
             <DialogTitle>{selected?.team.name}</DialogTitle>
             <DialogDescription>
-              {selected?.zoneLabel ?? (selected?.column.zone ? selected.column.zone.name : "Zonevrij")}
+              {selected?.column.zone ? selected.column.zone.name : "Zonevrij"}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-1 text-sm">
