@@ -131,9 +131,12 @@ create table public.location_events (
   -- null = geldt in alle zones; anders enkel voor teams in deze zone
   zone_id uuid references public.zones(id) on delete set null,
   active boolean not null default true,
+  -- vaste volgorde binnen de zone (kolomvolgorde in de admin-matrix)
+  order_index integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+create index location_events_order_idx on public.location_events(order_index);
 
 -- ============================================================
 -- OPDRACHTEN — één tabel voor gewone, bonus- en locatieopdrachten
