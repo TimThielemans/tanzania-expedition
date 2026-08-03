@@ -11,8 +11,8 @@ import { getDeviceId } from "@/lib/device";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { LocationEvent } from "@/lib/types";
 
-const MIN_INTERVAL_MS = 20_000;
-const MIN_DISTANCE_M = 20;
+const MIN_INTERVAL_MS = 15_000;
+const MIN_DISTANCE_M = 10;
 
 export type LocationPermission = "unknown" | "granted" | "denied" | "unsupported";
 
@@ -127,8 +127,9 @@ export function useLocationTracking({ team, trackingEnabled, consented, events, 
       const now = Date.now();
       const next = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
       const prev = last.current;
-      if (prev && now - prev.at < MIN_INTERVAL_MS) return;
-      if (prev && distanceMeters(prev, next) < MIN_DISTANCE_M) return;
+      if (prev && now - prev.at < MIN_INTERVAL_MS && distanceMeters(prev, next) < MIN_DISTANCE_M) {
+        return;
+      }
       last.current = { ...next, at: now };
       void (async () => {
         try {
