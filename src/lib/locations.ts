@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { createNotification } from "./notifications";
+import { toast } from "sonner";
 import type {
   LocationChallengeState,
   LocationChallengeStateValue,
@@ -81,6 +82,29 @@ export async function claimTrackingDevice(teamId: string, deviceId: string, forc
     .upsert({ team_id: teamId, device_id: deviceId, claimed_at: new Date().toISOString() }, { onConflict: "team_id" });
   if (error) throw error;
   return true;
+}
+
+function showLocationToast(accuracy?: number | null, updatedAt?: string | null) {
+  const ageSeconds = updatedAt ? Math.floor((Date.now() - new Date(updatedAt).getTime()) / 1000) : null;
+
+  const accuracyText = accuracy != null ? `${Math.round(accuracy)}m nauwkeurig` : "nauwkeurigheid onbekend";
+
+  const updateText = ageSeconds != null ? `${ageSeconds}s geleden` : "onbekend";
+
+  // Rood indien te oude update
+  if (ageSeconds == null || ageSeconds > 120) {
+    toast.error(`🔴 GPS niet betrouwbaar\n${accuracyText} • laatste update ${updateText}`);
+    return;
+  }
+
+  // Groen indien recente update EN goede nauwkeurigheid
+  if (accuracy != null && accuracy <= 15) {
+    toast.success(`🟢 GPS werkt goed\n${accuracyText} • laatste update ${updateText}`);
+    return;
+  }
+
+  // Anders geel
+  toast.warning(`🟡 GPS werkt, maar kan beter\n${accuracyText} • laatste update ${updateText}`);
 }
 
 /* ------------------------------ locatie-events ------------------------------ */

@@ -11,20 +11,8 @@ import { PwaInstallHint } from "@/components/PwaInstallHint";
 import { BonusChallengeCard } from "@/components/BonusChallengeCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   useAnswers,
   useChallenges,
@@ -50,14 +38,13 @@ import {
   unlockedZoneIds,
   zoneNeedsPassword,
 } from "@/lib/api";
-import { setLocationChallengeState } from "@/lib/locations";
+import { setLocationChallengeState, showLocationToast } from "@/lib/locations";
 import { fireConfetti } from "@/lib/confetti";
 import type { ReviewStatus, Zone } from "@/lib/types";
 import { clearSession, saveSession, useTeamSession } from "@/lib/session";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 const CONSENT_KEY = "bow-location-consent";
-
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
@@ -68,8 +55,7 @@ export const Route = createFileRoute("/")({
       { title: "BOW in Tanzania — Teambuilding expeditie" },
       {
         name: "description",
-        content:
-          "Speel de Tanzania-expeditie: ontgrendel zones, los opdrachten op en verzamel punten met je team.",
+        content: "Speel de Tanzania-expeditie: ontgrendel zones, los opdrachten op en verzamel punten met je team.",
       },
       { property: "og:title", content: "BOW in Tanzania — Teambuilding expeditie" },
       {
@@ -115,9 +101,7 @@ function LoginScreen() {
       <div className="mx-auto w-full max-w-lg text-primary-foreground">
         <p className="text-5xl">🦁🌴⛰️</p>
         <h1 className="mt-4 text-5xl leading-none">{settings?.app_title ?? "BOW in Tanzania"}</h1>
-        <p className="mt-2 text-base opacity-90">
-          {settings?.welcome_message ?? "Welkom bij Expeditie Tanzania"}
-        </p>
+        <p className="mt-2 text-base opacity-90">{settings?.welcome_message ?? "Welkom bij Expeditie Tanzania"}</p>
       </div>
 
       <div className="mx-auto mt-8 w-full max-w-lg space-y-4 rounded-3xl bg-card p-5 shadow-raised">
@@ -194,12 +178,9 @@ function HomeScreen({ teamId }: { teamId: string }) {
     setConsented(window.localStorage.getItem(CONSENT_KEY) === "true");
   }, []);
 
-  useRealtime(
-    ["scores", "challenges", "team_progress", "notifications", "location_challenge_states"],
-    () => {
-      void queryClient.invalidateQueries();
-    },
-  );
+  useRealtime(["scores", "challenges", "team_progress", "notifications", "location_challenge_states"], () => {
+    void queryClient.invalidateQueries();
+  });
 
   const submissions = useMemo(() => {
     const map = new Map<string, { status: ReviewStatus; points: number }>();
@@ -217,11 +198,7 @@ function HomeScreen({ teamId }: { teamId: string }) {
   const activeZoneIds = useMemo(
     () =>
       (zones ?? [])
-        .filter(
-          (z) =>
-            unlockedIds.has(z.id) &&
-            !(progress ?? []).some((p) => p.zone_id === z.id && p.completed),
-        )
+        .filter((z) => unlockedIds.has(z.id) && !(progress ?? []).some((p) => p.zone_id === z.id && p.completed))
         .map((z) => z.id),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [zones, progress, [...unlockedIds].join(",")],
@@ -238,9 +215,7 @@ function HomeScreen({ teamId }: { teamId: string }) {
 
   /** Locatieopdrachten zonder zonebeperking horen op het startscherm. */
   const homeLocationChallenges = useMemo(() => {
-    const zoneBound = new Set(
-      (locationEvents ?? []).filter((e) => e.zone_id).map((e) => e.id),
-    );
+    const zoneBound = new Set((locationEvents ?? []).filter((e) => e.zone_id).map((e) => e.id));
     return openLocationChallenges(challenges ?? [], locationStates ?? []).filter(
       (c) => !c.location_event_id || !zoneBound.has(c.location_event_id),
     );
@@ -262,11 +237,8 @@ function HomeScreen({ teamId }: { teamId: string }) {
     const ok = await requestLocationPermission();
     window.localStorage.setItem(CONSENT_KEY, ok ? "true" : "false");
     setConsented(ok);
-    toast[ok ? "success" : "error"](
-      ok ? "Locatie delen staat aan." : "Zonder locatie kunnen we jullie niet volgen.",
-    );
+    toast[ok ? "success" : "error"](ok ? "Locatie delen staat aan." : "Zonder locatie kunnen we jullie niet volgen.");
   }
-
 
   async function handleUnlock() {
     if (!lockedZone) return;
@@ -340,11 +312,11 @@ function HomeScreen({ teamId }: { teamId: string }) {
           className="mt-4 flex w-full items-center gap-3 rounded-3xl border border-border bg-card p-4 text-left shadow-card"
           onClick={async () => {
             if (isTracker) {
+              setShowLocationStatus(true);
               toast.success("Dit toestel deelt de locatie van jullie team.");
               return;
             }
-            if (!window.confirm("Wil je dat dit toestel als enige de locatie van jullie team deelt?"))
-              return;
+            if (!window.confirm("Wil je dat dit toestel als enige de locatie van jullie team deelt?")) return;
             await takeOver();
             toast.success("Dit toestel deelt nu de locatie.");
           }}
@@ -381,8 +353,6 @@ function HomeScreen({ teamId }: { teamId: string }) {
           ))}
         </section>
       ) : null}
-
-
 
       {bonus.length > 0 ? (
         <section className="mt-6 space-y-3">
