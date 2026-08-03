@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Dices, map-pinned, Images, Bell, Shield } from "lucide-react";
+import { Home, Dices, MapPinned, Images, Bell, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAdminSession } from "@/lib/admin-session";
 import { useNotificationCenter } from "@/hooks/useNotificationCenter";
@@ -7,7 +7,7 @@ import { useNotificationCenter } from "@/hooks/useNotificationCenter";
 const baseItems = [
   { to: "/", label: "Home", icon: Home },
   { to: "/info", label: "Info", icon: Dices },
-  { to: "/locatie", label: "Map", icon: map-pinned },
+  { to: "/locatie", label: "Map", icon: MapPinned },
   { to: "/galerij", label: "Foto's", icon: Images },
   { to: "/meldingen", label: "Meldingen", icon: Bell },
 ] as const;
@@ -17,21 +17,16 @@ export function BottomNav() {
   const { isAdmin } = useAdminSession();
   const { unread } = useNotificationCenter();
 
-  const items = isAdmin
-    ? [...baseItems, { to: "/admin", label: "Admin", icon: Shield } as const]
-    : baseItems;
+  const items = isAdmin ? [...baseItems, { to: "/admin", label: "Admin", icon: Shield } as const] : baseItems;
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
-      <ul
-        className={cn("mx-auto grid max-w-lg", isAdmin ? "grid-cols-6" : "grid-cols-5")}
-      >
+      <ul className={cn("mx-auto grid max-w-lg", isAdmin ? "grid-cols-6" : "grid-cols-5")}>
         {items.map(({ to, label, icon: Icon }) => {
           const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
           return (
             <li key={to} data-tour={to === "/meldingen" ? "nav-meldingen" : undefined}>
               <Link
-
                 to={to}
                 className={cn(
                   "flex min-h-16 flex-col items-center justify-center gap-1 text-[11px] font-semibold transition-colors",
