@@ -312,8 +312,9 @@ function HomeScreen({ teamId }: { teamId: string }) {
           className="mt-4 flex w-full items-center gap-3 rounded-3xl border border-border bg-card p-4 text-left shadow-card"
           onClick={async () => {
             if (isTracker) {
-              setShowLocationStatus(true);
-              toast.success("Dit toestel deelt de locatie van jullie team.");
+              const locations = await fetchTeamLocations();
+              const myLocation = locations.find((l) => l.team_id === team.id);
+              showLocationToast(myLocation?.accuracy, myLocation?.updated_at);
               return;
             }
             if (!window.confirm("Wil je dat dit toestel als enige de locatie van jullie team deelt?")) return;
