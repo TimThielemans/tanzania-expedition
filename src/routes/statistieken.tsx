@@ -6,7 +6,9 @@ import { useTeamSession } from "@/lib/session";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import AdminMap from "@/components/AdminMap";
 import { Button } from "@/components/ui/button";
-import { showLocationToast } from "@/lib/locations";
+import { useLocationTracking, requestLocationPermission } from "@/hooks/useLocationTracking";
+import { saveTeamLocation } from "@/lib/locations";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/statistieken")({
   ssr: false,
@@ -68,6 +70,15 @@ function StatsPage() {
     { label: "Voltooiing", value: `${pct}%` },
   ];
 
+  const { isTracker, takeOver } = useLocationTracking({
+    team: me ? { id: me.team.id, name: me.team.name } : null,
+    trackingEnabled: trackingOn,
+    consented,
+    events: locationEvents ?? [],
+    activeZoneIds,
+    onTriggered: () => queryClient.invalidateQueries(),
+  });
+
   return (
     <AppShell title="Statistieken" subtitle={session.teamName}>
       <div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
@@ -117,17 +128,43 @@ function StatsPage() {
               </p>
             </div>
 
-            <Button
-              variant="outline"
-              className="mt-4 w-full rounded-2xl"
-              onClick={() => {
-                const ok = await requestLocationPermission();
-                navigator.geolocation.getCurrentPosition(...)
-                await saveTeamLocation(...)
-              }}
-            >
-              Locatie vernieuwen
-            </Button>
+            {isTracker ? (
+              <Button
+                variant="outline"
+                className="mt-4 w-full rounded-2xl"
+                onClick={async () => {
+                  const ok = await requestLocationPermission();
+
+                  if (!ok) {
+                    toast.error("Locatietoegang geweigerd.");
+                    return;
+                  }
+
+                  navigator.geolocation.getCurrentPosition(
+                    async (pos) => {
+                      try {
+                        await saveTeamLocation(teamId, {
+                          latitude: pos.coords.latitude,
+                          longitude: pos.coords.longitude,
+                          accuracy: pos.coords.accuracy,
+                        });
+                      } catch {
+                        toast.error("Locatie kon niet worden opgeslagen.");
+                      }
+                    },
+                    () => {
+                      toast.error("Locatie kon niet worden opgehaald.");
+                    },
+                    {
+                      enableHighAccuracy: true,
+                      timeout: 15000,
+                    },
+                  );
+                }}
+              >
+                📍 Locatie vernieuwen
+              </Button>
+            ) : null}
           </>
         ) : (
           <p className="mt-4 text-sm text-muted-foreground">Nog geen locatie ontvangen.</p>
