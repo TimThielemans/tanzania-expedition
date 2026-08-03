@@ -13,6 +13,7 @@ import type { LocationEvent } from "@/lib/types";
 
 const MIN_INTERVAL_MS = 15_000;
 const MIN_DISTANCE_M = 10;
+const MAX_INTERVAL_MS = 60_000;
 
 export type LocationPermission = "unknown" | "granted" | "denied" | "unsupported";
 
@@ -131,7 +132,7 @@ export function useLocationTracking({ team, trackingEnabled, consented, events, 
 
       const elapsed = prev ? now - prev.at : Infinity;
       const distance = prev ? distanceMeters(prev, next) : Infinity;
-      const forceUpdate = elapsed >= MIN_INTERVAL_MS;
+      const forceUpdate = elapsed >= MAX_INTERVAL_MS;
 
       if (prev && !forceUpdate && elapsed < MIN_INTERVAL_MS && distance < MIN_DISTANCE_M) {
         return;
