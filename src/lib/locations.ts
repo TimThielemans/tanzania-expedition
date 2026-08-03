@@ -115,7 +115,11 @@ export function showLocationToast(accuracy?: number | null, updatedAt?: string |
 /* ------------------------------ locatie-events ------------------------------ */
 
 export async function fetchLocationEvents(): Promise<LocationEvent[]> {
-  const { data, error } = await supabase.from("location_events").select("*").order("created_at", { ascending: true });
+  const { data, error } = await supabase
+    .from("location_events")
+    .select("*")
+    .order("order_index", { ascending: true })
+    .order("created_at", { ascending: true });
   if (error) throw error;
   return (data ?? []) as LocationEvent[];
 }
@@ -139,13 +143,40 @@ export const emptyLocationEvent: LocationEventInput = {
   notification_message: null,
   zone_id: null,
   active: true,
+  order_index: 0,
 };
 
 export async function createLocationEvent(input: LocationEventInput) {
-  const { data, error } = await supabase.from("location_events").insert(input).select("id").single();
+  // Nieuwe events komen automatisch onderaan.
+  const { data: last } = await supabase
+    .from("location_events")
+    .select("order_index")
+    .order("order_index", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const nextIndex = ((last?.order_index as number | undefined) ?? 0) + 1;
+
+  const { data, error } = await supabase
+    .from("location_events")
+    .insert({ ...input, order_index: nextIndex })
+    .select("id")
+    .single();
   if (error) throw error;
   return data.id as string;
 }
+
+/** Bewaart de nieuwe volgorde van locatie-events (index volgt de arrayvolgorde). */
+export async function reorderLocationEvents(ids: string[]) {
+  await Promise.all(
+    ids.map((id, index) =>
+      supabase
+        .from("location_events")
+        .update({ order_index: index + 1 })
+        .eq("id", id),
+    ),
+  );
+}
+
 
 export async function updateLocationEvent(id: string, values: Partial<LocationEventInput>) {
   const { error } = await supabase.from("location_events").update(values).eq("id", id);
