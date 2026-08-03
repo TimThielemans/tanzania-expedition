@@ -101,8 +101,8 @@ function StatsPage() {
       */}
 
       <p className="mt-1 text-sm text-muted-foreground">
-        De reisleider gebruikt jullie locatie om locatieopdrachten automatisch te activeren, en ook een beetje om het
-        overzicht te bewaren. Hieronder kan je zien of die locatie goed wordt doorgegeven, en vind je ook een kaartje
+        De reisleider gebruikt jullie locatie om locatieopdrachten automatisch te activeren, en ook een beetje om
+        hetoverzicht te bewaren. Hieronder kan je zien of die locatie goed wordt doorgegeven, en vind je ook een kaartje
         als je de weg zou moeten zoeken. Zaken die de nauwkeurigheid van je GPS beinvloeden zijn batterijbesparing, hoge
         gebouwen/bomen, binnen zitten, ...
       </p>
