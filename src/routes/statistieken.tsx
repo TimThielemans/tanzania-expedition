@@ -98,6 +98,13 @@ function StatsPage() {
         <p className="mt-2 text-sm text-muted-foreground">{pct}% van de expeditie voltooid</p>
       </div>*/}
 
+      <p className="mt-1 text-sm text-muted-foreground">
+        De reisleider gebruikt jullie locatie om locatieopdrachten automatisch te activeren, en ook een beetje om het
+        overzicht te bewaren. Hieronder kan je zien of die locatie goed wordt doorgegeven, en vind je ook een kaartje
+        als je de weg zou moeten zoeken. Zaken die de nauwkeurigheid van je GPS beinvloeden zijn batterijbesparing, hoge
+        gebouwen/bomen, binnen zitten, ...
+      </p>
+
       <div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
         <h2 className="text-xl font-semibold">📍 Teamlocatie</h2>
 
@@ -166,9 +173,7 @@ function StatsPage() {
                             accuracy: pos.coords.accuracy,
                           });
 
-                          await queryClient.invalidateQueries({
-                            queryKey: ["teamLocations"],
-                          });
+                          await queryClient.invalidateQueries();
                           toast.success("📍 Locatie vernieuwd.");
                         } catch {
                           toast.error("Locatie kon niet worden opgeslagen.");
@@ -197,6 +202,19 @@ function StatsPage() {
           <p className="mt-4 text-sm text-muted-foreground">Nog geen locatie ontvangen.</p>
         )}
       </div>
+
+      {gpsAge == null || gpsAge > 120 ? (
+        <p className="text-sm text-red-600">
+          Geen recente GPS-update ontvangen? Open de app op het toestel dat de locatie deelt of maak het dit toestel
+          door op de homepagina op de locatieknop te duwen en te bevestigen. Zorg ook dat je de toestemming geeft om je
+          locatie te delen.
+        </p>
+      ) : myLocation.accuracy != null && myLocation.accuracy > 15 ? (
+        <p className="text-sm text-yellow-600">
+          GPS werkt, maar is niet zo nauwkeuriger. Als je even buiten rond loopt, komt dat normaal wel in orde :)
+        </p>
+      ) : null}
+
       {/*
       <div className="mt-4 grid grid-cols-2 gap-3">
         {tiles.map((tile) => (
