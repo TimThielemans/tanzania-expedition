@@ -124,6 +124,7 @@ export function useLocationTracking({ team, trackingEnabled, consented, events, 
     const handle = (pos: GeolocationPosition) => {
       setPermission("granted");
       //if (document.visibilityState !== "visible") return;
+      if (pos.coords.accuracy > 50) return; //Don't use inaccurate data
       const now = Date.now();
       const next = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
       const prev = last.current;
