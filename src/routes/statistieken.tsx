@@ -67,10 +67,10 @@ function StatsPage() {
     );
   }
  // const completed = new Set([
-    ...(answers ?? []).map((a) => a.challenge_id),
-    ...(quiz ?? []).map((a) => a.challenge_id),
-    ...(photos ?? []).map((p) => p.challenge_id),
-  ]).size;
+  //  ...(answers ?? []).map((a) => a.challenge_id),
+  //  ...(quiz ?? []).map((a) => a.challenge_id),
+  //  ...(photos ?? []).map((p) => p.challenge_id),
+  //]).size;
  // const total = challenges?.length ?? 0;
  // const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
   const me = ranking?.find((r) => r.team.id === session.teamId);
