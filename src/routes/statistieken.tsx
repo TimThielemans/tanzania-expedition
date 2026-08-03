@@ -103,8 +103,9 @@ function StatsPage() {
         overzicht te bewaren. Hieronder kan je zien of die locatie goed wordt doorgegeven, en vind je ook een kaartje
         als je de weg zou moeten zoeken. Zaken die de nauwkeurigheid van je GPS beinvloeden zijn batterijbesparing, hoge
         gebouwen/bomen, binnen zitten, ...
-
-        Vergeet niet dat er maar 1 device per team de locatie doorgeeft. Je positie wordt in dit spel sowieso maar om de ~15s of bij beweging doorgegeven om dataverkeer te besparen.
+      </p>
+<p className="mt-3 text-sm text-muted-foreground">
+        Vergeet niet dat er maar 1 device per team de locatie doorgeeft. Je positie wordt in dit spel sowieso maar om de 15s of bij beweging doorgegeven om dataverkeer te besparen.
       </p>
       */}
 
@@ -214,7 +215,7 @@ function StatsPage() {
   ) : myLocation.accuracy != null && myLocation.accuracy > 15 ? (
     <p className="text-sm text-yellow-600">
       GPS werkt, maar is momenteel niet zo nauwkeurig. Als je even buiten rond loopt,
-      zakt dat normaal wel <15m :)
+      zakt dat normaal wel &lt;15m :)
     </p>
   ) : null
 )} 
