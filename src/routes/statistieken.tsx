@@ -4,6 +4,8 @@ import { ConfigNotice } from "@/components/ConfigNotice";
 import { useAnswers, useChallenges, usePhotos, useQuizAnswers, useRanking, useTeamLocations } from "@/hooks/useGame";
 import { useTeamSession } from "@/lib/session";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import AdminMap from "@/components/AdminMap";
+import type { Team } from "@/lib/types";
 
 export const Route = createFileRoute("/statistieken")({
   ssr: false,
@@ -27,7 +29,6 @@ function StatsPage() {
   const { data: photos } = usePhotos(teamId);
   const { data: ranking } = useRanking();
   const { data: locations } = useTeamLocations();
-  ``;
 
   if (!isSupabaseConfigured) return <ConfigNotice />;
   if (!hydrated) return null;
