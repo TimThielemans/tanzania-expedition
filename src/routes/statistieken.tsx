@@ -40,6 +40,19 @@ function StatsPage() {
   const queryClient = useQueryClient();
   const [isTracker, setIsTracker] = useState<boolean | null>(null);
 
+  useEffect(() => {
+    if (!teamId) return;
+
+    void (async () => {
+      try {
+        const tracker = await fetchTrackingDevice(teamId);
+        setIsTracker(tracker?.device_id === getDeviceId());
+      } catch {
+        setIsTracker(false);
+      }
+    })();
+  }, [teamId]);
+
   if (!isSupabaseConfigured) return <ConfigNotice />;
   if (!hydrated) return null;
 
@@ -75,19 +88,6 @@ function StatsPage() {
     { label: "Huidige plaats", value: me ? `#${me.rank}` : "—" },
     { label: "Voltooiing", value: `${pct}%` },
   ];
-
-  useEffect(() => {
-    if (!teamId) return;
-
-    void (async () => {
-      try {
-        const tracker = await fetchTrackingDevice(teamId);
-        setIsTracker(tracker?.device_id === getDeviceId());
-      } catch {
-        setIsTracker(false);
-      }
-    })();
-  }, [teamId]);
 
   return (
     <AppShell title="Statistieken" subtitle={session.teamName}>
