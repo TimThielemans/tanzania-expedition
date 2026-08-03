@@ -312,9 +312,17 @@ function HomeScreen({ teamId }: { teamId: string }) {
           className="mt-4 flex w-full items-center gap-3 rounded-3xl border border-border bg-card p-4 text-left shadow-card"
           onClick={async () => {
             if (isTracker) {
-              const locations = await fetchTeamLocations();
-              const myLocation = locations.find((l) => l.team_id === teamId);
-              showLocationToast(myLocation?.accuracy, myLocation?.updated_at);
+              try {
+                const locations = await fetchTeamLocations();
+                const myLocation = locations.find((l) => l.team_id === teamId);
+                if (!myLocation) {
+                  toast.error("Nog geen locatie ontvangen van dit toestel.");
+                  return;
+                }
+                showLocationToast(myLocation?.accuracy, myLocation?.updated_at);
+              } catch {
+                toast.error("GPS-status kon niet worden opgehaald.");
+              }
               return;
             }
             if (!window.confirm("Wil je dat dit toestel als enige de locatie van jullie team deelt?")) return;
