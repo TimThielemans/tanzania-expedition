@@ -98,16 +98,16 @@ function StatsPage() {
         <p className="mt-2 text-sm text-muted-foreground">{pct}% van de expeditie voltooid</p>
       </div>
 
-      {/*  <p className="mt-1 text-sm text-muted-foreground">
+      <p className="mt-1 text-sm text-muted-foreground">
         De reisleider gebruikt jullie locatie om locatieopdrachten automatisch te activeren, en ook een beetje om het
         overzicht te bewaren. Hieronder kan je zien of die locatie goed wordt doorgegeven, en vind je ook een kaartje
         als je de weg zou moeten zoeken. Zaken die de nauwkeurigheid van je GPS beinvloeden zijn batterijbesparing, hoge
         gebouwen/bomen, binnen zitten, ...
       </p>
-<p className="mt-3 text-sm text-muted-foreground">
-        Vergeet niet dat er maar 1 device per team de locatie doorgeeft. Je positie wordt in dit spel sowieso maar om de 15s of bij beweging doorgegeven om dataverkeer te besparen.
+      <p className="mt-3 text-sm text-muted-foreground">
+        Vergeet niet dat er maar 1 device per team de locatie doorgeeft. Je positie wordt in dit spel sowieso maar om de
+        15s of bij beweging doorgegeven om dataverkeer te besparen.
       </p>
-      */}
 
       <div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
         <h2 className="text-xl font-semibold">📍 Teamlocatie</h2>
