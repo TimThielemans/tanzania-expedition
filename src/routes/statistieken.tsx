@@ -206,20 +206,18 @@ function StatsPage() {
           <p className="mt-4 text-sm text-muted-foreground">Nog geen locatie ontvangen.</p>
         )}
       </div>
-      {/*
-      {myLocation && (
-  gpsAge == null || gpsAge > 120 ? (
-    <p className="text-sm text-red-600">
-      Geen recente GPS-update ontvangen? Open de app op het toestel dat de locatie deelt...
-    </p>
-  ) : myLocation.accuracy != null && myLocation.accuracy > 15 ? (
-    <p className="text-sm text-yellow-600">
-      GPS werkt, maar is momenteel niet zo nauwkeurig. Als je even buiten rond loopt,
-      zakt dat normaal wel &lt;15m :)
-    </p>
-  ) : null
-)} 
-*/}
+
+      {myLocation &&
+        (gpsAge == null || gpsAge > 120 ? (
+          <p className="text-sm text-red-600">
+            Geen recente GPS-update ontvangen? Open de app op het toestel dat de locatie deelt...
+          </p>
+        ) : myLocation.accuracy != null && myLocation.accuracy > 15 ? (
+          <p className="text-sm text-yellow-600">
+            GPS werkt, maar is momenteel niet zo nauwkeurig. Als je even buiten rond loopt, zakt dat normaal wel &lt;15m
+            :)
+          </p>
+        ) : null)}
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         {tiles.map((tile) => (
