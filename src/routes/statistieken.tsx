@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { requestLocationPermission } from "@/hooks/useLocationTracking";
 import { saveTeamLocation } from "@/lib/locations";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 import { useEffect, useState } from "react";
 import { fetchTrackingDevice } from "@/lib/locations";
@@ -50,7 +51,7 @@ function StatsPage() {
       </AppShell>
     );
   }
-
+  const queryClient = useQueryClient();
   const completed = new Set([
     ...(answers ?? []).map((a) => a.challenge_id),
     ...(quiz ?? []).map((a) => a.challenge_id),
@@ -138,46 +139,59 @@ function StatsPage() {
               </p>
             </div>
 
-            <Button
-              variant="outline"
-              className="mt-4 w-full rounded-2xl"
-              onClick={async () => {
-                const ok = await requestLocationPermission();
+            {isTracker === null ? (
+              <div className="mt-4 rounded-2xl bg-muted px-4 py-3 text-sm text-muted-foreground">
+                Locatiestatus laden...
+              </div>
+            ) : isTracker ? (
+              <Button
+                variant="outline"
+                className="mt-4 w-full rounded-2xl"
+                onClick={async () => {
+                  const ok = await requestLocationPermission();
 
-                if (!ok) {
-                  toast.error("Locatietoegang geweigerd.");
-                  return;
-                }
+                  if (!ok) {
+                    toast.error("Locatietoegang geweigerd.");
+                    return;
+                  }
 
-                if (!teamId) return;
-                navigator.geolocation.getCurrentPosition(
-                  (pos) => {
-                    void (async () => {
-                      try {
-                        await saveTeamLocation(teamId!, {
-                          latitude: pos.coords.latitude,
-                          longitude: pos.coords.longitude,
-                          accuracy: pos.coords.accuracy,
-                        });
-                        await queryClient.invalidateQueries();
-                        toast.success("📍 Locatie vernieuwd.");
-                      } catch {
-                        toast.error("Locatie kon niet worden opgeslagen.");
-                      }
-                    })();
-                  },
-                  () => {
-                    toast.error("Locatie kon niet worden opgehaald.");
-                  },
-                  {
-                    enableHighAccuracy: true,
-                    timeout: 15000,
-                  },
-                );
-              }}
-            >
-              📍 Locatie vernieuwen
-            </Button>
+                  if (!teamId) return;
+
+                  navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                      void (async () => {
+                        try {
+                          await saveTeamLocation(teamId, {
+                            latitude: pos.coords.latitude,
+                            longitude: pos.coords.longitude,
+                            accuracy: pos.coords.accuracy,
+                          });
+
+                          await queryClient.invalidateQueries();
+
+                          toast.success("📍 Locatie vernieuwd.");
+                        } catch {
+                          toast.error("Locatie kon niet worden opgeslagen.");
+                        }
+                      })();
+                    },
+                    () => {
+                      toast.error("Locatie kon niet worden opgehaald.");
+                    },
+                    {
+                      enableHighAccuracy: true,
+                      timeout: 15000,
+                    },
+                  );
+                }}
+              >
+                📍 Locatie vernieuwen
+              </Button>
+            ) : (
+              <div className="mt-4 rounded-2xl bg-muted px-4 py-3 text-sm text-muted-foreground">
+                📱 Ander toestel deelt momenteel de locatie van jullie team.
+              </div>
+            )}
           </>
         ) : (
           <p className="mt-4 text-sm text-muted-foreground">Nog geen locatie ontvangen.</p>
