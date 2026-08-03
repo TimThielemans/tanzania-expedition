@@ -66,13 +66,13 @@ function StatsPage() {
       </AppShell>
     );
   }
- // const completed = new Set([
-  //  ...(answers ?? []).map((a) => a.challenge_id),
-  //  ...(quiz ?? []).map((a) => a.challenge_id),
-  //  ...(photos ?? []).map((p) => p.challenge_id),
-  //]).size;
- // const total = challenges?.length ?? 0;
- // const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+  const completed = new Set([
+   ...(answers ?? []).map((a) => a.challenge_id),
+   ...(quiz ?? []).map((a) => a.challenge_id),
+   ...(photos ?? []).map((p) => p.challenge_id),
+ ]).size;
+  const total = challenges?.length ?? 0;
+  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
   const me = ranking?.find((r) => r.team.id === session.teamId);
 
   const myLocation = locations?.find((l) => l.team_id === session.teamId);
@@ -80,7 +80,7 @@ function StatsPage() {
   const gpsAge =
     myLocation?.updated_at != null ? Math.floor((Date.now() - new Date(myLocation.updated_at).getTime()) / 1000) : null;
 
- /* const tiles = [
+  const tiles = [
     { label: "Voltooide opdrachten", value: `${completed}/${total}` },
     { label: "Ingezonden antwoorden", value: String((answers?.length ?? 0) + (quiz?.length ?? 0)) },
     { label: "Geüploade foto's", value: String(photos?.length ?? 0) },
@@ -88,16 +88,16 @@ function StatsPage() {
     { label: "Huidige plaats", value: me ? `#${me.rank}` : "—" },
     { label: "Voltooiing", value: `${pct}%` },
   ];
-  */
+ 
 
   return (
     <AppShell title="Locatie" subtitle={session.teamName}>
-      {/*<div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
+      <div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
         <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
           <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
         </div>
         <p className="mt-2 text-sm text-muted-foreground">{pct}% van de expeditie voltooid</p>
-      </div>*/}
+      </div>
 
       <p className="mt-1 text-sm text-muted-foreground">
         De reisleider gebruikt jullie locatie om locatieopdrachten automatisch te activeren, en ook een beetje om het
@@ -220,7 +220,7 @@ function StatsPage() {
 )} 
       
 
-      {/*
+      
       <div className="mt-4 grid grid-cols-2 gap-3">
         {tiles.map((tile) => (
           <div key={tile.label} className="rounded-3xl border border-border bg-card p-4 shadow-card">
@@ -228,7 +228,7 @@ function StatsPage() {
             <p className="mt-1 text-2xl font-bold">{tile.value}</p>
           </div>
         ))}
-      </div>*/}
+      </div>
     </AppShell>
   );
 }
