@@ -38,7 +38,7 @@ import {
   unlockedZoneIds,
   zoneNeedsPassword,
 } from "@/lib/api";
-import { setLocationChallengeState, showLocationToast } from "@/lib/locations";
+import { setLocationChallengeState, showLocationToast, fetchTeamLocations } from "@/lib/locations";
 import { fireConfetti } from "@/lib/confetti";
 import type { ReviewStatus, Zone } from "@/lib/types";
 import { clearSession, saveSession, useTeamSession } from "@/lib/session";
