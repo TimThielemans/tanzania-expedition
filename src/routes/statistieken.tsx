@@ -121,10 +121,12 @@ function StatsPage() {
               variant="outline"
               className="mt-4 w-full rounded-2xl"
               onClick={() => {
-                showLocationToast(myLocation.accuracy, myLocation.updated_at);
+                const ok = await requestLocationPermission();
+                navigator.geolocation.getCurrentPosition(...)
+                await saveTeamLocation(...)
               }}
             >
-              GPS-status controleren
+              Locatie vernieuwen
             </Button>
           </>
         ) : (
