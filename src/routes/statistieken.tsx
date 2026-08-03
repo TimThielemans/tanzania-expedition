@@ -10,6 +10,10 @@ import { requestLocationPermission } from "@/hooks/useLocationTracking";
 import { saveTeamLocation } from "@/lib/locations";
 import { toast } from "sonner";
 
+import { useEffect, useState } from "react";
+import { fetchTrackingDevice } from "@/lib/locations";
+import { getDeviceId } from "@/lib/device";
+
 export const Route = createFileRoute("/statistieken")({
   ssr: false,
   head: () => ({
@@ -69,6 +73,21 @@ function StatsPage() {
     { label: "Huidige plaats", value: me ? `#${me.rank}` : "—" },
     { label: "Voltooiing", value: `${pct}%` },
   ];
+
+  const [isTracker, setIsTracker] = useState(false);
+
+  useEffect(() => {
+    if (!teamId) return;
+
+    void (async () => {
+      try {
+        const tracker = await fetchTrackingDevice(teamId);
+        setIsTracker(tracker?.device_id === getDeviceId());
+      } catch {
+        setIsTracker(false);
+      }
+    })();
+  }, [teamId]);
 
   return (
     <AppShell title="Statistieken" subtitle={session.teamName}>
@@ -140,7 +159,7 @@ function StatsPage() {
                           longitude: pos.coords.longitude,
                           accuracy: pos.coords.accuracy,
                         });
-
+                        await queryClient.invalidateQueries();
                         toast.success("📍 Locatie vernieuwd.");
                       } catch {
                         toast.error("Locatie kon niet worden opgeslagen.");
