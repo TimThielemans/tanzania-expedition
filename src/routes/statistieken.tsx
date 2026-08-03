@@ -80,7 +80,7 @@ function StatsPage() {
   const gpsAge =
     myLocation?.updated_at != null ? Math.floor((Date.now() - new Date(myLocation.updated_at).getTime()) / 1000) : null;
 
-  const tiles = [
+ /* const tiles = [
     { label: "Voltooide opdrachten", value: `${completed}/${total}` },
     { label: "Ingezonden antwoorden", value: String((answers?.length ?? 0) + (quiz?.length ?? 0)) },
     { label: "Geüploade foto's", value: String(photos?.length ?? 0) },
@@ -88,6 +88,7 @@ function StatsPage() {
     { label: "Huidige plaats", value: me ? `#${me.rank}` : "—" },
     { label: "Voltooiing", value: `${pct}%` },
   ];
+  */
 
   return (
     <AppShell title="Locatie" subtitle={session.teamName}>
