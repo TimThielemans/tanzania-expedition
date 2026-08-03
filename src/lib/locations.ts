@@ -84,12 +84,17 @@ export async function claimTrackingDevice(teamId: string, deviceId: string, forc
   return true;
 }
 
-function showLocationToast(accuracy?: number | null, updatedAt?: string | null) {
+export function showLocationToast(accuracy?: number | null, updatedAt?: string | null) {
   const ageSeconds = updatedAt ? Math.floor((Date.now() - new Date(updatedAt).getTime()) / 1000) : null;
 
   const accuracyText = accuracy != null ? `${Math.round(accuracy)}m nauwkeurig` : "nauwkeurigheid onbekend";
 
-  const updateText = ageSeconds != null ? `${ageSeconds}s geleden` : "onbekend";
+  const updateText =
+    ageSeconds == null
+      ? "onbekend"
+      : ageSeconds < 60
+        ? `${ageSeconds}s geleden`
+        : `${Math.floor(ageSeconds / 60)} min geleden`;
 
   // Rood indien te oude update
   if (ageSeconds == null || ageSeconds > 120) {
