@@ -90,13 +90,13 @@ function StatsPage() {
   ];
 
   return (
-    <AppShell title="Statistieken" subtitle={session.teamName}>
-      <div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
+    <AppShell title="Locatie" subtitle={session.teamName}>
+      {/*<div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
         <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
           <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
         </div>
         <p className="mt-2 text-sm text-muted-foreground">{pct}% van de expeditie voltooid</p>
-      </div>
+      </div>*/}
 
       <div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
         <h2 className="text-xl font-semibold">📍 Teamlocatie</h2>
@@ -197,7 +197,7 @@ function StatsPage() {
           <p className="mt-4 text-sm text-muted-foreground">Nog geen locatie ontvangen.</p>
         )}
       </div>
-
+      {/*
       <div className="mt-4 grid grid-cols-2 gap-3">
         {tiles.map((tile) => (
           <div key={tile.label} className="rounded-3xl border border-border bg-card p-4 shadow-card">
@@ -205,7 +205,7 @@ function StatsPage() {
             <p className="mt-1 text-2xl font-bold">{tile.value}</p>
           </div>
         ))}
-      </div>
+      </div>*/}
     </AppShell>
   );
 }

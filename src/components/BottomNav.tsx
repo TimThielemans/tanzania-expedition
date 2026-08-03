@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Dices, BarChart3, Images, Bell, Shield } from "lucide-react";
+import { Home, Dices, map-pinned, Images, Bell, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAdminSession } from "@/lib/admin-session";
 import { useNotificationCenter } from "@/hooks/useNotificationCenter";
@@ -7,7 +7,7 @@ import { useNotificationCenter } from "@/hooks/useNotificationCenter";
 const baseItems = [
   { to: "/", label: "Home", icon: Home },
   { to: "/info", label: "Info", icon: Dices },
-  { to: "/statistieken", label: "Stats", icon: BarChart3 },
+  { to: "/locatie", label: "Map", icon: map-pinned },
   { to: "/galerij", label: "Foto's", icon: Images },
   { to: "/meldingen", label: "Meldingen", icon: Bell },
 ] as const;
