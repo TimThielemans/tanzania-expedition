@@ -75,8 +75,59 @@ function StatsPage() {
         <p className="mt-2 text-sm text-muted-foreground">{pct}% van de expeditie voltooid</p>
       </div>
 
-      <div className="mt-4">
-        <AdminMap teams={me ? [me.team] : []} locations={myLocation ? [myLocation] : []} events={[]} finale={null} />
+      <div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
+        <h2 className="text-xl font-semibold">📍 Teamlocatie</h2>
+
+        <p className="mt-1 text-sm text-muted-foreground">
+          Controleer hier of jullie locatie correct wordt doorgestuurd.
+        </p>
+
+        <div className="mt-3">
+          <AdminMap teams={me ? [me.team] : []} locations={myLocation ? [myLocation] : []} events={[]} finale={null} />
+        </div>
+
+        {myLocation ? (
+          <>
+            <div className="mt-4 space-y-2 text-sm">
+              <p>
+                <strong>GPS-status:</strong>{" "}
+                {gpsAge == null || gpsAge > 120 ? (
+                  <span className="text-red-600">🔴 Niet betrouwbaar</span>
+                ) : myLocation.accuracy != null && myLocation.accuracy <= 15 ? (
+                  <span className="text-green-600">🟢 Goed</span>
+                ) : (
+                  <span className="text-yellow-600">🟡 Werkt, maar kan beter</span>
+                )}
+              </p>
+
+              <p>
+                <strong>Nauwkeurigheid:</strong>{" "}
+                {myLocation.accuracy != null ? `${Math.round(myLocation.accuracy)} meter` : "Onbekend"}
+              </p>
+
+              <p>
+                <strong>Laatste update:</strong>{" "}
+                {gpsAge != null
+                  ? gpsAge < 60
+                    ? `${gpsAge} seconden geleden`
+                    : `${Math.floor(gpsAge / 60)} minuten geleden`
+                  : "Onbekend"}
+              </p>
+            </div>
+
+            <Button
+              variant="outline"
+              className="mt-4 w-full rounded-2xl"
+              onClick={() => {
+                showLocationToast(myLocation.accuracy, myLocation.updated_at);
+              }}
+            >
+              GPS-status controleren
+            </Button>
+          </>
+        ) : (
+          <p className="mt-4 text-sm text-muted-foreground">Nog geen locatie ontvangen.</p>
+        )}
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
