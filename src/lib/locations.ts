@@ -22,8 +22,7 @@ export function distanceMeters(
   const dLon = toRad(b.longitude - a.longitude);
   const lat1 = toRad(a.latitude);
   const lat2 = toRad(b.latitude);
-  const h =
-    Math.sin(dLat / 2) ** 2 + Math.sin(dLon / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
+  const h = Math.sin(dLat / 2) ** 2 + Math.sin(dLon / 2) ** 2 * Math.cos(lat1) * Math.cos(lat2);
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
@@ -62,11 +61,7 @@ export async function fetchTrackingDevices(): Promise<TeamTrackingDevice[]> {
 }
 
 export async function fetchTrackingDevice(teamId: string): Promise<TeamTrackingDevice | null> {
-  const { data, error } = await supabase
-    .from("team_tracking_devices")
-    .select("*")
-    .eq("team_id", teamId)
-    .maybeSingle();
+  const { data, error } = await supabase.from("team_tracking_devices").select("*").eq("team_id", teamId).maybeSingle();
   if (error) throw error;
   return (data as TeamTrackingDevice) ?? null;
 }
@@ -81,10 +76,9 @@ export async function claimTrackingDevice(teamId: string, deviceId: string, forc
   if (existing && existing.device_id === deviceId) return true;
   if (existing && !force) return false;
 
-  const { error } = await supabase.from("team_tracking_devices").upsert(
-    { team_id: teamId, device_id: deviceId, claimed_at: new Date().toISOString() },
-    { onConflict: "team_id" },
-  );
+  const { error } = await supabase
+    .from("team_tracking_devices")
+    .upsert({ team_id: teamId, device_id: deviceId, claimed_at: new Date().toISOString() }, { onConflict: "team_id" });
   if (error) throw error;
   return true;
 }
@@ -92,10 +86,7 @@ export async function claimTrackingDevice(teamId: string, deviceId: string, forc
 /* ------------------------------ locatie-events ------------------------------ */
 
 export async function fetchLocationEvents(): Promise<LocationEvent[]> {
-  const { data, error } = await supabase
-    .from("location_events")
-    .select("*")
-    .order("created_at", { ascending: true });
+  const { data, error } = await supabase.from("location_events").select("*").order("created_at", { ascending: true });
   if (error) throw error;
   return (data ?? []) as LocationEvent[];
 }
@@ -139,9 +130,7 @@ export async function deleteLocationEvent(id: string) {
 
 /* --------------------------- locatieopdrachtstatus --------------------------- */
 
-export async function fetchLocationChallengeStates(
-  teamId?: string,
-): Promise<LocationChallengeState[]> {
+export async function fetchLocationChallengeStates(teamId?: string): Promise<LocationChallengeState[]> {
   let query = supabase.from("location_challenge_states").select("*");
   if (teamId) query = query.eq("team_id", teamId);
   const { data, error } = await query;
@@ -154,10 +143,9 @@ export async function setLocationChallengeState(
   challengeId: string,
   state: LocationChallengeStateValue,
 ) {
-  const { error } = await supabase.from("location_challenge_states").upsert(
-    { team_id: teamId, challenge_id: challengeId, state },
-    { onConflict: "team_id,challenge_id" },
-  );
+  const { error } = await supabase
+    .from("location_challenge_states")
+    .upsert({ team_id: teamId, challenge_id: challengeId, state }, { onConflict: "team_id,challenge_id" });
   if (error) throw error;
 }
 
