@@ -329,3 +329,43 @@ export async function linkChallengeToEvent(challengeId: string, eventId: string 
     .eq("id", challengeId);
   if (error) throw error;
 }
+
+/* --------------------- handmatig beheer van triggers --------------------- */
+
+/**
+ * Zet een trigger terug: de trigger-rij verdwijnt en een eventueel geopende
+ * locatieopdracht voor dat team wordt opgeruimd, zodat het event opnieuw kan
+ * vuren zodra het team er weer langs komt.
+ */
+export async function resetLocationTrigger(eventId: string, teamId: string) {
+  const { error } = await supabase
+    .from("location_event_triggers")
+    .delete()
+    .eq("event_id", eventId)
+    .eq("team_id", teamId);
+  if (error) throw error;
+
+  const challenge = await challengeForEvent(eventId);
+  if (challenge) {
+    const { error: stateError } = await supabase
+      .from("location_challenge_states")
+      .delete()
+      .eq("team_id", teamId)
+      .eq("challenge_id", challenge.id);
+    if (stateError) throw stateError;
+  }
+}
+
+/** Forceert een trigger handmatig: zelfde gevolgen als een echte geofence-hit. */
+export async function forceLocationTrigger(
+  team: { id: string; name: string },
+  event: LocationEvent,
+) {
+  const { error } = await supabase.from("location_event_triggers").insert({
+    event_id: event.id,
+    team_id: team.id,
+    is_first: event.trigger_mode === "first",
+  });
+  if (error) throw error;
+  await runTriggerAction(team, event);
+}
