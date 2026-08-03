@@ -70,15 +70,6 @@ function StatsPage() {
     { label: "Voltooiing", value: `${pct}%` },
   ];
 
-  const { isTracker, takeOver } = useLocationTracking({
-    team: me ? { id: me.team.id, name: me.team.name } : null,
-    trackingEnabled: trackingOn,
-    consented,
-    events: locationEvents ?? [],
-    activeZoneIds,
-    onTriggered: () => queryClient.invalidateQueries(),
-  });
-
   return (
     <AppShell title="Statistieken" subtitle={session.teamName}>
       <div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
@@ -128,43 +119,41 @@ function StatsPage() {
               </p>
             </div>
 
-            {isTracker ? (
-              <Button
-                variant="outline"
-                className="mt-4 w-full rounded-2xl"
-                onClick={async () => {
-                  const ok = await requestLocationPermission();
+            <Button
+              variant="outline"
+              className="mt-4 w-full rounded-2xl"
+              onClick={async () => {
+                const ok = await requestLocationPermission();
 
-                  if (!ok) {
-                    toast.error("Locatietoegang geweigerd.");
-                    return;
-                  }
+                if (!ok) {
+                  toast.error("Locatietoegang geweigerd.");
+                  return;
+                }
 
-                  navigator.geolocation.getCurrentPosition(
-                    async (pos) => {
-                      try {
-                        await saveTeamLocation(teamId, {
-                          latitude: pos.coords.latitude,
-                          longitude: pos.coords.longitude,
-                          accuracy: pos.coords.accuracy,
-                        });
-                      } catch {
-                        toast.error("Locatie kon niet worden opgeslagen.");
-                      }
-                    },
-                    () => {
-                      toast.error("Locatie kon niet worden opgehaald.");
-                    },
-                    {
-                      enableHighAccuracy: true,
-                      timeout: 15000,
-                    },
-                  );
-                }}
-              >
-                📍 Locatie vernieuwen
-              </Button>
-            ) : null}
+                navigator.geolocation.getCurrentPosition(
+                  async (pos) => {
+                    try {
+                      await saveTeamLocation(teamId, {
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude,
+                        accuracy: pos.coords.accuracy,
+                      });
+                    } catch {
+                      toast.error("Locatie kon niet worden opgeslagen.");
+                    }
+                  },
+                  () => {
+                    toast.error("Locatie kon niet worden opgehaald.");
+                  },
+                  {
+                    enableHighAccuracy: true,
+                    timeout: 15000,
+                  },
+                );
+              }}
+            >
+              📍 Locatie vernieuwen
+            </Button>
           </>
         ) : (
           <p className="mt-4 text-sm text-muted-foreground">Nog geen locatie ontvangen.</p>
