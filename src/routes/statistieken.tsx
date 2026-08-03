@@ -91,12 +91,14 @@ function StatsPage() {
 
   return (
     <AppShell title="Locatie" subtitle={session.teamName}>
+      {/*
       <div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
         <div className="h-3 w-full overflow-hidden rounded-full bg-muted">
           <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
         </div>
         <p className="mt-2 text-sm text-muted-foreground">{pct}% van de expeditie voltooid</p>
       </div>
+      */}
 
       <p className="mt-1 text-sm text-muted-foreground">
         De reisleider gebruikt jullie locatie om locatieopdrachten automatisch te activeren, en ook een beetje om het
