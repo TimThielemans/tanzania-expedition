@@ -2,7 +2,23 @@ import { lazy, Suspense, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ChevronDown, Loader2, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, GripVertical, Loader2, Plus, Trash2 } from "lucide-react";
+import {
+  DndContext,
+  PointerSensor,
+  TouchSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +33,7 @@ import {
 import {
   useAllChallenges,
   useLocationEvents,
+  useLocationTriggers,
   useSettings,
   useTeamLocations,
   useTeams,
@@ -29,13 +46,39 @@ import {
   deleteLocationEvent,
   emptyLocationEvent,
   linkChallengeToEvent,
+  reorderLocationEvents,
   updateLocationEvent,
 } from "@/lib/locations";
 import type { LocationEventInput } from "@/lib/locations";
 import type { Challenge, LocationEvent, LocationTriggerMode, NotificationTarget } from "@/lib/types";
+import { AdminLocationMatrix } from "@/components/AdminLocationMatrix";
 
 const AdminMap = lazy(() => import("@/components/AdminMap"));
 const MapLocationPicker = lazy(() => import("@/components/MapLocationPicker"));
+
+/** Sleepbare rij met greep, gebruikt in het locatie-eventoverzicht. */
+function SortableEventRow({ id, children }: { id: string; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`flex items-start gap-1 rounded-2xl bg-muted px-1 py-1 ${isDragging ? "opacity-70" : ""}`}
+    >
+      <button
+        type="button"
+        aria-label="Volgorde wijzigen"
+        className="mt-2 shrink-0 touch-none text-muted-foreground"
+        {...attributes}
+        {...listeners}
+      >
+        <GripVertical className="size-4" />
+      </button>
+      <div className="min-w-0 flex-1">{children}</div>
+    </div>
+  );
+}
+
 
 export const TRACKING_KEY = "location_tracking_enabled";
 
