@@ -579,8 +579,12 @@ export function AdminMapPanel() {
                 </div>
               ) : null}
             </div>
+            </SortableEventRow>
           );
         })}
+            </div>
+          </SortableContext>
+        </DndContext>
         {(events ?? []).length === 0 ? (
           <p className="text-sm text-muted-foreground">Nog geen locatie-events.</p>
         ) : null}
