@@ -5,7 +5,6 @@ import { useAnswers, useChallenges, usePhotos, useQuizAnswers, useRanking, useTe
 import { useTeamSession } from "@/lib/session";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import AdminMap from "@/components/AdminMap";
-import type { Team } from "@/lib/types";
 
 export const Route = createFileRoute("/statistieken")({
   ssr: false,

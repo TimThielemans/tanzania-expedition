@@ -16,7 +16,7 @@ const TEAM_COLORS = ["#2563eb", "#dc2626", "#16a34a", "#d97706", "#7c3aed", "#08
  * onderdeel wordt enkel na hydratatie geladen (zie AdminMapPanel).
  */
 
-export default function AdminMap({ teams, locations, events = [], finale = null }: Props) {
+export default function AdminMap({ teams, locations, events, finale }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<import("leaflet").Map | null>(null);
   const layerRef = useRef<import("leaflet").LayerGroup | null>(null);
