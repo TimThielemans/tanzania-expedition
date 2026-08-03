@@ -6,7 +6,7 @@ import { useTeamSession } from "@/lib/session";
 import { isSupabaseConfigured } from "@/lib/supabase";
 import AdminMap from "@/components/AdminMap";
 import { Button } from "@/components/ui/button";
-import { useLocationTracking, requestLocationPermission } from "@/hooks/useLocationTracking";
+import { requestLocationPermission } from "@/hooks/useLocationTracking";
 import { saveTeamLocation } from "@/lib/locations";
 import { toast } from "sonner";
 
@@ -130,17 +130,22 @@ function StatsPage() {
                   return;
                 }
 
+                if (!teamId) return;
                 navigator.geolocation.getCurrentPosition(
-                  async (pos) => {
-                    try {
-                      await saveTeamLocation(teamId, {
-                        latitude: pos.coords.latitude,
-                        longitude: pos.coords.longitude,
-                        accuracy: pos.coords.accuracy,
-                      });
-                    } catch {
-                      toast.error("Locatie kon niet worden opgeslagen.");
-                    }
+                  (pos) => {
+                    void (async () => {
+                      try {
+                        await saveTeamLocation(teamId!, {
+                          latitude: pos.coords.latitude,
+                          longitude: pos.coords.longitude,
+                          accuracy: pos.coords.accuracy,
+                        });
+
+                        toast.success("📍 Locatie vernieuwd.");
+                      } catch {
+                        toast.error("Locatie kon niet worden opgeslagen.");
+                      }
+                    })();
                   },
                   () => {
                     toast.error("Locatie kon niet worden opgehaald.");
