@@ -192,6 +192,8 @@ export interface LocationEvent {
   /** null = geldt in alle zones; anders enkel voor teams die in deze zone bezig zijn. */
   zone_id: string | null;
   active: boolean;
+  /** Vaste volgorde binnen de zone (kolomvolgorde in de admin-matrix). */
+  order_index: number;
   created_at: string;
 }
 

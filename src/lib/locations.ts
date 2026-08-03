@@ -115,7 +115,11 @@ export function showLocationToast(accuracy?: number | null, updatedAt?: string |
 /* ------------------------------ locatie-events ------------------------------ */
 
 export async function fetchLocationEvents(): Promise<LocationEvent[]> {
-  const { data, error } = await supabase.from("location_events").select("*").order("created_at", { ascending: true });
+  const { data, error } = await supabase
+    .from("location_events")
+    .select("*")
+    .order("order_index", { ascending: true })
+    .order("created_at", { ascending: true });
   if (error) throw error;
   return (data ?? []) as LocationEvent[];
 }
@@ -139,13 +143,40 @@ export const emptyLocationEvent: LocationEventInput = {
   notification_message: null,
   zone_id: null,
   active: true,
+  order_index: 0,
 };
 
 export async function createLocationEvent(input: LocationEventInput) {
-  const { data, error } = await supabase.from("location_events").insert(input).select("id").single();
+  // Nieuwe events komen automatisch onderaan.
+  const { data: last } = await supabase
+    .from("location_events")
+    .select("order_index")
+    .order("order_index", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const nextIndex = ((last?.order_index as number | undefined) ?? 0) + 1;
+
+  const { data, error } = await supabase
+    .from("location_events")
+    .insert({ ...input, order_index: nextIndex })
+    .select("id")
+    .single();
   if (error) throw error;
   return data.id as string;
 }
+
+/** Bewaart de nieuwe volgorde van locatie-events (index volgt de arrayvolgorde). */
+export async function reorderLocationEvents(ids: string[]) {
+  await Promise.all(
+    ids.map((id, index) =>
+      supabase
+        .from("location_events")
+        .update({ order_index: index + 1 })
+        .eq("id", id),
+    ),
+  );
+}
+
 
 export async function updateLocationEvent(id: string, values: Partial<LocationEventInput>) {
   const { error } = await supabase.from("location_events").update(values).eq("id", id);
@@ -297,4 +328,44 @@ export async function linkChallengeToEvent(challengeId: string, eventId: string 
     })
     .eq("id", challengeId);
   if (error) throw error;
+}
+
+/* --------------------- handmatig beheer van triggers --------------------- */
+
+/**
+ * Zet een trigger terug: de trigger-rij verdwijnt en een eventueel geopende
+ * locatieopdracht voor dat team wordt opgeruimd, zodat het event opnieuw kan
+ * vuren zodra het team er weer langs komt.
+ */
+export async function resetLocationTrigger(eventId: string, teamId: string) {
+  const { error } = await supabase
+    .from("location_event_triggers")
+    .delete()
+    .eq("event_id", eventId)
+    .eq("team_id", teamId);
+  if (error) throw error;
+
+  const challenge = await challengeForEvent(eventId);
+  if (challenge) {
+    const { error: stateError } = await supabase
+      .from("location_challenge_states")
+      .delete()
+      .eq("team_id", teamId)
+      .eq("challenge_id", challenge.id);
+    if (stateError) throw stateError;
+  }
+}
+
+/** Forceert een trigger handmatig: zelfde gevolgen als een echte geofence-hit. */
+export async function forceLocationTrigger(
+  team: { id: string; name: string },
+  event: LocationEvent,
+) {
+  const { error } = await supabase.from("location_event_triggers").insert({
+    event_id: event.id,
+    team_id: team.id,
+    is_first: event.trigger_mode === "first",
+  });
+  if (error) throw error;
+  await runTriggerAction(team, event);
 }
