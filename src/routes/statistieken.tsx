@@ -66,13 +66,13 @@ function StatsPage() {
       </AppShell>
     );
   }
-  const completed = new Set([
+ // const completed = new Set([
     ...(answers ?? []).map((a) => a.challenge_id),
     ...(quiz ?? []).map((a) => a.challenge_id),
     ...(photos ?? []).map((p) => p.challenge_id),
   ]).size;
-  const total = challenges?.length ?? 0;
-  const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+ // const total = challenges?.length ?? 0;
+ // const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
   const me = ranking?.find((r) => r.team.id === session.teamId);
 
   const myLocation = locations?.find((l) => l.team_id === session.teamId);
@@ -103,6 +103,8 @@ function StatsPage() {
         overzicht te bewaren. Hieronder kan je zien of die locatie goed wordt doorgegeven, en vind je ook een kaartje
         als je de weg zou moeten zoeken. Zaken die de nauwkeurigheid van je GPS beinvloeden zijn batterijbesparing, hoge
         gebouwen/bomen, binnen zitten, ...
+
+        Vergeet niet dat er maar 1 device per team de locatie doorgeeft. Je positie wordt in dit spel sowieso maar om de ~15s of bij beweging doorgegeven om dataverkeer te besparen.
       </p>
 
       <div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
@@ -203,17 +205,19 @@ function StatsPage() {
         )}
       </div>
 
-      {gpsAge == null || gpsAge > 120 ? (
-        <p className="text-sm text-red-600">
-          Geen recente GPS-update ontvangen? Open de app op het toestel dat de locatie deelt of maak het dit toestel
-          door op de homepagina op de locatieknop te duwen en te bevestigen. Zorg ook dat je de toestemming geeft om je
-          locatie te delen.
-        </p>
-      ) : myLocation.accuracy != null && myLocation.accuracy > 15 ? (
-        <p className="text-sm text-yellow-600">
-          GPS werkt, maar is niet zo nauwkeuriger. Als je even buiten rond loopt, komt dat normaal wel in orde :)
-        </p>
-      ) : null}
+      {myLocation && (
+  gpsAge == null || gpsAge > 120 ? (
+    <p className="text-sm text-red-600">
+      Geen recente GPS-update ontvangen? Open de app op het toestel dat de locatie deelt...
+    </p>
+  ) : myLocation.accuracy != null && myLocation.accuracy > 15 ? (
+    <p className="text-sm text-yellow-600">
+      GPS werkt, maar is momenteel niet zo nauwkeurig. Als je even buiten rond loopt,
+      komt dat normaal wel in orde :)
+    </p>
+  ) : null
+)} 
+      
 
       {/*
       <div className="mt-4 grid grid-cols-2 gap-3">
