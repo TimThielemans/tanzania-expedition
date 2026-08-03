@@ -313,7 +313,7 @@ function HomeScreen({ teamId }: { teamId: string }) {
           onClick={async () => {
             if (isTracker) {
               const locations = await fetchTeamLocations();
-              const myLocation = locations.find((l) => l.team_id === team.id);
+              const myLocation = locations.find((l) => l.team_id === teamId);
               showLocationToast(myLocation?.accuracy, myLocation?.updated_at);
               return;
             }
