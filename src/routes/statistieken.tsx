@@ -166,8 +166,9 @@ function StatsPage() {
                             accuracy: pos.coords.accuracy,
                           });
 
-                          await queryClient.invalidateQueries();
-
+                          await queryClient.invalidateQueries({
+                            queryKey: ["teamLocations"],
+                          });
                           toast.success("📍 Locatie vernieuwd.");
                         } catch {
                           toast.error("Locatie kon niet worden opgeslagen.");
