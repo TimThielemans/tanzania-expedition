@@ -75,37 +75,15 @@ function StatsPage() {
         <p className="mt-2 text-sm text-muted-foreground">{pct}% van de expeditie voltooid</p>
       </div>
 
-      <div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
-        <h2 className="text-lg font-semibold">📍 Live teamlocatie</h2>
-
-        {myLocation ? (
-          <div className="mt-3 space-y-2 text-sm">
-            <p>
-              <strong>Latitude:</strong> {myLocation.latitude.toFixed(6)}
-            </p>
-
-            <p>
-              <strong>Longitude:</strong> {myLocation.longitude.toFixed(6)}
-            </p>
-
-            <p>
-              <strong>Nauwkeurigheid:</strong>{" "}
-              {myLocation.accuracy != null ? `${Math.round(myLocation.accuracy)} meter` : "Onbekend"}
-            </p>
-
-            <p>
-              <strong>Laatste update:</strong>{" "}
-              {gpsAge != null
-                ? gpsAge < 60
-                  ? `${gpsAge} seconden geleden`
-                  : `${Math.floor(gpsAge / 60)} minuten geleden`
-                : "Onbekend"}
-            </p>
-          </div>
-        ) : (
-          <p className="mt-3 text-sm text-muted-foreground">Nog geen locatie ontvangen.</p>
-        )}
-      </div>
+      <AdminMap
+        teams={[
+          {
+            id: session.teamId,
+            name: session.teamName,
+          } as Team,
+        ]}
+        locations={myLocation ? [myLocation] : []}
+      />
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         {tiles.map((tile) => (
