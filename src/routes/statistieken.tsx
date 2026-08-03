@@ -213,7 +213,7 @@ function StatsPage() {
   ) : myLocation.accuracy != null && myLocation.accuracy > 15 ? (
     <p className="text-sm text-yellow-600">
       GPS werkt, maar is momenteel niet zo nauwkeurig. Als je even buiten rond loopt,
-      komt dat normaal wel in orde :)
+      zakt dat normaal wel <15m :)
     </p>
   ) : null
 )} 
