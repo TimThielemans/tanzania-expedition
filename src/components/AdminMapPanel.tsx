@@ -470,14 +470,41 @@ export function AdminMapPanel() {
 
 
       <Section title={`Locatie-events (${events?.length ?? 0})`}>
+        <p className="text-[11px] text-muted-foreground">
+          Sleep met de greep om de vaste volgorde (kolommen in het overzicht) te wijzigen.
+        </p>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={async ({ active, over }: DragEndEvent) => {
+            if (!over || active.id === over.id) return;
+            const ids = (events ?? []).map((e) => e.id);
+            const from = ids.indexOf(String(active.id));
+            const to = ids.indexOf(String(over.id));
+            if (from < 0 || to < 0) return;
+            try {
+              await reorderLocationEvents(arrayMove(ids, from, to));
+              await refresh();
+            } catch (error) {
+              toast.error(error instanceof Error ? error.message : "Volgorde opslaan mislukt.");
+            }
+          }}
+        >
+          <SortableContext
+            items={(events ?? []).map((e) => e.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="space-y-2">
         {(events ?? []).map((event) => {
           const open = openId === event.id;
           const linkedId = linkedIdOf(event.id);
           const linked = allChallenges.find((c) => c.id === linkedId);
           return (
-            <div key={event.id} className="rounded-2xl bg-muted px-3 py-2">
+            <SortableEventRow key={event.id} id={event.id}>
+            <div className="rounded-2xl px-2 py-1">
               <div className="flex items-start justify-between gap-2">
                 <button
+
                   type="button"
                   className="min-w-0 flex-1 text-left"
                   onClick={() => {
