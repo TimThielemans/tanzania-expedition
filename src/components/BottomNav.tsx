@@ -7,7 +7,7 @@ import { useNotificationCenter } from "@/hooks/useNotificationCenter";
 const baseItems = [
   { to: "/", label: "Home", icon: Home },
   { to: "/info", label: "Info", icon: Dices },
-  { to: "/locatie", label: "Map", icon: MapPinned },
+  { to: "/statistieken", label: "Map", icon: MapPinned },
   { to: "/galerij", label: "Foto's", icon: Images },
   { to: "/meldingen", label: "Meldingen", icon: Bell },
 ] as const;
