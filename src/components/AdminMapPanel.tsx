@@ -267,6 +267,7 @@ export function AdminMapPanel() {
   const { data: zones } = useZones();
   const { data: locations } = useTeamLocations();
   const { data: events } = useLocationEvents();
+  const { data: triggers } = useLocationTriggers();
   const { data: challenges } = useAllChallenges();
   const { data: settings } = useSettings();
   const [draft, setDraft] = useState<LocationEventInput>(emptyLocationEvent);
@@ -276,6 +277,11 @@ export function AdminMapPanel() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<LocationEventInput | null>(null);
   const [busy, setBusy] = useState(false);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
+  );
+
 
   useRealtime(["team_locations", "location_events", "location_event_triggers"], () => {
     void queryClient.invalidateQueries({ queryKey: ["team-locations"] });
