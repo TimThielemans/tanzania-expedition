@@ -37,6 +37,8 @@ function StatsPage() {
   const { data: photos } = usePhotos(teamId);
   const { data: ranking } = useRanking();
   const { data: locations } = useTeamLocations();
+  const queryClient = useQueryClient();
+  const [isTracker, setIsTracker] = useState<boolean | null>(null);
 
   if (!isSupabaseConfigured) return <ConfigNotice />;
   if (!hydrated) return null;
@@ -51,7 +53,6 @@ function StatsPage() {
       </AppShell>
     );
   }
-  const queryClient = useQueryClient();
   const completed = new Set([
     ...(answers ?? []).map((a) => a.challenge_id),
     ...(quiz ?? []).map((a) => a.challenge_id),
@@ -74,8 +75,6 @@ function StatsPage() {
     { label: "Huidige plaats", value: me ? `#${me.rank}` : "—" },
     { label: "Voltooiing", value: `${pct}%` },
   ];
-
-  const [isTracker, setIsTracker] = useState(false);
 
   useEffect(() => {
     if (!teamId) return;
