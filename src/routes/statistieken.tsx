@@ -76,15 +76,9 @@ function StatsPage() {
         <p className="mt-2 text-sm text-muted-foreground">{pct}% van de expeditie voltooid</p>
       </div>
 
-      <AdminMap
-        teams={[
-          {
-            id: session.teamId,
-            name: session.teamName,
-          } as Team,
-        ]}
-        locations={myLocation ? [myLocation] : []}
-      />
+      <div className="mt-4">
+        <AdminMap teams={me ? [me.team] : []} locations={myLocation ? [myLocation] : []} events={[]} finale={null} />
+      </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         {tiles.map((tile) => (
