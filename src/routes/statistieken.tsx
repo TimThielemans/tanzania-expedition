@@ -221,6 +221,7 @@ function StatsPage() {
           </p>
         ) : null)}
 
+      {/*
       <div className="mt-4 grid grid-cols-2 gap-3">
         {tiles.map((tile) => (
           <div key={tile.label} className="rounded-3xl border border-border bg-card p-4 shadow-card">
@@ -229,6 +230,7 @@ function StatsPage() {
           </div>
         ))}
       </div>
+      */}
     </AppShell>
   );
 }
