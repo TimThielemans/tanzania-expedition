@@ -128,6 +128,15 @@ export function useLocationTracking({ team, trackingEnabled, consented, events, 
       const now = Date.now();
       const next = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
       const prev = last.current;
+
+      const elapsed = prev ? now - prev.at : Infinity;
+      const distance = prev ? distanceMeters(prev, next) : Infinity;
+      const forceUpdate = elapsed >= MIN_INTERVAL_MS;
+
+      if (prev && !forceUpdate && elapsed < MIN_INTERVAL_MS && distance < MIN_DISTANCE_M) {
+        return;
+      }
+
       if (prev && now - prev.at < MIN_INTERVAL_MS && distanceMeters(prev, next) < MIN_DISTANCE_M) {
         return;
       }
