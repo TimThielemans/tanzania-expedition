@@ -107,6 +107,17 @@ function ZonePage() {
     return map;
   }, [answers, quiz, photos]);
 
+  /** Locatieopdrachten van deze zone die de voltooiing nog tegenhouden. */
+  const pendingLocationCount = useMemo(() => {
+    const dismissed = new Set(
+      (locationStates ?? []).filter((s) => s.state === "dismissed").map((s) => s.challenge_id),
+    );
+    return locationChallengesOfZone(challenges ?? [], locationEvents ?? [], zoneId).filter(
+      (c) => !dismissed.has(c.id) && !submittedValue.has(c.id),
+    ).length;
+  }, [challenges, locationEvents, locationStates, zoneId, submittedValue]);
+
+
   if (!isSupabaseConfigured) return <ConfigNotice />;
   if (!hydrated) return null;
   if (!session) {
