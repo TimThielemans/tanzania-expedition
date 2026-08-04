@@ -74,29 +74,27 @@ export function OnboardingTour() {
   const cardAbove = step.placement === "top";
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-[70]">
-      {rect ? null : <div className="absolute inset-0 bg-foreground/60" />}
+    <div className="fixed inset-0 z-[70]">
+      {/* Donkere overlay die ALLE interactie tegenhoudt */}
+      <div className="absolute inset-0 bg-black/45 pointer-events-auto" />
 
+      {/* Highlight */}
       {rect ? (
         <div
-          className="absolute cursor-not-allowed rounded-2xl ring-4 ring-primary ring-offset-2"
+          className="pointer-events-none absolute rounded-2xl ring-4 ring-primary ring-offset-2 ring-offset-transparent"
           style={{
             top: rect.top - 6,
             left: rect.left - 6,
             width: rect.width + 12,
             height: rect.height + 12,
             boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)",
-            pointerEvents: "auto",
-          }}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
           }}
         />
       ) : null}
 
+      {/* Modal: enige klikbare element */}
       <div
-        className="pointer-events-auto absolute inset-x-0 px-4"
+        className="pointer-events-none absolute inset-x-0 px-4"
         style={
           rect
             ? cardAbove
@@ -105,9 +103,10 @@ export function OnboardingTour() {
             : { bottom: "calc(env(safe-area-inset-bottom) + 6rem)" }
         }
       >
-        <div className="mx-auto max-w-lg rounded-3xl bg-card p-5 shadow-raised">
+        <div className="pointer-events-auto mx-auto max-w-lg rounded-3xl bg-card p-5 shadow-raised">
           <div className="flex items-start gap-3">
             <h2 className="min-w-0 flex-1 text-xl leading-snug">{title}</h2>
+
             <button
               type="button"
               onClick={skip}
@@ -116,7 +115,9 @@ export function OnboardingTour() {
               Overslaan
             </button>
           </div>
+
           <p className="mt-2 text-sm text-muted-foreground">{body}</p>
+
           {step.action ? (
             <Button
               size="lg"
@@ -124,7 +125,10 @@ export function OnboardingTour() {
               onClick={() => {
                 const goTo = step.action?.goTo;
                 next();
-                if (goTo) void navigate({ to: goTo });
+
+                if (goTo) {
+                  void navigate({ to: goTo });
+                }
               }}
             >
               {step.action.label}
