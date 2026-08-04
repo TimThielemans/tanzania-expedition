@@ -72,7 +72,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 {
     id: "home-navigatie",
     route: "/",
-    target: "nav-statistieken",
+    target: "nav-map",
     optional: true,
     placement: "top",
     title: "Controleer GPS status",
@@ -97,22 +97,22 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     placement: "top",
     title: "Pole Pole",
     body: "Snap ik volledig, het wordt de moeite! Vooraleer ik jullie echt loslaat moet ik provisoir nog een veiligheidsmededeling doen: Hier kan je de spelregels vinden. Al mag je mij natuurlijk ook altijd iets sturen via whatsapp als je vast zit.",
-    action: { label: "Alsof uw uitleg ons interesseert, let's go.", goTo: "/home" },
+    action: { label: "Alsof uw uitleg ons interesseert, let's go.", goTo: "/" },
 },
 
    {
-    id: "info",
-    route: "/info",
-    target: "nav-info",
+    id: "start",
+    route: "/",
+    target: "first_zone",
     placement: "top",
     title: "Hakuna Matata",
     body: "Daar ben ik me van bewust... Gooi de beentjes maar los in de MTB zone, voltooi de opdrachten en ontdek stap voor stap het verhaal. Je kan steeds terug naar home als er nieuwe zones zijn ontgrendeld. Veel succes, vooral veel plezier en tot in Zanzibar! 🇹🇿,
-    action: { label: "Twende (Ja, Swahili is belangrijk).", goTo: "/home" },
+    action: { label: "Twende (Ja, Swahili is belangrijk)." },
 },
 ];
 
 const DONE = "done";
-const ONBOARDING_VERSION = "0v1";
+const ONBOARDING_VERSION = "0v2";
 
 const key = (teamId: string) => `bow-onboarding:${ONBOARDING_VERSION}:${teamId}`;
 
