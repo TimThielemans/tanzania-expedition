@@ -18,7 +18,7 @@ export function ZoneCard({ zone, unlocked, completed, total, onClick, tourTarget
   return (
     <button
       type="button"
-      datat-tour={tourTarget}
+      data-tour={tourTarget}
       onClick={onClick}
       className={cn(
         "flex w-full items-center gap-4 rounded-3xl border border-border bg-card p-4 text-left shadow-card transition-transform active:scale-[0.98]",
