@@ -46,7 +46,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     target: "zones",
     placement: "top",
     title: "Het reisschema",
-    body: "Onze reis laat zich in 4 etappes verdelen: eerst gaan we mountainbiken, daarna beklimmen we Mount Meru (de toffe versie van Kilimanjaro), een safari kan nadien niet ontbreken in Tanzania, en afsluiten doen we op Zanzibar. In elke zone zullen jullie enkele opdrachten moeten voltooien voordat je de volgende etappe kan ontgrendelen.",
+    body: "Onze reis laat zich in 4 etappes verdelen: eerst gaan we mountainbiken, daarna beklimmen we Mount Meru (de toffe versie van Kilimanjaro), een safari kan nadien niet ontbreken in Tanzania, en afsluiten doen we op Zanzibar. In elke zone zullen jullie enkele opdrachten moeten voltooien voordat jullie de volgende etappe kunnen ontdekken.",
     action: { label: "Tof, hoe win ik?" },
   },
 
@@ -76,7 +76,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     optional: true,
     placement: "top",
     title: "Controleer GPS status",
-    body: "Op deze Map pagina kan je controleren of jullie locatie correct wordt doorgestuurd. GPS is nooit perfect nauwkeurig en wordt bewust niet elke seconde vernieuwd om batterij en dataverbruik te beperken.",
+    body: "Op deze Map-pagina kan je controleren of jullie locatie correct wordt doorgestuurd. GPS is nooit perfect nauwkeurig en wordt bewust niet elke seconde vernieuwd om batterij en dataverbruik te beperken.",
     action: { label: "Vertel eens over dat rode bolletje", goTo: "/meldingen" },
   },
 
@@ -96,7 +96,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     target: "nav-info",
     placement: "top",
     title: "Pole Pole",
-    body: "Voor ik jullie loslaat in Tanzania moet ik toch nog even de saaie verantwoordelijke uithangen. Hier vind je alle info over het spel. Hopelijk wijst alles zichzelf uit maar even diagonaal doorlezen kan geen kwaad.",
+    body: "Voor ik jullie loslaat in Tanzania moet ik toch nog even de saaie verantwoordelijke uithangen. Hier vind je alle info over het spel. Hopelijk wijst alles zichzelf wel uit maar even diagonaal doorlezen kan geen kwaad. Herken je trouwens al de woordjes Swahili? Dat wordt misschien nog wel belangrijk...",
     action: { label: "Alsof uw uitleg ons interesseert, let's go.", goTo: "/" },
   },
 
@@ -106,13 +106,13 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     target: "first-zone",
     placement: "top",
     title: "Hakuna Matata",
-    body: "Daar ben ik me van bewust... Gooi de beentjes maar los in de MTB zone, voltooi de opdrachten en ontdek stap voor stap het verhaal. Keer af en toe terug naar Home om bonusopdrachten of nieuwe zones te ontdekken. Veel succes, vooral veel plezier en tot in Zanzibar! 🇹🇿",
-    action: { label: "Twende (Ja, Swahili is belangrijk)." },
+    body: "Daar ben ik me van bewust... Gooi de beentjes maar los in de MTB zone, voltooi de opdrachten en ontdek stap voor stap het verhaal. Keer af en toe terug naar Home om te kijken of er nieuwe bonusopdrachten of zones zijn ontgrendeld. Veel succes, vooral veel plezier en tot in Zanzibar! 🇹🇿",
+    action: { label: "Twende! (Let's go)" },
   },
 ];
 
 const DONE = "done";
-const ONBOARDING_VERSION = "0v2";
+const ONBOARDING_VERSION = "0v3";
 
 const key = (teamId: string) => `bow-onboarding:${ONBOARDING_VERSION}:${teamId}`;
 
