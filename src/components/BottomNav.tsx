@@ -12,6 +12,13 @@ const baseItems = [
   { to: "/meldingen", label: "Meldingen", icon: Bell },
 ] as const;
 
+const tourTargets: Record<string, string | undefined> = {
+  "/meldingen": "nav-meldingen",
+  "/info": "nav-info",
+  "/statistieken": "nav-map",
+};
+
+
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { isAdmin } = useAdminSession();
@@ -24,14 +31,9 @@ export function BottomNav() {
       <ul className={cn("mx-auto grid max-w-lg", isAdmin ? "grid-cols-6" : "grid-cols-5")}>
         {items.map(({ to, label, icon: Icon }) => {
           const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
-          const tourTargets = {
-            "/meldingen": "nav-meldingen",
-            "/info": "nav-info",
-            "/statistieken": "nav-map",
-          } as const;
-          ``;
           return (
             <li key={to} data-tour={tourTargets[to]}>
+
               <Link
                 to={to}
                 className={cn(
