@@ -71,19 +71,19 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   },
   {
     id: "home-navigatie",
-    route: "/",
+    route: "/statistieken",
     target: "nav-map",
     optional: true,
     placement: "top",
     title: "Controleer GPS status",
     body: "Je kan steeds zelf controleren of je locatie goed wordt doorgegeven via de Map-pagina. Hou er rekening mee dat GPS niet tot op de m nauwkeurig werkt en ook niet elke seconde updatet.",
-    action: { label: "Wat is dat rood bolletje?", goTo: "/meldingen" },
+    action: { label: "Wat is dat rood bolletje onderaan?", goTo: "/meldingen" },
   },
 
   {
     id: "meldingen",
     route: "/meldingen",
-    target: "mark-all-read",
+    target: "nav-meldingen",
     placement: "bottom",
     title: "Meldingen",
     body: "Ah eindelijk heb ik je aandacht! Hier kan je al de berichten lezen van je reisleider tijdens het spel. Nieuwe berichten staan steeds bovenaan in een ander kleurtje en veranderen als je er op hebt geklikt. Je kan ook op alles gelezen klikken als je meerdere nieuwe berichten tegelijk hebt gelezen.",
