@@ -37,5 +37,6 @@ Onderaan de zonepagina, boven "Terug naar Home", komt een discrete mededeling zo
 - `src/lib/api.ts`: helper die de volledige zoneset teruggeeft (zoneopdrachten + locatieopdrachten van de zone via `locationChallengesOfZone`), zodat `review.ts` en de voortgangsweergave dezelfde bron gebruiken.
 - `src/lib/review.ts`:
   - `maybeDeliverZoneCode` haalt ook `fetchLocationEvents()` en `fetchLocationChallengeStates(teamId)` op; locatieopdrachten met state `dismissed` worden uit de set gehaald.
-  - `afterReview`: bij `approval_message` het eigen bericht sturen i.p.v. de standaard bonus-/locatiemelding; voor locatieopdrachten daarna de zone van het gekoppelde event bepalen en `maybeDeliverZoneCode` aanroepen.
+  - `afterReview`: bij `approval_message` dat bericht sturen (zowel bij `approved` als `rejected`) i.p.v. de standaard bonus-/locatiemelding; voor locatieopdrachten daarna de zone van het gekoppelde event bepalen en `maybeDeliverZoneCode` aanroepen.
+- `src/routes/zone.$zoneId.tsx`: afleiden welke locatieopdrachten van de zone nog blokkeren (via `locationChallengesOfZone`, de states en `submittedValue`) en die mededeling boven de "Terug naar Home"-knop tonen.
 - Na het toepassen van de migratie moet `upgrade5.sql` in de Supabase SQL Editor gerund worden.
