@@ -67,7 +67,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     placement: "bottom",
     title: "Locatie delen",
     body: "Deel hier de locatie van je team (geef toestemming aan je browser). Zo kunnen locatie-opdrachten automatisch verschijnen wanneer jullie belangrijke plaatsen bereiken. Slechts een toestel per team deelt de locatie maar je kan via deze knop zelf instellen welk toestel dit is.",
-    action: { label: "Naar de Map" },
+    action: { label: "Naar de Map", goTo: "/statistieken" },
   },
   {
     id: "home-navigatie",
