@@ -250,6 +250,17 @@ function ZonePage() {
             />
           ) : null}
 
+          {pendingLocationCount > 0 ? (
+            <p className="mt-5 rounded-2xl border border-accent/40 bg-accent/10 p-4 text-sm">
+              📍 Deze zone heeft nog{" "}
+              {pendingLocationCount === 1
+                ? "een openstaande locatieopdracht"
+                : `${pendingLocationCount} openstaande locatieopdrachten`}
+              . De zone is pas voltooid als die ook zijn ingezonden.
+            </p>
+          ) : null}
+
+
           <Button asChild size="lg" variant="secondary" className="mt-6 h-12 w-full rounded-2xl">
             <Link to="/">Terug naar Home</Link>
           </Button>
