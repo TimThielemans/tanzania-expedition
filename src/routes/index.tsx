@@ -398,6 +398,7 @@ function HomeScreen({ teamId }: { teamId: string }) {
               unlocked={unlocked}
               completed={zoneChallenges.filter((c) => submissions.has(c.id)).length}
               total={zoneChallenges.length}
+              tourTarget={index === 0 ? "first-zone" : undefined}
               onClick={() => {
                 if (unlocked) void navigate({ to: "/zone/$zoneId", params: { zoneId: zone.id } });
                 else {

@@ -8,15 +8,17 @@ interface ZoneCardProps {
   completed: number;
   total: number;
   onClick: () => void;
+  tourTarget?: string;
 }
 
-export function ZoneCard({ zone, unlocked, completed, total, onClick }: ZoneCardProps) {
+export function ZoneCard({ zone, unlocked, completed, total, onClick, tourTarget }: ZoneCardProps) {
   const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
   const done = total > 0 && completed === total;
 
   return (
     <button
       type="button"
+      datat-tour={tourTarget}
       onClick={onClick}
       className={cn(
         "flex w-full items-center gap-4 rounded-3xl border border-border bg-card p-4 text-left shadow-card transition-transform active:scale-[0.98]",
@@ -38,9 +40,7 @@ export function ZoneCard({ zone, unlocked, completed, total, onClick }: ZoneCard
           {done ? <Check className="size-4 shrink-0 text-primary" /> : null}
           {!unlocked ? <Lock className="size-4 shrink-0 text-muted-foreground" /> : null}
         </div>
-        <p className="truncate text-sm italic text-muted-foreground">
-          {zone.tagline ?? zone.description ?? ""}
-        </p>
+        <p className="truncate text-sm italic text-muted-foreground">{zone.tagline ?? zone.description ?? ""}</p>
         <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
           <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
         </div>
