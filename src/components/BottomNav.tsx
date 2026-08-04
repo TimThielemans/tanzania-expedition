@@ -24,19 +24,13 @@ export function BottomNav() {
       <ul className={cn("mx-auto grid max-w-lg", isAdmin ? "grid-cols-6" : "grid-cols-5")}>
         {items.map(({ to, label, icon: Icon }) => {
           const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
+          const tourTargets: Record<string, string> = {
+            "/meldingen": "nav-meldingen",
+            "/info": "nav-info",
+            "/statistieken": "nav-map",
+          };
           return (
-            <li
-              key={to}
-              data-tour={
-                to === "/meldingen"
-                  ? "nav-meldingen"
-                  : to === "/info"
-                    ? "nav-info"
-                    : to === "/statistieken"
-                      ? "nav-map"
-                      : undefined
-              }
-            >
+            <li key={to} data-tour={tourTargets[to]}>
               <Link
                 to={to}
                 className={cn(
