@@ -36,7 +36,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     target: null,
     placement: "top",
     title: "👋 Karibu {team}!",
-    body: "Welkom in Tanzania, een prachtig land waar zoveel unieke dingen te zien en toffe activiteiten te beleven zijn! Deze namiddag herbeleven we samen mijn 3-weekse trip daar.",
+    body: "Welkom in Tanzania, een prachtig land waar zoveel unieke dingen te zien en toffe activiteiten te beleven zijn dat je er gerust weken kan rondtrekken! Maar dinsdag is het al terug training, zeker? Daarom ben ik al eens in het tussenseizoen gaan schouten. Vandaag mogen jullie dus de fast-forward versie beleven: drie weken Tanzania samengeperst in één namiddag!",
     action: { label: "Ik ben benieuwd" },
   },
 
@@ -105,7 +105,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     route: "/",
     target: "first-zone",
     placement: "top",
-    title: "Hakuna Matata",
+    title: "Hakuna Matata ",
     body: "Daar ben ik me van bewust... Gooi de beentjes maar los in de MTB zone, voltooi de opdrachten en ontdek stap voor stap het verhaal. Keer af en toe terug naar Home om te kijken of er nieuwe bonusopdrachten of zones zijn ontgrendeld. Veel succes, vooral veel plezier en tot in Zanzibar! 🇹🇿",
     action: { label: "Twende! (Let's go)" },
   },
