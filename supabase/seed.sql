@@ -12,8 +12,8 @@ insert into public.game_settings (key, value) values
   ('show_statistics',           'true'),
   ('show_gallery',              'true'),
   ('location_tracking_enabled', 'true'),
-  ('finale_latitude',           '50.8798'),
-  ('finale_longitude',          '4.7005'),
+  ('finale_latitude',           '50.875382'),
+  ('finale_longitude',          '4.691967'),
   ('finale_label',              'Finale')
 on conflict (key) do update set value = excluded.value;
 
@@ -33,8 +33,7 @@ insert into public.point_actions (label, points, sort_order) values
 insert into public.teams (name, password, sort_order) values
   ('Team Simba', 'simba', 1),
   ('Team Twiga', 'twiga', 2),
-  ('Team Tembo', 'tembo', 3),
-  ('Team Chui',  'chui',  4)
+  ('Team Tembo', 'tembo', 3)
 on conflict (name) do nothing;
 
 insert into public.scores (team_id, points, regular_points, bonus_points, creativity_points)
@@ -45,10 +44,10 @@ on conflict (team_id) do nothing;
 -- Leeg unlock_password = zone opent automatisch zodra de vorige zone af is.
 insert into public.zones (name, description, tagline, icon, order_index, unlock_type, unlock_password)
 values
-  ('MTB Adventure', 'Trap je een weg door de heuvels van Arusha.', 'Niet iedereen die dwaalt is verdwaald.', '🚵', 1, 'open',     null),
-  ('Mt Meru',       'De klim naar 4.562 meter. Adem diep in.',     'Samen naar de top.',                    '⛰️', 2, 'password', 'MERU2026'),
-  ('Safari',        'Big Five spotten in de Serengeti.',           'Ogen open voor avontuur.',              '🦁', 3, 'password', 'SERENGETI'),
-  ('Zanzibar',      'Wit zand, blauw water, welverdiende rust.',   'De finish is een paradijs.',            '🌴', 4, 'open',     null);
+  ('MTB Adventure', 'Een avontuurlijke start.', 'Beentjes losgooien.', '🚵', 1, 'open',     null),
+  ('Mt Meru',       'Een fysieke en mentale uitdaging.',     'Road to the top.',                    '⛰️', 2, 'password', 'ploegsport'),
+  ('Safari',        'Big Five spotten.',           'Ogen open.',              '🦁', 3, 'password', 'SERENGETI'),
+  ('Zanzibar',      'Chill',   'Rust, eten, drinken, muziek.',            '🌴', 4, 'open',     null);
 
 -- ---------- zoneopdrachten ----------
 -- creativity_bonus_points > 0 → de reisleider kan ⭐ Uitstekend geven.
