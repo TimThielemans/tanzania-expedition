@@ -75,20 +75,10 @@ export function OnboardingTour() {
 
   return (
     <div className="fixed inset-0 z-[99999]">
-      {/* Donkere overlay die ALLE interactie tegenhoudt */}
-      <div
-        className="absolute inset-0 bg-black/45"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-        onPointerDown={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
-      />
+      {/* Volledig scherm: vangt alle klikken */}
+      <div className="absolute inset-0 bg-transparent pointer-events-auto" />
 
-      {/* Highlight */}
+      {/* Achtergrond en highlight */}
       {rect ? (
         <div
           className="pointer-events-none absolute rounded-2xl ring-4 ring-primary ring-offset-2 ring-offset-transparent"
@@ -100,9 +90,11 @@ export function OnboardingTour() {
             boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)",
           }}
         />
-      ) : null}
+      ) : (
+        <div className="pointer-events-none absolute inset-0 bg-black/45" />
+      )}
 
-      {/* Modal: enige klikbare element */}
+      {/* Positionering van de kaart */}
       <div
         className="pointer-events-none absolute inset-x-0 px-4"
         style={
@@ -113,6 +105,7 @@ export function OnboardingTour() {
             : { bottom: "calc(env(safe-area-inset-bottom) + 6rem)" }
         }
       >
+        {/* ENIGE klikbare element */}
         <div className="pointer-events-auto mx-auto max-w-lg rounded-3xl bg-card p-5 shadow-raised">
           <div className="flex items-start gap-3">
             <h2 className="min-w-0 flex-1 text-xl leading-snug">{title}</h2>
@@ -134,6 +127,7 @@ export function OnboardingTour() {
               className="mt-4 h-12 w-full rounded-2xl text-base"
               onClick={() => {
                 const goTo = step.action?.goTo;
+
                 next();
 
                 if (goTo) {
