@@ -11,8 +11,8 @@ import { getDeviceId } from "@/lib/device";
 import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 import type { LocationEvent } from "@/lib/types";
 
-const MIN_INTERVAL_MS = 10_000;
-const MIN_DISTANCE_M = 10;
+const MIN_INTERVAL_MS = 15_000;
+const MIN_DISTANCE_M = 5;
 const MAX_INTERVAL_MS = 30_000;
 
 export type LocationPermission = "unknown" | "granted" | "denied" | "unsupported";
@@ -125,7 +125,7 @@ export function useLocationTracking({ team, trackingEnabled, consented, events, 
     const handle = (pos: GeolocationPosition) => {
       setPermission("granted");
       //if (document.visibilityState !== "visible") return;
-      if (pos.coords.accuracy > 60) return; //Don't use inaccurate data
+      if (pos.coords.accuracy > 100) return; //Don't use inaccurate data
       const now = Date.now();
       const next = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
       const prev = last.current;
@@ -158,7 +158,7 @@ export function useLocationTracking({ team, trackingEnabled, consented, events, 
       watchId = navigator.geolocation.watchPosition(
         handle,
         (err) => setPermission(err.code === err.PERMISSION_DENIED ? "denied" : "unknown"),
-        { enableHighAccuracy: true, maximumAge: 10_000, timeout: 30_000 },
+        { enableHighAccuracy: true, maximumAge: 1_000, timeout: 10_000 },
       );
     };
 
