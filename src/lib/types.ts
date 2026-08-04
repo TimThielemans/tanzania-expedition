@@ -58,6 +58,8 @@ export interface Challenge {
   /** Locatieopdracht: strikt één-op-één gekoppeld aan een locatie-event. */
   is_location: boolean;
   location_event_id: string | null;
+  /** Bericht dat na het nakijken (goed- of afkeuring) naar het team gaat i.p.v. de standaardmelding. */
+  approval_message: string | null;
 }
 
 

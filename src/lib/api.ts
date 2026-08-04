@@ -113,6 +113,27 @@ export function zoneChallengesOf(challenges: Challenge[], zoneId: string): Chall
 }
 
 /**
+ * Alle opdrachten die een zone moet afronden voordat die als voltooid geldt:
+ * de vaste zoneopdrachten plus élke actieve locatieopdracht van die zone,
+ * behalve de opdrachten die dit team expliciet heeft weggeklikt (dismissed).
+ * Bonusopdrachten en opdrachten/locatieopdrachten van andere zones tellen nooit mee.
+ */
+export function zoneCompletionChallenges(
+  challenges: Challenge[],
+  events: LocationEvent[],
+  zoneId: string,
+  states: LocationChallengeState[],
+): Challenge[] {
+  const dismissed = new Set(
+    states.filter((s) => s.state === "dismissed").map((s) => s.challenge_id),
+  );
+  return [
+    ...zoneChallengesOf(challenges, zoneId),
+    ...locationChallengesOfZone(challenges, events, zoneId).filter((c) => !dismissed.has(c.id)),
+  ];
+}
+
+/**
  * Alle opdrachten die meetellen voor de X/Y-voortgang van een zone: de vaste
  * zoneopdrachten plus de locatieopdrachten van die zone die dit team al
  * geactiveerd heeft (afgewezen opdrachten tellen niet mee).
@@ -346,7 +367,7 @@ export async function refreshZoneCompletion(
   const events: ZoneCompletionEvent[] = [];
 
   for (const [index, zone] of sorted.entries()) {
-    const zoneChallenges = zoneProgressChallenges(challenges, locEvents, zone.id, locStates);
+    const zoneChallenges = zoneCompletionChallenges(challenges, locEvents, zone.id, locStates);
     const complete = zoneChallenges.length > 0 && zoneChallenges.every((c) => done.has(c.id));
     if (!complete) continue;
 

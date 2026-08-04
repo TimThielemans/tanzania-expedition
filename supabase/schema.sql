@@ -171,6 +171,9 @@ create table public.challenges (
   is_location boolean not null default false,
   location_event_id uuid unique references public.location_events(id) on delete set null,
 
+  -- eigen bericht dat na het nakijken naar het team gaat i.p.v. de standaardmelding
+  approval_message text default null,
+
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
