@@ -1,5 +1,13 @@
 import { supabase } from "./supabase";
-import { addPoints, fetchAllChallenges, fetchZones, sortZones, zoneNeedsPassword } from "./api";
+import {
+  addPoints,
+  fetchAllChallenges,
+  fetchZones,
+  sortZones,
+  zoneCompletionChallenges,
+  zoneNeedsPassword,
+} from "./api";
+import { fetchLocationChallengeStates, fetchLocationEvents } from "./locations";
 import { createNotification } from "./notifications";
 import type { Answer, Challenge, Photo, QuizAnswer, ReviewStatus } from "./types";
 
