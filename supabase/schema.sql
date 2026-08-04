@@ -476,9 +476,8 @@ begin
     kind
   )
   values (
-    'Welkom!',
-    '👋 Welkom bij BOW in Tanzania! Open eerst het tabblad Meldingen en volg de korte opstartgids.',
-    'all',
+    'Mambo -> Poa',
+    '👋🏾 Zo gaat een begroeting er hier aan toe in Tanzania. Veel plezier op reis, hier zal je regelmatig updates krijgen van mij. Bij problemen stuur je maar iets op Whatsapp!' , 'all',
     'info'
   );
 end;
