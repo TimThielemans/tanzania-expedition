@@ -119,8 +119,18 @@ async function maybeSetGroupPhoto(photoId: string, teamId: string) {
 
 async function afterReview(input: ReviewInput, status: ReviewStatus, points: number) {
   const challenge = input.challenge;
+  const custom = challenge?.approval_message?.trim();
 
-  if (challenge?.is_bonus) {
+  if (custom) {
+    // Eigen bericht vervangt de standaardmelding, zowel bij goed- als afkeuring.
+    await createNotification({
+      title: challenge?.title ?? "Opdracht nagekeken",
+      body: custom,
+      audience: "team",
+      teamId: input.teamId,
+      kind: challenge?.is_bonus ? "bonus" : challenge?.is_location ? "location" : "review",
+    });
+  } else if (challenge?.is_bonus) {
     await createNotification({
       title: status === "approved" ? "✅ Bonusopdracht goedgekeurd!" : "❌ Bonusopdracht afgekeurd.",
       body:
@@ -131,10 +141,7 @@ async function afterReview(input: ReviewInput, status: ReviewStatus, points: num
       teamId: input.teamId,
       kind: "bonus",
     });
-    return;
-  }
-
-  if (challenge?.is_location) {
+  } else if (challenge?.is_location) {
     await createNotification({
       title: status === "approved" ? "✅ Punten toegekend" : "❌ Inzending afgekeurd",
       body:
@@ -145,6 +152,17 @@ async function afterReview(input: ReviewInput, status: ReviewStatus, points: num
       teamId: input.teamId,
       kind: "location",
     });
+  }
+
+  // Bonusopdrachten horen bij geen enkele zone.
+  if (challenge?.is_bonus) return;
+
+  // Locatieopdracht: de zone komt van het gekoppelde locatie-event.
+  if (challenge?.is_location) {
+    if (!challenge.location_event_id) return;
+    const events = await fetchLocationEvents();
+    const zoneId = events.find((e) => e.id === challenge.location_event_id)?.zone_id ?? null;
+    if (zoneId) await maybeDeliverZoneCode(input.teamId, zoneId);
     return;
   }
 
@@ -155,19 +173,24 @@ async function afterReview(input: ReviewInput, status: ReviewStatus, points: num
 
 /**
  * Stuurt automatisch de code van de volgende zone zodra alle opdrachten van
- * een zone zijn ingezonden én nagekeken. Gebeurt maximaal één keer per team/zone.
+ * een zone — inclusief de locatieopdrachten van die zone — zijn ingezonden én
+ * nagekeken. Gebeurt maximaal één keer per team/zone.
  */
 export async function maybeDeliverZoneCode(teamId: string, zoneId: string) {
-  const [zones, challenges] = await Promise.all([fetchZones(), fetchAllChallenges()]);
+  const [zones, challenges, locEvents, locStates] = await Promise.all([
+    fetchZones(),
+    fetchAllChallenges(),
+    fetchLocationEvents(),
+    fetchLocationChallengeStates(teamId),
+  ]);
   const sorted = sortZones(zones);
   const index = sorted.findIndex((z) => z.id === zoneId);
   const zone = sorted[index];
   if (!zone) return;
 
-  const zoneChallenges = challenges.filter(
-    (c) => c.zone_id === zoneId && c.active && !c.is_bonus && !c.is_location,
-  );
+  const zoneChallenges = zoneCompletionChallenges(challenges, locEvents, zoneId, locStates);
   if (zoneChallenges.length === 0) return;
+
 
   const [answers, quiz, photos] = await Promise.all([
     supabase.from("answers").select("*").eq("team_id", teamId),
