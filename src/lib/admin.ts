@@ -145,6 +145,7 @@ export type ChallengeInput = Pick<
   | "duration_minutes"
   | "notification_message"
   | "is_location"
+  | "approval_message"
 >;
 
 export async function createChallenge(input: ChallengeInput) {
