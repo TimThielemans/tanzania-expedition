@@ -97,7 +97,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 ];
 
 const DONE = "done";
-const key = (teamId: string) => `bow-onboarding:${teamId}`;
+const ONBOARDING_VERSION = "0v1";
+
+const key = (teamId: string) => `bow-onboarding:${ONBOARDING_VERSION}:${teamId}`;
 
 const listeners = new Set<() => void>();
 const tourEvents = new Set<(name: string) => void>();
