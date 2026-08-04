@@ -241,6 +241,22 @@ export function ChallengeEditor({ challengeId, value, onChange, onSaved, onCance
         </>
       ) : null}
 
+      <label className="text-[11px] font-semibold">
+        Bericht na nakijken (optioneel)
+        <Textarea
+          value={value.approval_message ?? ""}
+          onChange={(e) => onChange({ ...value, approval_message: e.target.value || null })}
+          placeholder="Bv. de volgende instructie voor het team"
+          rows={3}
+          className="rounded-xl"
+        />
+        <span className="mt-1 block font-normal text-muted-foreground">
+          Wordt na goed- of afkeuring naar het team gestuurd en vervangt de standaardmelding. Leeg
+          laten = standaardgedrag.
+        </span>
+      </label>
+
+
       <div className="flex gap-2">
         <Button className="h-11 flex-1 rounded-2xl" disabled={busy} onClick={save}>
           {busy ? <Loader2 className="size-4 animate-spin" /> : challengeId ? "Opslaan" : "Toevoegen"}
