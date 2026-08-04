@@ -49,6 +49,7 @@ export function emptyChallenge(options: {
     duration_minutes: options.isBonus ? 15 : 0,
     notification_message: null,
     is_location: options.isLocation ?? false,
+    approval_message: null,
   };
 }
 
