@@ -39,7 +39,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     body: "Welkom in Tanzania, een prachtig land waar zoveel unieke dingen te zien en toffe activiteiten te beleven zijn! Deze namiddag herbeleven we samen mijn 3-weekse trip daar.",
     action: { label: "Ik ben benieuwd" },
   },
-
+  
   {
     id: "spelopzet",
     route: "/",
@@ -47,10 +47,10 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     placement: "top",
     title: "Het reisschema",
     body: "Onze reis laat zich in 4 etappes verdelen: eerst gaan we mountainbiken, daarna beklimmen we Mount Meru (de toffe versie van Kilimanjaro), een safari kan nadien niet ontbreken in Tanzania, en afsluiten doen we op Zanzibar. In elke zone zullen jullie enkele opdrachten moeten voltooien voordat je de volgende etappe kan ontgrendelen.",
-    action: { label: "Puntjes" },
+    action: { label: "Puntjes"},
   },
 
-  {
+ {
     id: "home-team",
     route: "/",
     target: "team-bar",
@@ -59,7 +59,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     body: "Elke opdracht kan puntjes opleveren en hier zie je steeds een overzicht van je aantal behaalde punten. Als je op de banner klikt, zal je ook de live tussenstand zien waarin je kan zien hoeveel leuker jouw vakantie is tov de andere groepen.",
     action: { label: "Volgende" },
   },
-  {
+   {
     id: "home-location",
     route: "/",
     target: "location-share",
@@ -69,7 +69,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     body: "Deel hier de locatie van je team (geef toestemming aan je browser). Zo kunnen locatie-opdrachten automatisch verschijnen wanneer jullie belangrijke plaatsen bereiken. Slechts een toestel per team deelt de locatie maar je kan via deze knop zelf instellen welk toestel dit is.",
     action: { label: "Naar de Map" },
   },
-  {
+{
     id: "home-navigatie",
     route: "/",
     target: "nav-statistieken",
@@ -78,7 +78,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: "Controleer GPS status",
     body: "Je kan steeds zelf controleren of je locatie goed wordt doorgegeven via de Map-pagina. Hou er rekening mee dat GPS niet tot op de m nauwkeurig werkt en ook niet elke seconde updatet.",
     action: { label: "Wat is dat rood bolletje?", goTo: "/meldingen" },
-  },
+},
 
   {
     id: "meldingen",
@@ -88,21 +88,31 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     title: "Meldingen",
     body: "Ah eindelijk heb ik je aandacht! Hier kan je al de berichten lezen van je reisleider tijdens het spel. Nieuwe berichten staan steeds bovenaan in een ander kleurtje en veranderen als je er op hebt geklikt. Je kan ook op alles gelezen klikken als je meerdere nieuwe berichten tegelijk hebt gelezen.",
     action: { label: "Ik wil beginnen aan de reis!", goTo: "/info" },
-  },
-
-  {
+},
+  
+ {
     id: "info",
     route: "/info",
     target: "nav-info",
     placement: "top",
-    title: "Sna",
+    title: "Pole Pole",
     body: "Snap ik volledig, het wordt de moeite! Vooraleer ik jullie echt loslaat moet ik provisoir nog een veiligheidsmededeling doen: Hier kan je de spelregels vinden. Al mag je mij natuurlijk ook altijd iets sturen via whatsapp als je vast zit.",
     action: { label: "Alsof uw uitleg ons interesseert, let's go.", goTo: "/home" },
-  },
+},
+
+   {
+    id: "info",
+    route: "/info",
+    target: "nav-info",
+    placement: "top",
+    title: "Hakuna Matata",
+    body: "Daar ben ik me van bewust... Gooi de beentjes maar los in de MTB zone, voltooi de opdrachten en ontdek stap voor stap het verhaal. Je kan steeds terug naar home als er nieuwe zones zijn ontgrendeld. Veel succes, vooral veel plezier en tot in Zanzibar! 🇹🇿,
+    action: { label: "Twende (Ja, Swahili is belangrijk).", goTo: "/home" },
+},
 ];
 
 const DONE = "done";
-const ONBOARDING_VERSION = "0v2";
+const ONBOARDING_VERSION = "0v1";
 
 const key = (teamId: string) => `bow-onboarding:${ONBOARDING_VERSION}:${teamId}`;
 

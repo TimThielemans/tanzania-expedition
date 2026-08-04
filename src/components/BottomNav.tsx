@@ -25,7 +25,18 @@ export function BottomNav() {
         {items.map(({ to, label, icon: Icon }) => {
           const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
           return (
-            <li key={to} data-tour={to === "/meldingen" ? "nav-meldingen" : undefined}>
+            <li
+              key={to}
+              data-tour={
+                to === "/meldingen"
+                  ? "nav-meldingen"
+                  : to === "/info"
+                    ? "nav-info"
+                    : to === "/statistieken"
+                      ? "nav-map"
+                      : undefined
+              }
+            >
               <Link
                 to={to}
                 className={cn(
