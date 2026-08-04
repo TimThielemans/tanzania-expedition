@@ -12,17 +12,21 @@ Nieuw gedrag:
 - Pas als alle meetellende opdrachten een beoordeling hebben (niet meer `pending`), gaat het "Goed gedaan"-bericht met de code/ontgrendeling van de volgende zone eenmalig naar het team.
 - Na goedkeuring van een locatieopdracht wordt de zonecheck nu ook uitgevoerd (zone bepaald via het locatie-event van die opdracht).
 
-## 2. Goedkeuringsbericht per opdracht
+## 2. Beoordelingsbericht per opdracht
 
-- Nieuw veld op opdrachten: `approval_message` (optioneel).
-- Bij goedkeuring (ook ⭐ Uitstekend) van een inzending: als `approval_message` gevuld is, wordt dat bericht naar het team gestuurd in plaats van de standaard goedkeuringsmelding (bonus/locatie). De ⭐-creativiteitsmelding blijft daarnaast bestaan.
+- Nieuw veld op opdrachten: `approval_message` (optioneel) — een bericht dat verstuurd wordt zodra de inzending nagekeken is.
+- Bij het nakijken van een inzending (goedkeuring, ⭐ Uitstekend **en** afkeuring): als `approval_message` gevuld is, wordt dat bericht naar het team gestuurd in plaats van de standaard bonus-/locatiemelding. De ⭐-creativiteitsmelding blijft daarnaast bestaan.
 - Is het veld leeg, dan blijft alles precies zoals nu.
-- Bij afkeuring verandert niets.
 - De zonecode-melding blijft los hiervan werken, zodat een verhaalbericht en een zonecode elkaar niet uitsluiten.
 
 ## 3. Admin
 
-In de opdracht-editor (nieuw en bestaand, alle soorten opdrachten) komt een tekstveld "Bericht bij goedkeuring" met uitleg dat dit de standaardmelding vervangt en leeg gelaten kan worden.
+In de opdracht-editor (nieuw en bestaand, alle soorten opdrachten) komt een tekstveld "Bericht na nakijken" met uitleg dat dit de standaardmelding vervangt en leeg gelaten kan worden.
+
+## 4. Zonepagina: melding over openstaande locatieopdrachten
+
+Onderaan de zonepagina, boven "Terug naar Home", komt een discrete mededeling zodra de zone nog locatieopdrachten heeft die de voltooiing tegenhouden (actieve locatieopdrachten van de zone die niet weggeklikt en niet ingezonden/nagekeken zijn), bv. "Deze zone heeft nog openstaande locatieopdrachten." De mededeling verdwijnt als er geen blokkerende locatieopdrachten meer zijn.
+
 
 ## Technische details
 
