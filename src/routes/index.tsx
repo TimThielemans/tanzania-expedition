@@ -383,14 +383,16 @@ function HomeScreen({ teamId }: { teamId: string }) {
 
       <h2 className="mt-6 text-2xl">Zones</h2>
       <div data-tour="zones" className="mt-3 space-y-3">
-        {(zones ?? []).map((zone) => {
+        {(zones ?? []).map((zone, index) => {
           const zoneChallenges = zoneProgressChallenges(
             challenges ?? [],
             locationEvents ?? [],
             zone.id,
             locationStates ?? [],
           );
+
           const unlocked = unlockedIds.has(zone.id);
+
           return (
             <ZoneCard
               key={zone.id}
@@ -400,8 +402,12 @@ function HomeScreen({ teamId }: { teamId: string }) {
               total={zoneChallenges.length}
               tourTarget={index === 0 ? "first-zone" : undefined}
               onClick={() => {
-                if (unlocked) void navigate({ to: "/zone/$zoneId", params: { zoneId: zone.id } });
-                else {
+                if (unlocked) {
+                  void navigate({
+                    to: "/zone/$zoneId",
+                    params: { zoneId: zone.id },
+                  });
+                } else {
                   setPassword("");
                   setLockedZone(zone);
                 }
@@ -409,9 +415,6 @@ function HomeScreen({ teamId }: { teamId: string }) {
             />
           );
         })}
-        {zones && zones.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Er zijn nog geen zones aangemaakt.</p>
-        ) : null}
       </div>
 
       <Dialog open={lockedZone !== null} onOpenChange={(open) => !open && setLockedZone(null)}>
