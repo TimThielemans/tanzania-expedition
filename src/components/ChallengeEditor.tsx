@@ -70,6 +70,7 @@ export function toInput(challenge: Challenge): ChallengeInput {
     duration_minutes: challenge.duration_minutes,
     notification_message: challenge.notification_message,
     is_location: challenge.is_location,
+    approval_message: challenge.approval_message ?? null,
   };
 }
 
