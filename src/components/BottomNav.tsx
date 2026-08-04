@@ -12,6 +12,13 @@ const baseItems = [
   { to: "/meldingen", label: "Meldingen", icon: Bell },
 ] as const;
 
+const tourTargets: Record<string, string | undefined> = {
+  "/meldingen": "nav-meldingen",
+  "/info": "nav-info",
+  "/statistieken": "nav-map",
+};
+
+
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { isAdmin } = useAdminSession();
