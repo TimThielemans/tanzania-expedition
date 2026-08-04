@@ -367,7 +367,7 @@ export async function refreshZoneCompletion(
   const events: ZoneCompletionEvent[] = [];
 
   for (const [index, zone] of sorted.entries()) {
-    const zoneChallenges = zoneProgressChallenges(challenges, locEvents, zone.id, locStates);
+    const zoneChallenges = zoneCompletionChallenges(challenges, locEvents, zone.id, locStates);
     const complete = zoneChallenges.length > 0 && zoneChallenges.every((c) => done.has(c.id));
     if (!complete) continue;
 
