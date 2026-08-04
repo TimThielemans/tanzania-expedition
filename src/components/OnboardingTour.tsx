@@ -79,13 +79,18 @@ export function OnboardingTour() {
 
       {rect ? (
         <div
-          className="absolute rounded-2xl ring-4 ring-primary ring-offset-2 ring-offset-transparent"
+          className="absolute cursor-not-allowed rounded-2xl ring-4 ring-primary ring-offset-2"
           style={{
             top: rect.top - 6,
             left: rect.left - 6,
             width: rect.width + 12,
             height: rect.height + 12,
             boxShadow: "0 0 0 9999px rgba(0,0,0,0.45)",
+            pointerEvents: "auto",
+          }}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
           }}
         />
       ) : null}
