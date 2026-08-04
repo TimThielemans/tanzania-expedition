@@ -74,9 +74,15 @@ export function OnboardingTour() {
   const cardAbove = step.placement === "top";
 
   return (
-    <div className="fixed inset-0 z-[70]">
+    <div className="fixed inset-0 z-[9999]">
       {/* Donkere overlay die ALLE interactie tegenhoudt */}
-      <div className="absolute inset-0 bg-black/45 pointer-events-auto" />
+      <div
+        className="absolute inset-0 bg-black/45"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        }}
+      />
 
       {/* Highlight */}
       {rect ? (
