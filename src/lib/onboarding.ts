@@ -36,7 +36,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     target: null,
     placement: "top",
     title: "👋 Karibu {team}!",
-    body: "Welkom in Tanzania, een prachtig land waar zoveel unieke dingen te zien en toffe activiteiten te beleven zijn dat je er gerust weken kan rondtrekken! Maar dinsdag is het al terug training, zeker? Daarom ben ik al eens in het tussenseizoen gaan schouten. Vandaag mogen jullie dus de fast-forward versie beleven: drie weken Tanzania samengeperst in één namiddag!",
+    body: "Welkom in Tanzania, een prachtig land waar zoveel unieke dingen te zien en toffe activiteiten te beleven zijn dat je er gerust weken kan rondtrekken! Maar dinsdag is het al terug training, zeker? Daarom ben ik al eens in het tussenseizoen gaan scouten. Vandaag mogen jullie dus de fast-forward versie beleven: drie weken Tanzania samengeperst in één namiddag!",
     action: { label: "Ik ben benieuwd" },
   },
 
@@ -84,7 +84,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "meldingen",
     route: "/meldingen",
     target: "nav-meldingen",
-    placement: "bottom",
+    placement: "top",
     title: "Meldingen",
     body: "Ah eindelijk heb ik je aandacht! Hier lees je berichten van je reisleider. Nieuwe berichten vallen extra op en verdwijnen uit de aandacht zodra iemand van je team ze heeft gelezen.",
     action: { label: "Ik wil beginnen aan de reis!", goTo: "/info" },
