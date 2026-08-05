@@ -275,6 +275,10 @@ export function ChallengeCard({
               <p className="text-center text-xs text-muted-foreground">
                 Foto's leveren punten op zodra de reisleider ze goedkeurt.
               </p>
+
+              <p className="text-center text-xs text-muted-foreground break-all">
+                URL: {imageUrl ?? "geen afbeelding"}
+              </p>
             </>
           )}
         </div>
