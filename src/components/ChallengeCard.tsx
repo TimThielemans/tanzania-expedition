@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ImageLightbox } from "@/components/ImageLightbox";
 import { PointsBadge, type ChallengeState } from "@/components/StatusBadge";
+import { getSiteImageStorageUrl } from "@/lib/supabase";
 import { OfflineQueuedError, submitQuizAnswer, submitTextAnswer, uploadPhoto } from "@/lib/api";
 import type { Challenge } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -71,9 +72,7 @@ export function ChallengeCard({
 
   const isPhoto = challenge.challenge_type === "photo_upload" || challenge.challenge_type === "bonus_photo_upload";
 
-  const imageUrl = challenge.image_url
-    ? supabase.storage.from("challenges").getPublicUrl(challenge.image_url).data.publicUrl
-    : undefined;
+  const imageUrl = getSiteImageStorageUrl(challenge.image_url);
 
   return (
     <article className="rounded-3xl border border-border bg-card p-4 shadow-card">
@@ -97,7 +96,7 @@ export function ChallengeCard({
         <PointsBadge state={state} points={challenge.points} awarded={awardedPoints} />
       </div>
 
-      {challenge.image_url ? (
+      {imageUrl ? (
         <>
           <button
             type="button"
@@ -105,19 +104,9 @@ export function ChallengeCard({
             className="mt-3 block w-full overflow-hidden rounded-2xl bg-muted"
             aria-label={`${challenge.title} — foto vergroten`}
           >
-            <img
-              src={challenge.image_url}
-              alt={challenge.title}
-              loading="lazy"
-              className="max-h-72 w-full object-contain"
-            />
+            <img src={imageUrl} alt={challenge.title} loading="lazy" className="max-h-72 w-full object-contain" />
           </button>
-          <ImageLightbox
-            src={challenge.image_url}
-            alt={challenge.title}
-            open={lightbox}
-            onClose={() => setLightbox(false)}
-          />
+          <ImageLightbox src={imageUrl} alt={challenge.title} open={lightbox} onClose={() => setLightbox(false)} />
         </>
       ) : null}
 
