@@ -233,15 +233,6 @@ function ZonePage() {
             ) : null}
           </div>
 
-          {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={zone.name}
-              loading="lazy"
-              className="mt-5 w-full rounded-3xl object-cover shadow-card"
-            />
-          ) : null}
-
           {pendingLocationCount > 0 ? (
             <p className="mt-5 rounded-2xl border border-accent/40 bg-accent/10 p-4 text-sm">
               📍 Deze zone heeft nog{" "}
@@ -250,6 +241,15 @@ function ZonePage() {
                 : `${pendingLocationCount} openstaande locatieopdrachten`}
               . De zone is pas voltooid als die ook zijn ingezonden.
             </p>
+          ) : null}
+
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={imageUrl}
+              loading="lazy"
+              className="mt-5 w-full rounded-3xl object-cover shadow-card"
+            />
           ) : null}
 
           <Button asChild size="lg" variant="secondary" className="mt-6 h-12 w-full rounded-2xl">
