@@ -75,8 +75,7 @@ function ZonePage() {
   const zone = zones?.find((z) => z.id === zoneId);
   /** Vaste zoneopdrachten plus de al geactiveerde locatieopdrachten van deze zone. */
   const zoneChallenges = useMemo(
-    () =>
-      zoneProgressChallenges(challenges ?? [], locationEvents ?? [], zoneId, locationStates ?? []),
+    () => zoneProgressChallenges(challenges ?? [], locationEvents ?? [], zoneId, locationStates ?? []),
     [challenges, locationEvents, locationStates, zoneId],
   );
 
@@ -85,9 +84,7 @@ function ZonePage() {
     () =>
       new Set(
         locationChallengesOfZone(challenges ?? [], locationEvents ?? [], zoneId)
-          .filter((c) =>
-            (locationStates ?? []).some((s) => s.challenge_id === c.id && s.state === "open"),
-          )
+          .filter((c) => (locationStates ?? []).some((s) => s.challenge_id === c.id && s.state === "open"))
           .map((c) => c.id),
       ),
     [challenges, locationEvents, locationStates, zoneId],
@@ -109,14 +106,11 @@ function ZonePage() {
 
   /** Locatieopdrachten van deze zone die de voltooiing nog tegenhouden. */
   const pendingLocationCount = useMemo(() => {
-    const dismissed = new Set(
-      (locationStates ?? []).filter((s) => s.state === "dismissed").map((s) => s.challenge_id),
-    );
+    const dismissed = new Set((locationStates ?? []).filter((s) => s.state === "dismissed").map((s) => s.challenge_id));
     return locationChallengesOfZone(challenges ?? [], locationEvents ?? [], zoneId).filter(
       (c) => !dismissed.has(c.id) && !submittedValue.has(c.id),
     ).length;
   }, [challenges, locationEvents, locationStates, zoneId, submittedValue]);
-
 
   if (!isSupabaseConfigured) return <ConfigNotice />;
   if (!hydrated) return null;
@@ -159,6 +153,8 @@ function ZonePage() {
 
   const completedCount = zoneChallenges.filter((c) => submittedValue.has(c.id)).length;
 
+  const imageUrl = getSiteImageStorageUrl(zone.picture);
+
   return (
     <AppShell
       title={zone ? `${zone.icon} ${zone.name}` : "Zone"}
@@ -184,9 +180,7 @@ function ZonePage() {
             </p>
           ) : (
             <>
-              <p className="text-sm text-muted-foreground">
-                Vul het zonewachtwoord in dat je van de reisleider kreeg.
-              </p>
+              <p className="text-sm text-muted-foreground">Vul het zonewachtwoord in dat je van de reisleider kreeg.</p>
               <Input
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -207,9 +201,7 @@ function ZonePage() {
       ) : (
         <>
           {zone.description ? (
-            <p className="mt-4 rounded-3xl border border-border bg-card p-4 text-sm shadow-card">
-              {zone.description}
-            </p>
+            <p className="mt-4 rounded-3xl border border-border bg-card p-4 text-sm shadow-card">{zone.description}</p>
           ) : null}
 
           <div className="mt-4 space-y-4">
@@ -241,9 +233,9 @@ function ZonePage() {
             ) : null}
           </div>
 
-          {zone.picture ? (
+          {imageUrl ? (
             <img
-              src={zone.picture}
+              src={imageUrl}
               alt={zone.name}
               loading="lazy"
               className="mt-5 w-full rounded-3xl object-cover shadow-card"
@@ -260,7 +252,6 @@ function ZonePage() {
             </p>
           ) : null}
 
-
           <Button asChild size="lg" variant="secondary" className="mt-6 h-12 w-full rounded-2xl">
             <Link to="/">Terug naar Home</Link>
           </Button>
@@ -271,9 +262,7 @@ function ZonePage() {
         <DialogContent className="max-w-sm rounded-3xl">
           <DialogHeader>
             <DialogTitle className="text-2xl">
-              {completion?.nextNeedsPassword || !completion?.nextZoneName
-                ? "✅ Zone voltooid!"
-                : "🎉 Zone voltooid!"}
+              {completion?.nextNeedsPassword || !completion?.nextZoneName ? "✅ Zone voltooid!" : "🎉 Zone voltooid!"}
             </DialogTitle>
             <DialogDescription className="text-base">
               {completion?.nextNeedsPassword
