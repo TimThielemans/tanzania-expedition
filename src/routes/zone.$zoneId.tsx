@@ -153,8 +153,7 @@ function ZonePage() {
   }
 
   const completedCount = zoneChallenges.filter((c) => submittedValue.has(c.id)).length;
-
-  const imageUrl = getSiteImageStorageUrl(zone.picture);
+  const imageUrl = getSiteImageStorageUrl(zone?.picture);
 
   return (
     <AppShell
