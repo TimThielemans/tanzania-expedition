@@ -35,13 +35,7 @@ export function supportsCreativity(challenge: Challenge | undefined): boolean {
   return (challenge.creativity_bonus_points ?? 0) > 0;
 }
 
-async function setStatus(
-  table: SubmissionTable,
-  id: string,
-  status: ReviewStatus,
-  points: number,
-  creativity: number,
-) {
+async function setStatus(table: SubmissionTable, id: string, status: ReviewStatus, points: number, creativity: number) {
   const { error } = await supabase
     .from(table)
     .update({ status, points_awarded: points, creativity_points: creativity })
@@ -91,10 +85,7 @@ export const rejectSubmission = (input: ReviewInput) => reviewSubmission(input, 
 
 /** Markeert een foto als teamfoto (of haalt die markering weg). */
 export async function markPhotoAsGroupPhoto(photoId: string, teamId: string, value: boolean) {
-  const { error } = await supabase
-    .from("photos")
-    .update({ is_group_photo: value })
-    .eq("id", photoId);
+  const { error } = await supabase.from("photos").update({ is_group_photo: value }).eq("id", photoId);
   if (error) throw error;
 
   if (value) {
@@ -106,11 +97,7 @@ export async function markPhotoAsGroupPhoto(photoId: string, teamId: string, val
 }
 
 async function maybeSetGroupPhoto(photoId: string, teamId: string) {
-  const { data } = await supabase
-    .from("photos")
-    .select("photo_url, is_group_photo")
-    .eq("id", photoId)
-    .maybeSingle();
+  const { data } = await supabase.from("photos").select("photo_url, is_group_photo").eq("id", photoId).maybeSingle();
   if (!data?.is_group_photo) return;
   await supabase.from("teams").update({ group_photo_url: data.photo_url }).eq("id", teamId);
 }
@@ -191,7 +178,6 @@ export async function maybeDeliverZoneCode(teamId: string, zoneId: string) {
   const zoneChallenges = zoneCompletionChallenges(challenges, locEvents, zoneId, locStates);
   if (zoneChallenges.length === 0) return;
 
-
   const [answers, quiz, photos] = await Promise.all([
     supabase.from("answers").select("*").eq("team_id", teamId),
     supabase.from("quiz_answers").select("*").eq("team_id", teamId),
@@ -211,10 +197,7 @@ export async function maybeDeliverZoneCode(teamId: string, zoneId: string) {
   if (!allDone) return;
 
   const earned = zoneChallenges.reduce(
-    (sum, c) =>
-      sum +
-      (byChallenge.get(c.id)?.points_awarded ?? 0) +
-      (byChallenge.get(c.id)?.creativity_points ?? 0),
+    (sum, c) => sum + (byChallenge.get(c.id)?.points_awarded ?? 0) + (byChallenge.get(c.id)?.creativity_points ?? 0),
     0,
   );
   const max = zoneChallenges.reduce((sum, c) => sum + c.points, 0);
@@ -226,7 +209,8 @@ export async function maybeDeliverZoneCode(teamId: string, zoneId: string) {
   if (noticeError) return;
 
   const next = sorted[index + 1] ?? null;
-  const lines = [`Jullie voltooiden ${zone.name} met ${earned} van de ${max} punten.`];
+  const lines = [`Jullie voltooiden ${zone.name} met ${earned} punten.`];
+  //const lines = [`Jullie voltooiden ${zone.name} met ${earned} van de ${max} punten.`];
   if (next && zoneNeedsPassword(next)) {
     lines.push("", `Code voor ${next.name}:`, (next.unlock_password ?? "").trim());
   } else if (next) {
@@ -246,10 +230,7 @@ export async function maybeDeliverZoneCode(teamId: string, zoneId: string) {
 
 /* --------------------------- bonusopdrachten --------------------------- */
 
-export async function updateBonusChallenge(
-  id: string,
-  values: { duration_minutes?: number; points?: number },
-) {
+export async function updateBonusChallenge(id: string, values: { duration_minutes?: number; points?: number }) {
   const { error } = await supabase.from("challenges").update(values).eq("id", id);
   if (error) throw error;
 }

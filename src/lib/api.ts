@@ -2,11 +2,7 @@ import { supabase, PHOTO_BUCKET } from "./supabase";
 import { enqueue } from "./offline";
 import { createNotification } from "./notifications";
 import { compareTeams } from "./scoring";
-import {
-  fetchLocationChallengeStates,
-  fetchLocationEvents,
-  setLocationChallengeState,
-} from "./locations";
+import { fetchLocationChallengeStates, fetchLocationEvents, setLocationChallengeState } from "./locations";
 import type {
   Answer,
   Challenge,
@@ -23,8 +19,6 @@ import type {
   Zone,
 } from "./types";
 
-
-
 /* ------------------------------ reads ------------------------------ */
 
 export async function fetchSettings(): Promise<Record<string, string>> {
@@ -34,12 +28,7 @@ export async function fetchSettings(): Promise<Record<string, string>> {
 }
 
 export async function fetchTeams(): Promise<Team[]> {
-  const { data, error } = await supabase
-    .from("teams")
-    .select("*")
-    .eq("active", true)
-    .order("sort_order")
-    .order("name");
+  const { data, error } = await supabase.from("teams").select("*").eq("active", true).order("sort_order").order("name");
   if (error) throw error;
   return (data ?? []) as Team[];
 }
@@ -59,11 +48,7 @@ function mapChallenges(data: unknown[]): Challenge[] {
 
 /** Actieve opdrachten (inclusief bonusopdrachten). */
 export async function fetchChallenges(): Promise<Challenge[]> {
-  const { data, error } = await supabase
-    .from("challenges")
-    .select("*")
-    .eq("active", true)
-    .order("sort_order");
+  const { data, error } = await supabase.from("challenges").select("*").eq("active", true).order("sort_order");
   if (error) throw error;
   return mapChallenges(data ?? []);
 }
@@ -87,10 +72,7 @@ export function activeBonusChallenges(challenges: Challenge[], now = Date.now())
 }
 
 /** Locatieopdrachten die voor dit team zijn vrijgekomen en nog open staan. */
-export function openLocationChallenges(
-  challenges: Challenge[],
-  states: LocationChallengeState[],
-): Challenge[] {
+export function openLocationChallenges(challenges: Challenge[], states: LocationChallengeState[]): Challenge[] {
   const open = new Set(states.filter((s) => s.state === "open").map((s) => s.challenge_id));
   return challenges.filter((c) => c.is_location && c.active && open.has(c.id));
 }
@@ -124,9 +106,7 @@ export function zoneCompletionChallenges(
   zoneId: string,
   states: LocationChallengeState[],
 ): Challenge[] {
-  const dismissed = new Set(
-    states.filter((s) => s.state === "dismissed").map((s) => s.challenge_id),
-  );
+  const dismissed = new Set(states.filter((s) => s.state === "dismissed").map((s) => s.challenge_id));
   return [
     ...zoneChallengesOf(challenges, zoneId),
     ...locationChallengesOfZone(challenges, events, zoneId).filter((c) => !dismissed.has(c.id)),
@@ -144,16 +124,12 @@ export function zoneProgressChallenges(
   zoneId: string,
   states: LocationChallengeState[],
 ): Challenge[] {
-  const counted = new Set(
-    states.filter((s) => s.state !== "dismissed").map((s) => s.challenge_id),
-  );
+  const counted = new Set(states.filter((s) => s.state !== "dismissed").map((s) => s.challenge_id));
   return [
     ...zoneChallengesOf(challenges, zoneId),
     ...locationChallengesOfZone(challenges, events, zoneId).filter((c) => counted.has(c.id)),
   ];
 }
-
-
 
 export async function fetchProgress(teamId?: string): Promise<TeamProgress[]> {
   let query = supabase.from("team_progress").select("*");
@@ -194,11 +170,7 @@ export async function fetchScores(): Promise<Score[]> {
 }
 
 export async function fetchPointActions(): Promise<PointAction[]> {
-  const { data, error } = await supabase
-    .from("point_actions")
-    .select("*")
-    .eq("active", true)
-    .order("sort_order");
+  const { data, error } = await supabase.from("point_actions").select("*").eq("active", true).order("sort_order");
   if (error) throw error;
   return (data ?? []) as PointAction[];
 }
@@ -222,7 +194,6 @@ export async function fetchRanking(): Promise<RankedTeam[]> {
   rows.sort(compareTeams);
   return rows.map((row, index) => ({ ...row, rank: index + 1 }));
 }
-
 
 /* ------------------------------ login ------------------------------ */
 
@@ -260,7 +231,6 @@ export async function addPoints(teamId: string, points: number, kind: PointKind 
   if (error) throw error;
 }
 
-
 /* ------------------------------ zones ------------------------------ */
 
 /** Een zone zonder wachtwoord opent automatisch zodra de vorige zone klaar is. */
@@ -296,9 +266,7 @@ export function unlockedZoneIds(zones: Zone[], progress: TeamProgress[]): Set<st
 
 /** Registreer het eerste team dat een zone bereikt en maak een globale melding. */
 async function registerFirstUnlock(teamId: string, zone: Zone) {
-  const { error } = await supabase
-    .from("zone_first_unlocks")
-    .insert({ zone_id: zone.id, team_id: teamId });
+  const { error } = await supabase.from("zone_first_unlocks").insert({ zone_id: zone.id, team_id: teamId });
   if (error) return; // al bezet door een sneller team
   const { data: team } = await supabase.from("teams").select("name").eq("id", teamId).maybeSingle();
   await createNotification({
@@ -412,7 +380,6 @@ export async function refreshZoneCompletion(
   return { completedZones, events };
 }
 
-
 /* ------------------------------ inzendingen ------------------------------ */
 
 export interface SubmitContext {
@@ -446,6 +413,9 @@ export async function submitTextAnswer({ teamId, zoneId, challenge }: SubmitCont
     if (error) throw error;
     if (points !== 0) await addPoints(teamId, points);
     await markLocationSubmitted(teamId, challenge);
+    if (zoneId) {
+      await maybeDeliverZoneCode(teamId, zoneId);
+    }
   } catch (err) {
     enqueue({ kind: "answer", payload, points, teamId });
     throw new OfflineQueuedError(err);
@@ -465,12 +435,13 @@ export async function submitQuizAnswer({ teamId, zoneId, challenge }: SubmitCont
     points_awarded: points,
   };
   try {
-    const { error } = await supabase
-      .from("quiz_answers")
-      .upsert(payload, { onConflict: "team_id,challenge_id" });
+    const { error } = await supabase.from("quiz_answers").upsert(payload, { onConflict: "team_id,challenge_id" });
     if (error) throw error;
     if (points !== 0) await addPoints(teamId, points);
     await markLocationSubmitted(teamId, challenge);
+    if (zoneId) {
+      await maybeDeliverZoneCode(teamId, zoneId);
+    }
   } catch (err) {
     enqueue({ kind: "quiz", payload, points, teamId });
     throw new OfflineQueuedError(err);
@@ -497,6 +468,9 @@ export async function uploadPhoto({ teamId, zoneId, challenge }: SubmitContext, 
   });
   if (error) throw error;
   await markLocationSubmitted(teamId, challenge);
+  if (zoneId) {
+    await maybeDeliverZoneCode(teamId, zoneId);
+  }
   // Foto's leveren pas punten op na goedkeuring door de reisleider.
   return data.publicUrl;
 }
