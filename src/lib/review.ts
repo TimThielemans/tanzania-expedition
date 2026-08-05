@@ -149,11 +149,11 @@ async function afterReview(input: ReviewInput, status: ReviewStatus, points: num
     if (!challenge.location_event_id) return;
     const events = await fetchLocationEvents();
     const zoneId = events.find((e) => e.id === challenge.location_event_id)?.zone_id ?? null;
-    if (zoneId) await maybeDeliverZoneCode(input.teamId, zoneId);
+    if (zoneId) await maybeDeliverZoneScore(input.teamId, zoneId);
     return;
   }
 
-  if (input.zoneId) await maybeDeliverZoneCode(input.teamId, input.zoneId);
+  if (input.zoneId) await maybeDeliverZoneScore(input.teamId, input.zoneId);
 }
 
 /* --------------------------- automatische zonecode --------------------------- */
@@ -163,19 +163,19 @@ async function afterReview(input: ReviewInput, status: ReviewStatus, points: num
  * een zone — inclusief de locatieopdrachten van die zone — zijn ingezonden én
  * nagekeken. Gebeurt maximaal één keer per team/zone.
  */
-export async function maybeDeliverZoneCode(teamId: string, zoneId: string) {
+export async function maybeDeliverZoneScore(teamId: string, zoneId: string) {
   const [zones, challenges, locEvents, locStates] = await Promise.all([
     fetchZones(),
     fetchAllChallenges(),
     fetchLocationEvents(),
     fetchLocationChallengeStates(teamId),
   ]);
-  const sorted = sortZones(zones);
-  const index = sorted.findIndex((z) => z.id === zoneId);
-  const zone = sorted[index];
+
+  const zone = zones.find((z) => z.id === zoneId);
   if (!zone) return;
 
   const zoneChallenges = zoneCompletionChallenges(challenges, locEvents, zoneId, locStates);
+
   if (zoneChallenges.length === 0) return;
 
   const [answers, quiz, photos] = await Promise.all([
@@ -183,48 +183,52 @@ export async function maybeDeliverZoneCode(teamId: string, zoneId: string) {
     supabase.from("quiz_answers").select("*").eq("team_id", teamId),
     supabase.from("photos").select("*").eq("team_id", teamId),
   ]);
+
   const rows = [
     ...((answers.data ?? []) as Answer[]),
     ...((quiz.data ?? []) as QuizAnswer[]),
     ...((photos.data ?? []) as Photo[]),
   ];
+
   const byChallenge = new Map(rows.map((r) => [r.challenge_id, r]));
 
-  const allDone = zoneChallenges.every((c) => {
+  // Alles moet nagekeken zijn
+  const fullyReviewed = zoneChallenges.every((c) => {
     const row = byChallenge.get(c.id);
     return row && row.status !== "pending";
   });
-  if (!allDone) return;
 
-  const earned = zoneChallenges.reduce(
-    (sum, c) => sum + (byChallenge.get(c.id)?.points_awarded ?? 0) + (byChallenge.get(c.id)?.creativity_points ?? 0),
-    0,
-  );
-  const max = zoneChallenges.reduce((sum, c) => sum + c.points, 0);
+  if (!fullyReviewed) return;
 
-  // Eén keer per team/zone
-  const { error: noticeError } = await supabase
-    .from("zone_completion_notices")
-    .insert({ team_id: teamId, zone_id: zoneId });
-  if (noticeError) return;
+  const regularPoints = zoneChallenges.reduce((sum, c) => sum + (byChallenge.get(c.id)?.points_awarded ?? 0), 0);
 
-  const next = sorted[index + 1] ?? null;
-  const lines = [`Jullie voltooiden ${zone.name} met ${earned} punten.`];
-  //const lines = [`Jullie voltooiden ${zone.name} met ${earned} van de ${max} punten.`];
-  if (next && zoneNeedsPassword(next)) {
-    lines.push("", `Code voor ${next.name}:`, (next.unlock_password ?? "").trim());
-  } else if (next) {
-    lines.push("", `${next.name} is automatisch ontgrendeld.`);
-  } else {
-    lines.push("", "Dit was de laatste zone. Wat een expeditie!");
+  const creativityPoints = zoneChallenges.reduce((sum, c) => sum + (byChallenge.get(c.id)?.creativity_points ?? 0), 0);
+
+  const totalPoints = regularPoints + creativityPoints;
+
+  // Eenmalig versturen
+  const { error } = await supabase.from("zone_score_notices").insert({
+    team_id: teamId,
+    zone_id: zoneId,
+  });
+
+  if (error) return;
+
+  const lines = [`Jullie behaalden ${regularPoints} punten in deze zone.`];
+
+  if (creativityPoints > 0) {
+    lines.push(`(+${creativityPoints} creativiteitspunten)`);
   }
 
+  lines.push("");
+  lines.push(`Totaal: ${totalPoints} punten`);
+
   await createNotification({
-    title: "🎉 Goed gedaan!",
+    title: `🏁 Eindscore van ${zone.name}`,
     body: lines.join("\n"),
     audience: "team",
     teamId,
-    kind: "zone_code",
+    kind: "score",
   });
 }
 
