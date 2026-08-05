@@ -8,6 +8,7 @@ import { ConfigNotice } from "@/components/ConfigNotice";
 import { ChallengeCard } from "@/components/ChallengeCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getSiteImageStorageUrl } from "@/lib/supabase";
 import {
   useAnswers,
   useChallenges,
