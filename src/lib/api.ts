@@ -414,7 +414,7 @@ export async function submitTextAnswer({ teamId, zoneId, challenge }: SubmitCont
     if (points !== 0) await addPoints(teamId, points);
     await markLocationSubmitted(teamId, challenge);
     if (zoneId) {
-      await maybeDeliverZoneCode(teamId, zoneId);
+      await maybeDeliverZoneCode2(teamId, zoneId);
     }
   } catch (err) {
     enqueue({ kind: "answer", payload, points, teamId });
@@ -440,7 +440,7 @@ export async function submitQuizAnswer({ teamId, zoneId, challenge }: SubmitCont
     if (points !== 0) await addPoints(teamId, points);
     await markLocationSubmitted(teamId, challenge);
     if (zoneId) {
-      await maybeDeliverZoneCode(teamId, zoneId);
+      await maybeDeliverZoneCode2(teamId, zoneId);
     }
   } catch (err) {
     enqueue({ kind: "quiz", payload, points, teamId });
@@ -469,7 +469,7 @@ export async function uploadPhoto({ teamId, zoneId, challenge }: SubmitContext, 
   if (error) throw error;
   await markLocationSubmitted(teamId, challenge);
   if (zoneId) {
-    await maybeDeliverZoneCode(teamId, zoneId);
+    await maybeDeliverZoneCode2(teamId, zoneId);
   }
   // Foto's leveren pas punten op na goedkeuring door de reisleider.
   return data.publicUrl;
@@ -481,4 +481,67 @@ export class OfflineQueuedError extends Error {
     super("Geen verbinding — je antwoord is lokaal bewaard en wordt automatisch verstuurd.");
     this.name = "OfflineQueuedError";
   }
+}
+
+/**
+ * Stuurt automatisch de code van de volgende zone zodra alle opdrachten van
+ * een zone — inclusief de locatieopdrachten van die zone — zijn ingezonden én
+ * nagekeken. Gebeurt maximaal één keer per team/zone.
+ */
+export async function maybeDeliverZoneCode2(teamId: string, zoneId: string) {
+  const [zones, challenges, locEvents, locStates] = await Promise.all([
+    fetchZones(),
+    fetchAllChallenges(),
+    fetchLocationEvents(),
+    fetchLocationChallengeStates(teamId),
+  ]);
+  const sorted = sortZones(zones);
+  const index = sorted.findIndex((z) => z.id === zoneId);
+  const zone = sorted[index];
+  if (!zone) return;
+
+  const zoneChallenges = zoneCompletionChallenges(challenges, locEvents, zoneId, locStates);
+  if (zoneChallenges.length === 0) return;
+
+  const [answers, quiz, photos] = await Promise.all([
+    supabase.from("answers").select("*").eq("team_id", teamId),
+    supabase.from("quiz_answers").select("*").eq("team_id", teamId),
+    supabase.from("photos").select("*").eq("team_id", teamId),
+  ]);
+  const rows = [
+    ...((answers.data ?? []) as Answer[]),
+    ...((quiz.data ?? []) as QuizAnswer[]),
+    ...((photos.data ?? []) as Photo[]),
+  ];
+  const byChallenge = new Map(rows.map((r) => [r.challenge_id, r]));
+
+  const allDone = zoneChallenges.every((c) => {
+    const row = byChallenge.get(c.id);
+    return !!row;
+  });
+  if (!allDone) return;
+
+  // Eén keer per team/zone
+  const { error: noticeError } = await supabase
+    .from("zone_completion_notices")
+    .insert({ team_id: teamId, zone_id: zoneId });
+  if (noticeError) return;
+
+  const next = sorted[index + 1] ?? null;
+  const lines = [`Jullie voltooiden ${zone.name}, punten zijn nog onder review.`];
+  if (next && zoneNeedsPassword(next)) {
+    lines.push("", `Code voor ${next.name}:`, (next.unlock_password ?? "").trim());
+  } else if (next) {
+    lines.push("", `${next.name} is automatisch ontgrendeld.`);
+  } else {
+    lines.push("", "Dit was de laatste zone. Wat een expeditie!");
+  }
+
+  await createNotification({
+    title: "🎉 Goed gedaan!",
+    body: lines.join("\n"),
+    audience: "team",
+    teamId,
+    kind: "zone_code",
+  });
 }
