@@ -69,8 +69,11 @@ export function ChallengeCard({
     setPreview(URL.createObjectURL(file));
   }
 
-  const isPhoto =
-    challenge.challenge_type === "photo_upload" || challenge.challenge_type === "bonus_photo_upload";
+  const isPhoto = challenge.challenge_type === "photo_upload" || challenge.challenge_type === "bonus_photo_upload";
+
+  const imageUrl = challenge.image_url
+    ? supabase.storage.from("challenges").getPublicUrl(challenge.image_url).data.publicUrl
+    : undefined;
 
   return (
     <article className="rounded-3xl border border-border bg-card p-4 shadow-card">
@@ -89,9 +92,7 @@ export function ChallengeCard({
             ) : null}
           </div>
           <h3 className="text-xl leading-tight">{challenge.title}</h3>
-          {challenge.description ? (
-            <p className="mt-1 text-sm text-muted-foreground">{challenge.description}</p>
-          ) : null}
+          {challenge.description ? <p className="mt-1 text-sm text-muted-foreground">{challenge.description}</p> : null}
         </div>
         <PointsBadge state={state} points={challenge.points} awarded={awardedPoints} />
       </div>
@@ -134,13 +135,9 @@ export function ChallengeCard({
         <div className="mt-4 space-y-1 rounded-2xl bg-secondary px-4 py-3 text-sm font-semibold text-secondary-foreground">
           <div className="flex items-center gap-2">
             <Check className="size-4 shrink-0" />
-            <span className="min-w-0 truncate">
-              Ingezonden{submittedValue ? `: ${submittedValue}` : ""}
-            </span>
+            <span className="min-w-0 truncate">Ingezonden{submittedValue ? `: ${submittedValue}` : ""}</span>
           </div>
-          {state !== "todo" ? (
-            <p className="text-xs font-medium opacity-80">{stateHint[state]}</p>
-          ) : null}
+          {state !== "todo" ? <p className="text-xs font-medium opacity-80">{stateHint[state]}</p> : null}
         </div>
       ) : (
         <div className="mt-4 space-y-3">

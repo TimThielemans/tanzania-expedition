@@ -23,3 +23,10 @@ export const supabase = createClient(url || "https://placeholder.supabase.co", a
 });
 
 export const PHOTO_BUCKET = "photos";
+export const SITE_BUCKET = "site_images";
+
+export function getSiteImageStorageUrl(path: string | null | undefined) {
+  if (!path) return null;
+
+  return supabase.storage.from(SITE_BUCKET).getPublicUrl(path).data.publicUrl;
+}
