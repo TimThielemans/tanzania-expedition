@@ -177,7 +177,6 @@ export async function reorderLocationEvents(ids: string[]) {
   );
 }
 
-
 export async function updateLocationEvent(id: string, values: Partial<LocationEventInput>) {
   const { error } = await supabase.from("location_events").update(values).eq("id", id);
   if (error) throw error;
@@ -292,22 +291,27 @@ async function runTriggerAction(team: GeofenceTeam, event: LocationEvent) {
 
   // Hangt er een opdracht aan dit event? Dan komt die nu vrij voor dit team.
   const challenge = await challengeForEvent(event.id);
+  const hasEventMessage = (event.notification_message ?? "").trim() !== "" || (event.description ?? "").trim() !== "";
+
   if (challenge?.active) {
     await setLocationChallengeState(team.id, challenge.id, "open");
-    await createNotification({
-      title: `📍 Locatieopdracht: ${challenge.title}`,
-      body: challenge.description ?? "Open de app — er staat een opdracht klaar.",
-      audience: "team",
-      teamId: team.id,
-      kind: "location",
-    });
+
+    if (!hasEventMessage) {
+      await createNotification({
+        title: `📍 Locatieopdracht: ${challenge.title}`,
+        body: challenge.description ?? "Open de app — er staat een opdracht klaar.",
+        audience: "team",
+        teamId: team.id,
+        kind: "location",
+      });
+    }
   }
 
   // Eerste team op de locatie: iedereen mag het weten.
   if (event.trigger_mode === "first") {
     await createNotification({
-      title: `🏆 ${team.name} bereikte als eerste ${event.name}!`,
-      body: "Wie volgt?",
+      title: `🏆 ${team.name} bereikte als eerste ${event.name} en kreeg daar mogelijks een extra tip voor!`,
+      body: "Wie haalt ze in?",
       audience: "all",
       kind: "achievement",
     });
@@ -357,10 +361,7 @@ export async function resetLocationTrigger(eventId: string, teamId: string) {
 }
 
 /** Forceert een trigger handmatig: zelfde gevolgen als een echte geofence-hit. */
-export async function forceLocationTrigger(
-  team: { id: string; name: string },
-  event: LocationEvent,
-) {
+export async function forceLocationTrigger(team: { id: string; name: string }, event: LocationEvent) {
   const { error } = await supabase.from("location_event_triggers").insert({
     event_id: event.id,
     team_id: team.id,
