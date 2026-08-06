@@ -138,14 +138,14 @@ export function OnboardingTour() {
 
           <p className="mt-2 text-sm text-muted-foreground">{body}</p>
 
-          <p className="mt-3 text-center text-xs font-semibold text-green-600">
-            ↓ Gebruik de groene knop hieronder om verder te gaan
+          <p className="mt-3 animate-pulse text-center text-xs font-semibold text-green-600">
+            ↓ Gebruik de groene knop hieronder om verder te gaan↓
           </p>
 
           {step.action ? (
             <Button
               size="lg"
-              className="mt-4 h-12 w-full rounded-2xl bg-green-600 text-base text-white animate-pulse hover:bg-green-700"
+              className="mt-4 h-12 w-full rounded-2xl bg-green-600 text-base text-white hover:bg-green-700"
               onClick={async () => {
                 if (step.id === "home-location") {
                   void enableLocationSharing();
