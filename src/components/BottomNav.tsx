@@ -18,7 +18,6 @@ const tourTargets: Record<string, string | undefined> = {
   "/statistieken": "nav-map",
 };
 
-
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { isAdmin } = useAdminSession();
@@ -27,13 +26,12 @@ export function BottomNav() {
   const items = isAdmin ? [...baseItems, { to: "/admin", label: "Admin", icon: Shield } as const] : baseItems;
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+    <nav className="fixed inset-x-0 bottom-0 z-[9999] border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
       <ul className={cn("mx-auto grid max-w-lg", isAdmin ? "grid-cols-6" : "grid-cols-5")}>
         {items.map(({ to, label, icon: Icon }) => {
           const active = to === "/" ? pathname === "/" : pathname.startsWith(to);
           return (
             <li key={to} data-tour={tourTargets[to]}>
-
               <Link
                 to={to}
                 className={cn(

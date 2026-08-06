@@ -66,7 +66,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     optional: true,
     placement: "bottom",
     title: "Locatie delen",
-    body: "Deel hier de locatie van je team. Zo kunnen locatie-opdrachten automatisch verschijnen wanneer jullie belangrijke plaatsen bereiken. Slechts één toestel per team deelt de locatie, maar je kan hier altijd wisselen van toestel.",
+    body: "Om opdrachten automatisch te laten verschijnen wanneer jullie belangrijke plaatsen bereiken, zal je zo dadelijk gevraagd worden om toestemming te geven om je locatie door te geven. Slechts één toestel per team deelt de locatie, maar je kan via deze knop altijd wisselen van toestel tijdens het spel.",
     action: { label: "Naar de Map", goTo: "/statistieken" },
   },
   {
