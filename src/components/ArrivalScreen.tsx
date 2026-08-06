@@ -36,6 +36,7 @@ export function ArrivalScreen({ teamName, onDone }: { teamName: string; onDone: 
   useEffect(() => {
     if (reduced || announcementDone) return;
     const line = lines[lineIndex];
+    const delay = lineIndex === 0 && chars === 0 ? timing.initialDelay : timing.charDelay;
     if (chars < line.length) {
       const t = window.setTimeout(() => setChars((c) => c + 1), timing.charDelay);
       return () => window.clearTimeout(t);
@@ -107,16 +108,11 @@ export function ArrivalScreen({ teamName, onDone }: { teamName: string; onDone: 
         <header className="border-b border-background/20 pb-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p
-                className="text-3xl leading-none tracking-[0.28em]"
-                style={{ color: "var(--gold)" }}
-              >
+              <p className="text-3xl leading-none tracking-[0.28em]" style={{ color: "var(--gold)" }}>
                 {airline}
               </p>
               <p className="mt-3 text-2xl leading-none tracking-[0.35em] opacity-90">{route}</p>
-              <p className="mt-2 text-[0.7rem] uppercase tracking-[0.25em] opacity-60">
-                Flight BOWDA26 · {teamName}
-              </p>
+              <p className="mt-2 text-[0.7rem] uppercase tracking-[0.25em] opacity-60">Flight BOWDA26 · {teamName}</p>
             </div>
             {!landed ? (
               <button
@@ -143,10 +139,7 @@ export function ArrivalScreen({ teamName, onDone }: { teamName: string; onDone: 
           {checks > 0 ? (
             <ul className="mt-8 space-y-2 border-t border-background/20 pt-6">
               {checkpoints.slice(0, checks).map((c) => (
-                <li
-                  key={c}
-                  className="animate-fade-in text-xs uppercase tracking-[0.18em] opacity-85"
-                >
+                <li key={c} className="animate-fade-in text-xs uppercase tracking-[0.18em] opacity-85">
                   <span style={{ color: "var(--gold)" }}>✓</span> {c}
                 </li>
               ))}
@@ -154,10 +147,7 @@ export function ArrivalScreen({ teamName, onDone }: { teamName: string; onDone: 
           ) : null}
 
           {landed ? (
-            <p
-              className="animate-scale-in pt-8 text-2xl leading-tight"
-              style={{ color: "var(--gold)" }}
-            >
+            <p className="animate-scale-in pt-8 text-2xl leading-tight" style={{ color: "var(--gold)" }}>
               {arrivalLabel}
             </p>
           ) : null}

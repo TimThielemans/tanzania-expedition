@@ -15,8 +15,7 @@ export const ARRIVAL_SCRIPT = {
   /** Aankondiging van de cabinecrew — elke regel verschijnt na de vorige. */
   lines: [
     "Good afternoon and welcome aboard BOW Airlines flight BOWDA26 from Brussels to Kilimanjaro International Airport.",
-    "Our expected flight time today is approximately 9 seconds, with favourable conditions all the way to Tanzania.",
-    "During this journey you will be travelling through mountain bike trails, the slopes of Mount Meru, the wildlife of the African savannah and finally the tropical beaches of Zanzibar.",
+    "Our expected flight time today is approximately 30 seconds, with favourable conditions all the way to Tanzania.",
     "Please remain seated until the aircraft has come to a complete stop and the Touch Down button has illuminated.",
     "On behalf of captain Lotte and the entire cabin crew, we wish you a pleasant flight and an excellent adventure in Tanzania.",
     "Hakuna Matata!",
@@ -24,6 +23,7 @@ export const ARRIVAL_SCRIPT = {
   /** Statusregels die één per één afgevinkt verschijnen. */
   checkpoints: [
     "Boarding completed",
+    "Cleared for take-off",
     "Cruising altitude reached",
     "Mount Kilimanjaro spotted",
     "Descent initiated",
@@ -34,16 +34,17 @@ export const ARRIVAL_SCRIPT = {
   buttonLabel: "TOUCH DOWN",
   /** Tempo (ms). */
   timing: {
+    initialDelay: 2500,
     /** Tijd per teken van de typewriter. */
     charDelay: 18,
     /** Pauze tussen twee aankondigingsregels. */
-    linePause: 700,
+    linePause: 100,
     /** Pauze tussen twee checkpoints. */
-    checkpointPause: 900,
+    checkpointPause: 1500,
   },
 } as const;
 
-const ARRIVAL_VERSION = "v1";
+const ARRIVAL_VERSION = "v1.1";
 const DONE = "done";
 
 const key = (teamId: string) => `bow-arrival:${ARRIVAL_VERSION}:${teamId}`;
