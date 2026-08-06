@@ -2,6 +2,7 @@ import { supabase, PHOTO_BUCKET } from "./supabase";
 import { enqueue } from "./offline";
 import { createNotification } from "./notifications";
 import { compareTeams } from "./scoring";
+import { toast } from "sonner";
 import { fetchLocationChallengeStates, fetchLocationEvents, setLocationChallengeState } from "./locations";
 import type {
   Answer,
