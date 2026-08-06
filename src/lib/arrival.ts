@@ -44,7 +44,7 @@ export const ARRIVAL_SCRIPT = {
   },
 } as const;
 
-const ARRIVAL_VERSION = "v1.1";
+const ARRIVAL_VERSION = "v1.2";
 const DONE = "done";
 
 const key = (teamId: string) => `bow-arrival:${ARRIVAL_VERSION}:${teamId}`;
