@@ -42,6 +42,8 @@ import { setLocationChallengeState, showLocationToast, fetchTeamLocations } from
 import { fireConfetti } from "@/lib/confetti";
 import type { ReviewStatus, Zone } from "@/lib/types";
 import { clearSession, saveSession, useTeamSession } from "@/lib/session";
+import { arrivalDone, useArrival } from "@/lib/arrival";
+import { ArrivalScreen } from "@/components/ArrivalScreen";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 const CONSENT_KEY = "bow-location-consent";
@@ -71,7 +73,15 @@ function IndexPage() {
   const { session, hydrated } = useTeamSession();
   if (!isSupabaseConfigured) return <ConfigNotice />;
   if (!hydrated) return null;
-  return session ? <HomeScreen teamId={session.teamId} /> : <LoginScreen />;
+  return session ? <SessionScreen teamId={session.teamId} teamName={session.teamName} /> : <LoginScreen />;
+}
+
+/** Eerste keer per team + toestel: aankomstscherm in plaats van Home. */
+function SessionScreen({ teamId, teamName }: { teamId: string; teamName: string }) {
+  const { done, hydrated, complete } = useArrival(teamId);
+  if (!hydrated) return null;
+  if (!done) return <ArrivalScreen teamName={teamName} onDone={complete} />;
+  return <HomeScreen teamId={teamId} />;
 }
 
 /* ------------------------------- login ------------------------------- */
@@ -88,7 +98,8 @@ function LoginScreen() {
     try {
       const team = await loginTeam(teamId, password);
       saveSession({ teamId: team.id, teamName: team.name });
-      toast.success(`Welkom, ${team.name}!`);
+      // Eerste login op dit toestel: geen toast, het aankomstscherm neemt over.
+      if (arrivalDone(team.id)) toast.success(`Welkom, ${team.name}!`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Inloggen mislukt.");
     } finally {

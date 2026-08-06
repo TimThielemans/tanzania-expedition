@@ -3,6 +3,7 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { useTeamSession } from "@/lib/session";
 import { useOnboarding } from "@/lib/onboarding";
+import { useArrival } from "@/lib/arrival";
 
 interface Rect {
   top: number;
@@ -22,7 +23,19 @@ export function OnboardingTour() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const { step, hydrated, next, skip } = useOnboarding(session?.teamId ?? null);
+  const arrival = useArrival(session?.teamId ?? null);
   const [rect, setRect] = useState<Rect | null>(null);
+  // Na het aankomstscherm 1 seconde wachten voor de tour begint.
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    if (!arrival.hydrated || !arrival.done) {
+      setReady(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setReady(true), 1000);
+    return () => window.clearTimeout(timer);
+  }, [arrival.hydrated, arrival.done]);
 
   const onRoute = !!step && step.route === pathname;
 
@@ -66,6 +79,7 @@ export function OnboardingTour() {
   }, [onRoute, step]);
 
   if (!sessionReady || !hydrated || !session || !step || !onRoute) return null;
+  if (!ready) return null;
   if (step.optional && !rect) return null;
 
   const team = session.teamName;
