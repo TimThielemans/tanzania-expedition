@@ -123,7 +123,7 @@ export function OnboardingTour() {
         }
       >
         {/* ENIGE klikbare element */}
-        <div className="pointer-events-auto mx-auto max-w-lg rounded-3xl bg-card p-5 shadow-raised">
+        <div className="pointer-events-auto mx-auto max-w-lg rounded-3xl bg-card p-5 shadow-raised ring-4 ring-green-500">
           <div className="flex items-start gap-3">
             <h2 className="min-w-0 flex-1 text-xl leading-snug">{title}</h2>
 
