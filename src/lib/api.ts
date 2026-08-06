@@ -554,7 +554,6 @@ export async function maybeDeliverZoneCode(teamId: string, zoneId: string) {
     return !!row;
   });
 
-  toast.info(`allDone = ${allDone}`);
   if (!allDone) return;
 
   // Eén keer per team/zone
@@ -562,7 +561,7 @@ export async function maybeDeliverZoneCode(teamId: string, zoneId: string) {
     .from("zone_completion_notices")
     .insert({ team_id: teamId, zone_id: zoneId });
 
-  toast.info(`noticeError = ${noticeError}`);
+  toast.info(`allDone = ${allDone} and noticeError = ${noticeError}`);
   if (noticeError) return;
 
   const next = sorted[index + 1] ?? null;
