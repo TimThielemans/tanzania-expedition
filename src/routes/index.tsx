@@ -50,6 +50,7 @@ import { clearSession, saveSession, useTeamSession } from "@/lib/session";
 import { arrivalDone, useArrival } from "@/lib/arrival";
 import { ArrivalScreen } from "@/components/ArrivalScreen";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { useOnboarding } from "@/lib/onboarding";
 
 const MEDALS = ["🥇", "🥈", "🥉"];
 
@@ -188,6 +189,8 @@ function HomeScreen({ teamId }: { teamId: string }) {
   const [tick, setTick] = useState(0);
   const [consented, setConsented] = useState(false);
 
+  const { done: onboardingDone } = useOnboarding(teamId);
+
   useEffect(() => {
     setConsented(window.localStorage.getItem(CONSENT_KEY) === "true");
   }, []);
@@ -306,7 +309,20 @@ function HomeScreen({ teamId }: { teamId: string }) {
         </div>
       </Link>
 
-      {trackingOn && !consented ? (
+      {trackingOn && !onboardingDone ? (
+        <button
+          type="button"
+          data-tour="location-share"
+          className="mt-4 flex w-full items-center gap-3 rounded-3xl border border-border bg-card p-4 text-left shadow-card"
+        >
+          <MapPin className={isTracker ? "size-5 text-primary" : "size-5 text-muted-foreground"} />
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">Hier komt info over welke toestel de locatiedeelt</span>
+          </span>
+        </button>
+      ) : null}
+
+      {trackingOn && !consented && onboardingDone ? (
         <div data-tour="location-share" className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
           <h2 className="text-xl">📍 Deel jullie locatie</h2>
           <p className="mt-1 text-sm text-muted-foreground">

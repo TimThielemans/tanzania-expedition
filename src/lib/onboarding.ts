@@ -101,7 +101,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   },
 
   {
-    id: "start",
+    id: "home-start",
     route: "/",
     target: "first-zone",
     placement: "top",
@@ -179,5 +179,5 @@ export function useOnboarding(teamId: string | null) {
     };
   }, [step?.advanceOn, step, next]);
 
-  return { step, hydrated, next, skip };
+  return { step, hydrated, next, skip, done };
 }
