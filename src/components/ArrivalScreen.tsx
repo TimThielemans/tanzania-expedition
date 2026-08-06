@@ -73,7 +73,7 @@ export function ArrivalScreen({ teamName, onDone }: { teamName: string; onDone: 
   }, [lineIndex, chars, checks, landed]);
 
   const visibleLines = useMemo(() => {
-    const shown = lines.slice(0, lineIndex);
+    const shown: string[] = lines.slice(0, lineIndex);
     if (!announcementDone && !reduced) shown.push(lines[lineIndex].slice(0, chars));
     return shown;
   }, [lineIndex, chars, announcementDone, reduced]);
