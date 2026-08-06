@@ -2,7 +2,6 @@ import { supabase, PHOTO_BUCKET } from "./supabase";
 import { enqueue } from "./offline";
 import { createNotification } from "./notifications";
 import { compareTeams } from "./scoring";
-import { toast } from "sonner";
 import { fetchLocationChallengeStates, fetchLocationEvents, setLocationChallengeState } from "./locations";
 import type {
   Answer,
@@ -425,11 +424,7 @@ export async function submitTextAnswer({ teamId, zoneId, challenge }: SubmitCont
       });
     }
 
-    if (zoneId) {
-      await maybeDeliverZoneCode(teamId, zoneId);
-    } else {
-      toast.info("not called because zoneId = not");
-    }
+    await triggerZoneCompletionCheck(teamId, zoneId, challenge);
   } catch (err) {
     enqueue({ kind: "answer", payload, points, teamId });
     throw new OfflineQueuedError(err);
@@ -462,9 +457,7 @@ export async function submitQuizAnswer({ teamId, zoneId, challenge }: SubmitCont
         kind: challenge.is_location ? "location" : "review",
       });
     }
-    if (zoneId) {
-      await maybeDeliverZoneCode(teamId, zoneId);
-    }
+    await triggerZoneCompletionCheck(teamId, zoneId, challenge);
   } catch (err) {
     enqueue({ kind: "quiz", payload, points, teamId });
     throw new OfflineQueuedError(err);
@@ -500,11 +493,8 @@ export async function uploadPhoto({ teamId, zoneId, challenge }: SubmitContext, 
       kind: challenge.is_location ? "location" : "review",
     });
   }
-  if (zoneId) {
-    await maybeDeliverZoneCode(teamId, zoneId);
-  } else {
-    toast.info("not called because zoneId = not");
-  }
+
+  await triggerZoneCompletionCheck(teamId, zoneId, challenge);
   // Foto's leveren pas punten op na goedkeuring door de reisleider.
   return data.publicUrl;
 }
@@ -514,6 +504,25 @@ export class OfflineQueuedError extends Error {
   constructor(public cause: unknown) {
     super("Geen verbinding — je antwoord is lokaal bewaard en wordt automatisch verstuurd.");
     this.name = "OfflineQueuedError";
+  }
+}
+
+async function triggerZoneCompletionCheck(teamId: string, zoneId: string | null, challenge: Challenge) {
+  if (zoneId) {
+    await maybeDeliverZoneCode(teamId, zoneId);
+    return;
+  }
+
+  if (!challenge.is_location || !challenge.location_event_id) {
+    return;
+  }
+
+  const events = await fetchLocationEvents();
+
+  const locationZoneId = events.find((e) => e.id === challenge.location_event_id)?.zone_id;
+
+  if (locationZoneId) {
+    await maybeDeliverZoneCode(teamId, locationZoneId);
   }
 }
 
@@ -561,7 +570,6 @@ export async function maybeDeliverZoneCode(teamId: string, zoneId: string) {
     .from("zone_completion_notices")
     .insert({ team_id: teamId, zone_id: zoneId });
 
-  toast.info(`allDone = ${allDone} and noticeError = ${noticeError}`);
   if (noticeError) return;
 
   const next = sorted[index + 1] ?? null;
