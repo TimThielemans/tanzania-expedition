@@ -108,7 +108,7 @@ async function afterReview(input: ReviewInput, status: ReviewStatus, points: num
   const challenge = input.challenge;
   const custom = challenge?.approval_message?.trim();
 
-  if (custom) {
+  /*if (custom) {
     // Eigen bericht vervangt de standaardmelding, zowel bij goed- als afkeuring.
     await createNotification({
       title: challenge?.title ?? "Opdracht nagekeken",
@@ -117,7 +117,8 @@ async function afterReview(input: ReviewInput, status: ReviewStatus, points: num
       teamId: input.teamId,
       kind: challenge?.is_bonus ? "bonus" : challenge?.is_location ? "location" : "review",
     });
-  } else if (challenge?.is_bonus) {
+  } else*/
+  if (challenge?.is_bonus) {
     await createNotification({
       title: status === "approved" ? "✅ Bonusopdracht goedgekeurd!" : "❌ Bonusopdracht afgekeurd.",
       body:

@@ -413,8 +413,19 @@ export async function submitTextAnswer({ teamId, zoneId, challenge }: SubmitCont
     if (error) throw error;
     if (points !== 0) await addPoints(teamId, points);
     await markLocationSubmitted(teamId, challenge);
+
+    if (challenge.approval_message?.trim()) {
+      await createNotification({
+        title: challenge.title,
+        body: challenge.approval_message,
+        audience: "team",
+        teamId,
+        kind: challenge.is_location ? "location" : "review",
+      });
+    }
+
     if (zoneId) {
-      await maybeDeliverZoneCode2(teamId, zoneId);
+      await maybeDeliverZoneCode(teamId, zoneId);
     }
   } catch (err) {
     enqueue({ kind: "answer", payload, points, teamId });
@@ -439,8 +450,17 @@ export async function submitQuizAnswer({ teamId, zoneId, challenge }: SubmitCont
     if (error) throw error;
     if (points !== 0) await addPoints(teamId, points);
     await markLocationSubmitted(teamId, challenge);
+    if (challenge.approval_message?.trim()) {
+      await createNotification({
+        title: challenge.title,
+        body: challenge.approval_message,
+        audience: "team",
+        teamId,
+        kind: challenge.is_location ? "location" : "review",
+      });
+    }
     if (zoneId) {
-      await maybeDeliverZoneCode2(teamId, zoneId);
+      await maybeDeliverZoneCode(teamId, zoneId);
     }
   } catch (err) {
     enqueue({ kind: "quiz", payload, points, teamId });
@@ -468,8 +488,17 @@ export async function uploadPhoto({ teamId, zoneId, challenge }: SubmitContext, 
   });
   if (error) throw error;
   await markLocationSubmitted(teamId, challenge);
+  if (challenge.approval_message?.trim()) {
+    await createNotification({
+      title: challenge.title,
+      body: challenge.approval_message,
+      audience: "team",
+      teamId,
+      kind: challenge.is_location ? "location" : "review",
+    });
+  }
   if (zoneId) {
-    await maybeDeliverZoneCode2(teamId, zoneId);
+    await maybeDeliverZoneCode(teamId, zoneId);
   }
   // Foto's leveren pas punten op na goedkeuring door de reisleider.
   return data.publicUrl;
@@ -488,7 +517,7 @@ export class OfflineQueuedError extends Error {
  * een zone — inclusief de locatieopdrachten van die zone — zijn ingezonden én
  * nagekeken. Gebeurt maximaal één keer per team/zone.
  */
-export async function maybeDeliverZoneCode2(teamId: string, zoneId: string) {
+export async function maybeDeliverZoneCode(teamId: string, zoneId: string) {
   const [zones, challenges, locEvents, locStates] = await Promise.all([
     fetchZones(),
     fetchAllChallenges(),

@@ -262,14 +262,16 @@ function ZonePage() {
         <DialogContent className="max-w-sm rounded-3xl">
           <DialogHeader>
             <DialogTitle className="text-2xl">
-              {completion?.nextNeedsPassword || !completion?.nextZoneName ? "✅ Zone voltooid!" : "🎉 Zone voltooid!"}
+              {completion?.nextNeedsPassword || !completion?.nextZoneName
+                ? "✅ Etappe voltooid!"
+                : "🎉 Etappe voltooid!"}
             </DialogTitle>
             <DialogDescription className="text-base">
               {completion?.nextNeedsPassword
-                ? "De reisleider kijkt jullie antwoorden na. Klopt alles? Dan krijgen jullie het wachtwoord voor de volgende zone via Meldingen."
+                ? "De reisleider zal jullie antwoorden van deze zone nog beoordelen maar in notificaties vinden jullie alvast het wachtwoord voor het volgende deel van de reis. Have fun!"
                 : completion?.nextZoneName
                   ? `De volgende zone (${completion.nextZoneName}) is automatisch ontgrendeld.`
-                  : "Jullie hebben de laatste zone afgerond. Wat een expeditie!"}
+                  : "Jullie hebben de laatste etappe van de reis afgerond. Wat een expeditie!"}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
