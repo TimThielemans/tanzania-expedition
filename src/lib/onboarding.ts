@@ -179,5 +179,6 @@ export function useOnboarding(teamId: string | null) {
     };
   }, [step?.advanceOn, step, next]);
 
+  const done = stepId === DONE;
   return { step, hydrated, next, skip, done };
 }
