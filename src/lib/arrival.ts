@@ -40,7 +40,7 @@ export const ARRIVAL_SCRIPT = {
     /** Pauze tussen twee aankondigingsregels. */
     linePause: 1500,
     /** Pauze tussen twee checkpoints. */
-    checkpointPause: 2000,
+    checkpointPause: 3500,
   },
 } as const;
 
