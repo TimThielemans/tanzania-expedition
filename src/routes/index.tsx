@@ -27,7 +27,12 @@ import {
   useTeams,
   useZones,
 } from "@/hooks/useGame";
-import { enableLocationSharing, useLocationTracking, requestLocationPermission } from "@/hooks/useLocationTracking";
+import {
+  CONSENT_KEY,
+  enableLocationSharing,
+  useLocationTracking,
+  requestLocationPermission,
+} from "@/hooks/useLocationTracking";
 import { TRACKING_KEY } from "@/components/AdminMapPanel";
 import {
   activeBonusChallenges,
