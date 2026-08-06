@@ -34,7 +34,7 @@ export const ARRIVAL_SCRIPT = {
   buttonLabel: "TOUCH DOWN",
   /** Tempo (ms). */
   timing: {
-    initialDelay: 5000,
+    initialDelay: 2000,
     /** Tijd per teken van de typewriter. */
     charDelay: 20,
     /** Pauze tussen twee aankondigingsregels. */

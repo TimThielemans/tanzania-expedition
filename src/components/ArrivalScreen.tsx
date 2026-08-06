@@ -38,7 +38,7 @@ export function ArrivalScreen({ teamName, onDone }: { teamName: string; onDone: 
     const line = lines[lineIndex];
     const delay = lineIndex === 0 && chars === 0 ? timing.initialDelay : timing.charDelay;
     if (chars < line.length) {
-      const t = window.setTimeout(() => setChars((c) => c + 1), timing.charDelay);
+      const t = window.setTimeout(() => setChars((c) => c + 1), delay);
       return () => window.clearTimeout(t);
     }
     const t = window.setTimeout(() => {
