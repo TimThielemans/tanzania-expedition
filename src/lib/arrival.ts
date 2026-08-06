@@ -15,9 +15,9 @@ export const ARRIVAL_SCRIPT = {
   /** Aankondiging van de cabinecrew — elke regel verschijnt na de vorige. */
   lines: [
     "Good afternoon and welcome aboard BOW Airlines flight BOWDA26 from Brussels to Kilimanjaro International Airport.",
-    "Our expected flight time today is approximately 30 seconds, with favourable conditions all the way to Tanzania.",
+    "Our expected flight time today is approximately 20 seconds, with favourable conditions all the way to Tanzania.",
     "Please remain seated until the aircraft has come to a complete stop and the Touch Down button has illuminated.",
-    "On behalf of captain Lotte and the entire cabin crew, we wish you a pleasant flight and an excellent adventure in Tanzania.",
+    "On behalf of our captain (Lotte?) and the entire cabin crew, we wish you a pleasant flight and an excellent adventure in Tanzania.",
     "Hakuna Matata!",
   ],
   /** Statusregels die één per één afgevinkt verschijnen. */
@@ -34,13 +34,13 @@ export const ARRIVAL_SCRIPT = {
   buttonLabel: "TOUCH DOWN",
   /** Tempo (ms). */
   timing: {
-    initialDelay: 2000,
+    initialDelay: 1000,
     /** Tijd per teken van de typewriter. */
     charDelay: 20,
     /** Pauze tussen twee aankondigingsregels. */
-    linePause: 1500,
+    linePause: 200,
     /** Pauze tussen twee checkpoints. */
-    checkpointPause: 3500,
+    checkpointPause: 3000,
   },
 } as const;
 
