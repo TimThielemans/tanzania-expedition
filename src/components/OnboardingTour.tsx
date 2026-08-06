@@ -5,6 +5,7 @@ import { useTeamSession } from "@/lib/session";
 import { useOnboarding } from "@/lib/onboarding";
 import { useArrival } from "@/lib/arrival";
 import { enableLocationSharing } from "@/hooks/useLocationTracking";
+import { toast } from "sonner";
 
 interface Rect {
   top: number;
@@ -96,7 +97,8 @@ export function OnboardingTour() {
       {/* Achtergrond en highlight */}
       {rect ? (
         <div
-          className="pointer-events-none absolute rounded-2xl ring-4 ring-primary ring-offset-2 ring-offset-transparent"
+          onClick={() => toast.info("Volg eerst de onboarding via de groene knop hieronder.")}
+          className="absolute rounded-2xl ring-4 ring-primary ring-offset-2 ring-offset-transparent"
           style={{
             top: rect.top - 6,
             left: rect.left - 6,
@@ -136,10 +138,14 @@ export function OnboardingTour() {
 
           <p className="mt-2 text-sm text-muted-foreground">{body}</p>
 
+          <p className="mt-3 text-center text-xs font-semibold text-green-600">
+            ↓ Gebruik de groene knop hieronder om verder te gaan
+          </p>
+
           {step.action ? (
             <Button
               size="lg"
-              className="mt-4 h-12 w-full rounded-2xl text-base"
+              className="mt-4 h-12 w-full rounded-2xl bg-green-600 text-base text-white animate-pulse hover:bg-green-700"
               onClick={async () => {
                 if (step.id === "home-location") {
                   void enableLocationSharing();
