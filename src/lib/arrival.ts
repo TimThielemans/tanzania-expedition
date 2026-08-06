@@ -34,13 +34,13 @@ export const ARRIVAL_SCRIPT = {
   buttonLabel: "TOUCH DOWN",
   /** Tempo (ms). */
   timing: {
-    initialDelay: 2500,
+    initialDelay: 3000,
     /** Tijd per teken van de typewriter. */
-    charDelay: 18,
+    charDelay: 20,
     /** Pauze tussen twee aankondigingsregels. */
-    linePause: 100,
+    linePause: 300,
     /** Pauze tussen twee checkpoints. */
-    checkpointPause: 1500,
+    checkpointPause: 2000,
   },
 } as const;
 
