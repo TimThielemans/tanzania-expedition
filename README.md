@@ -214,6 +214,31 @@ Die teksten staan in **`src/routes/info.tsx`** in de constante `SECTIONS`. Elke 
 
 Pas de teksten aan, voeg secties toe of verwijder ze — er is geen databasewijziging nodig.
 
+## Landingspagina (BOW Airlines) aanpassen
+
+Bij de **eerste login** van een team op een toestel verschijnt het aankomstscherm
+"BOW Airlines" in plaats van het startscherm: de aankondiging verschijnt regel per regel,
+daarna de statusregels (✓ Boarding completed …), en ten slotte de knop **TOUCH DOWN**.
+Na die knop komt het startscherm en start één seconde later de onboardingtour.
+Terugkerende gebruikers zien het scherm niet meer en krijgen de gewone welkomsttoast.
+
+Alle inhoud staat in **`src/lib/arrival.ts`** in de constante `ARRIVAL_SCRIPT`:
+
+```ts
+airline: "BOW AIRLINES",        // kop
+route: "BRU → JRO",             // route-regel
+lines: ["…", "…"],              // aankondiging: elke regel verschijnt na de vorige
+checkpoints: ["Boarding completed", …],  // ✓-regels
+arrivalLabel: "🛬 Welcome to Tanzania",
+buttonLabel: "TOUCH DOWN",
+timing: { charDelay: 18, linePause: 700, checkpointPause: 900 },  // tempo in ms
+```
+
+Pas teksten aan, voeg regels of checkpoints toe of verwijder ze — geen databasewijziging
+nodig. Wil je dat álle teams het scherm opnieuw zien (ook wie het al zag)? Verhoog dan
+`ARRIVAL_VERSION` in hetzelfde bestand; die waarde zit in de localStorage-sleutel
+`bow-arrival:<versie>:<teamId>` (per team én per toestel).
+
 ## Zone-taglines
 
 Elke zone heeft een korte slogan (`tagline`) die op het startscherm en boven de zone
