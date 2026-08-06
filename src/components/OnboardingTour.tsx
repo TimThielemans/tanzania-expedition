@@ -5,6 +5,7 @@ import { useTeamSession } from "@/lib/session";
 import { useOnboarding } from "@/lib/onboarding";
 import { useArrival } from "@/lib/arrival";
 import { enableLocationSharing } from "@/hooks/useLocationTracking";
+import { toast } from "sonner";
 
 interface Rect {
   top: number;
@@ -145,6 +146,7 @@ export function OnboardingTour() {
                   await enableLocationSharing();
                 }
 
+                toast.info(`step = ${step.id}`);
                 const goTo = step.action?.goTo;
 
                 next();
