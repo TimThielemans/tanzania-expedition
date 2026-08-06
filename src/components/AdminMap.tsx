@@ -127,5 +127,5 @@ export default function AdminMap({ teams, locations, events, finale }: Props) {
     }
   }, [mapReady, teams, locations, events, finale]);
 
-  return <div ref={containerRef} className="h-80 w-full rounded-2xl" />;
+  return <div ref={containerRef} className="h-80 w-full overflow-hidden rounded-2xl" />;
 }
