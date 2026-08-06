@@ -34,17 +34,17 @@ export const ARRIVAL_SCRIPT = {
   buttonLabel: "TOUCH DOWN",
   /** Tempo (ms). */
   timing: {
-    initialDelay: 3000,
+    initialDelay: 5000,
     /** Tijd per teken van de typewriter. */
     charDelay: 20,
     /** Pauze tussen twee aankondigingsregels. */
-    linePause: 300,
+    linePause: 1500,
     /** Pauze tussen twee checkpoints. */
     checkpointPause: 2000,
   },
 } as const;
 
-const ARRIVAL_VERSION = "v1.2";
+const ARRIVAL_VERSION = "v1.02";
 const DONE = "done";
 
 const key = (teamId: string) => `bow-arrival:${ARRIVAL_VERSION}:${teamId}`;
