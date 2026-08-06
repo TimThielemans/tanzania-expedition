@@ -426,6 +426,8 @@ export async function submitTextAnswer({ teamId, zoneId, challenge }: SubmitCont
 
     if (zoneId) {
       await maybeDeliverZoneCode(teamId, zoneId);
+    } else {
+      toast.info("not called because zoneId = not");
     }
   } catch (err) {
     enqueue({ kind: "answer", payload, points, teamId });
@@ -499,6 +501,8 @@ export async function uploadPhoto({ teamId, zoneId, challenge }: SubmitContext, 
   }
   if (zoneId) {
     await maybeDeliverZoneCode(teamId, zoneId);
+  } else {
+    toast.info("not called because zoneId = not");
   }
   // Foto's leveren pas punten op na goedkeuring door de reisleider.
   return data.publicUrl;
@@ -548,12 +552,16 @@ export async function maybeDeliverZoneCode(teamId: string, zoneId: string) {
     const row = byChallenge.get(c.id);
     return !!row;
   });
+
+  toast.info(`allDone = ${allDone}`);
   if (!allDone) return;
 
   // Eén keer per team/zone
   const { error: noticeError } = await supabase
     .from("zone_completion_notices")
     .insert({ team_id: teamId, zone_id: zoneId });
+
+  toast.info(`noticeError = ${noticeError}`);
   if (noticeError) return;
 
   const next = sorted[index + 1] ?? null;
