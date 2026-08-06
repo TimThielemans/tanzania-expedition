@@ -23,6 +23,7 @@ export default function AdminMap({ teams, locations, events, finale }: Props) {
   const leafletRef = useRef<typeof import("leaflet") | null>(null);
   const [mapReady, setMapReady] = useState(false);
 
+  const initialFitDone = useRef(false);
   useEffect(() => {
     let cancelled = false;
     void (async () => {
@@ -120,10 +121,10 @@ export default function AdminMap({ teams, locations, events, finale }: Props) {
 
       L.marker([finale.latitude, finale.longitude], { icon: finaleIcon }).bindPopup("🏁 Finale").addTo(layer);
     }
-
-    if (points.length > 0) {
+    if (points.length > 0 && !initialFitDone.current) {
       map.fitBounds(L.latLngBounds(points).pad(0.3), { maxZoom: 16 });
-      map.invalidateSize();
+
+      initialFitDone.current = true;
     }
   }, [mapReady, teams, locations, events, finale]);
 

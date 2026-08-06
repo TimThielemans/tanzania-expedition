@@ -142,7 +142,7 @@ export function OnboardingTour() {
               className="mt-4 h-12 w-full rounded-2xl text-base"
               onClick={async () => {
                 if (step.id === "home-location") {
-                  await enableLocationSharing();
+                  void enableLocationSharing();
                 }
                 const goTo = step.action?.goTo;
 

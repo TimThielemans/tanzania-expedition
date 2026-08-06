@@ -46,7 +46,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     target: "zones",
     placement: "top",
     title: "Het reisschema",
-    body: "Onze reis laat zich in 4 etappes verdelen: eerst gaan we mountainbiken, daarna beklimmen we Mount Meru (de toffe versie van Kilimanjaro), een safari kan nadien niet ontbreken in Tanzania, en afsluiten doen we op Zanzibar. In elke zone zullen jullie enkele opdrachten moeten voltooien voordat jullie de volgende etappe kunnen ontdekken.",
+    body: "Onze reis laat zich in 4 etappes verdelen: eerst gaan we mountainbiken, daarna beklimmen we Mount Meru, een safari kan nadien niet ontbreken in Tanzania, en afsluiten doen we op Zanzibar. In elke zone zullen jullie enkele opdrachten moeten voltooien voordat jullie de volgende etappe kunnen ontdekken.",
     action: { label: "Tof, hoe win ik?" },
   },
 

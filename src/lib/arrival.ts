@@ -38,7 +38,7 @@ export const ARRIVAL_SCRIPT = {
     /** Tijd per teken van de typewriter. */
     charDelay: 20,
     /** Pauze tussen twee aankondigingsregels. */
-    linePause: 200,
+    linePause: 800,
     /** Pauze tussen twee checkpoints. */
     checkpointPause: 3000,
   },
