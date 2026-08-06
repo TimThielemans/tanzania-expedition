@@ -110,16 +110,6 @@ export function ChallengeCard({
         </>
       ) : null}
 
-      {!submitted && isLocation && onDismiss ? (
-        <Button
-          variant="ghost"
-          className="mt-2 h-9 w-full rounded-xl text-xs text-muted-foreground"
-          onClick={onDismiss}
-        >
-          Niet deelnemen
-        </Button>
-      ) : null}
-
       {submitted ? (
         <div className="mt-4 space-y-1 rounded-2xl bg-secondary px-4 py-3 text-sm font-semibold text-secondary-foreground">
           <div className="flex items-center gap-2">
