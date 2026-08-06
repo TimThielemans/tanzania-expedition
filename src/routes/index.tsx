@@ -46,8 +46,6 @@ import { arrivalDone, useArrival } from "@/lib/arrival";
 import { ArrivalScreen } from "@/components/ArrivalScreen";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
-const CONSENT_KEY = "bow-location-consent";
-
 const MEDALS = ["🥇", "🥈", "🥉"];
 
 export const Route = createFileRoute("/")({

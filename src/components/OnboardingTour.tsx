@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useTeamSession } from "@/lib/session";
 import { useOnboarding } from "@/lib/onboarding";
 import { useArrival } from "@/lib/arrival";
+import { enableLocationSharing } from "@/hooks/useLocationTracking";
 
 interface Rect {
   top: number;
@@ -141,11 +142,7 @@ export function OnboardingTour() {
               className="mt-4 h-12 w-full rounded-2xl text-base"
               onClick={async () => {
                 if (step.id === "home-location") {
-                  const ok = await requestLocationPermission();
-
-                  if (ok) {
-                    window.localStorage.setItem(CONSENT_KEY, "true");
-                  }
+                  await enableLocationSharing();
                 }
 
                 const goTo = step.action?.goTo;

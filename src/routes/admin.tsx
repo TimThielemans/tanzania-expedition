@@ -929,6 +929,19 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
               >
                 Alle teams verwijderen
               </Button>
+
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  Object.keys(localStorage)
+                    .filter((key) => key.startsWith("bow-"))
+                    .forEach((key) => localStorage.removeItem(key));
+
+                  toast.success("BOW local storage gereset.");
+                }}
+              >
+                Reset onboarding & arrival
+              </Button>
             </div>
           </Section>
         </TabsContent>
