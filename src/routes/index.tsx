@@ -27,7 +27,7 @@ import {
   useTeams,
   useZones,
 } from "@/hooks/useGame";
-import { useLocationTracking, requestLocationPermission } from "@/hooks/useLocationTracking";
+import { enableLocationSharing, useLocationTracking, requestLocationPermission } from "@/hooks/useLocationTracking";
 import { TRACKING_KEY } from "@/components/AdminMapPanel";
 import {
   activeBonusChallenges,
@@ -245,8 +245,7 @@ function HomeScreen({ teamId }: { teamId: string }) {
   );
 
   async function askLocation() {
-    const ok = await requestLocationPermission();
-    window.localStorage.setItem(CONSENT_KEY, ok ? "true" : "false");
+    const ok = await enableLocationSharing();
     setConsented(ok);
     toast[ok ? "success" : "error"](ok ? "Locatie delen staat aan." : "Zonder locatie kunnen we jullie niet volgen.");
   }

@@ -139,7 +139,15 @@ export function OnboardingTour() {
             <Button
               size="lg"
               className="mt-4 h-12 w-full rounded-2xl text-base"
-              onClick={() => {
+              onClick={async () => {
+                if (step.id === "home-location") {
+                  const ok = await requestLocationPermission();
+
+                  if (ok) {
+                    window.localStorage.setItem(CONSENT_KEY, "true");
+                  }
+                }
+
                 const goTo = step.action?.goTo;
 
                 next();

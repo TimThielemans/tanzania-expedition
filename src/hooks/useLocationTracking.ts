@@ -191,6 +191,16 @@ export function useLocationTracking({ team, trackingEnabled, consented, events, 
   return { permission, isTracker, deviceId, takeOver };
 }
 
+export const CONSENT_KEY = "bow-location-consent";
+
+export async function enableLocationSharing() {
+  const ok = await requestLocationPermission();
+
+  window.localStorage.setItem(CONSENT_KEY, ok ? "true" : "false");
+
+  return ok;
+}
+
 /** Vraagt eenmalig toestemming; het antwoord onthouden we in localStorage. */
 export function requestLocationPermission(): Promise<boolean> {
   return new Promise((resolve) => {
