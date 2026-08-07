@@ -101,11 +101,6 @@ function StatsPage() {
       */}
 
       <div className="mt-4 rounded-3xl border border-border bg-card p-4 shadow-card">
-        <p className="text-sm text-muted-foreground">
-          De reisleider gebruikt jullie locatie om locatieopdrachten automatisch te activeren. Hieronder zie je of
-          jullie locatie correct wordt doorgestuurd.
-        </p>
-
         <p className="mt-2 text-sm text-muted-foreground">
           Voor de beste GPS-kwaliteit blijf je best even buiten, houd je de app open en schakel je batterijbesparing uit
           indien mogelijk.

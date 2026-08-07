@@ -44,7 +44,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "spelopzet",
     route: "/",
     target: "zones",
-    placement: "top",
+    placement: "bottom",
     title: "Het reisschema",
     body: "Onze reis laat zich in 4 etappes verdelen: eerst gaan we mountainbiken, daarna beklimmen we Mount Meru, een safari kan nadien niet ontbreken in Tanzania, en afsluiten doen we op Zanzibar. In elke zone zullen jullie enkele opdrachten moeten voltooien voordat jullie de volgende etappe kunnen ontdekken.",
     action: { label: "Tof, hoe win ik?" },
@@ -64,9 +64,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     route: "/",
     target: "location-share",
     optional: true,
-    placement: "bottom",
+    placement: "top",
     title: "Locatie delen",
-    body: "Om opdrachten automatisch te laten verschijnen wanneer jullie belangrijke plaatsen bereiken, zal je zo dadelijk gevraagd worden om toestemming te geven om je locatie door te geven. Slechts één toestel per team deelt de locatie, maar je kan via deze knop altijd wisselen van toestel tijdens het spel.",
+    body: "Om opdrachten automatisch te laten verschijnen wanneer jullie belangrijke plaatsen bereiken, zal je zo dadelijk gevraagd worden om toestemming te geven om je locatie door te geven. Slechts één toestel per team deelt de locatie, maar je kan via deze knop op de homepagine altijd wisselen van toestel tijdens het spel.",
     action: { label: "Naar de Map", goTo: "/statistieken" },
   },
   {
@@ -77,7 +77,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     placement: "top",
     title: "Controleer GPS status",
     body: "Op deze Map-pagina kan je controleren of jullie locatie correct wordt doorgestuurd. GPS is nooit perfect nauwkeurig en wordt bewust niet elke seconde vernieuwd om batterij en dataverbruik te beperken.",
-    action: { label: "Vertel eens over dat rode bolletje", goTo: "/meldingen" },
+    action: { label: "Vertel eens over dat rode bolletje 1 →", goTo: "/meldingen" },
   },
 
   {
