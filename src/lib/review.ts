@@ -134,26 +134,20 @@ async function afterReview(input: ReviewInput, status: ReviewStatus, points: num
 
   // Bonusopdrachten horen bij geen enkele zone.
   if (challenge?.is_bonus) {
-    toast.info("bonus -> skip");
     return;
   }
 
   if (challenge?.is_location) {
-    toast.info("location challenge");
-
     if (!challenge.location_event_id) {
-      toast.error("location_event_id ontbreekt");
       return;
     }
     const events = await fetchLocationEvents();
     const zoneId = events.find((e) => e.id === challenge.location_event_id)?.zone_id ?? null;
-    toast.info(`zoneId=${zoneId}`);
     if (zoneId) {
       await maybeDeliverZoneScore(input.teamId, zoneId);
     }
     return;
   }
-  toast.info(`normal challenge zone=${input.zoneId}`);
   if (input.zoneId) {
     await maybeDeliverZoneScore(input.teamId, input.zoneId);
   }
@@ -181,7 +175,6 @@ export async function maybeDeliverZoneScore(teamId: string, zoneId: string) {
 
   const zoneChallenges = zoneCompletionChallenges(challenges, locEvents, zoneId, locStates);
 
-  toast.info(`zoneChallenges = ${zoneChallenges}`);
   if (zoneChallenges.length === 0) return;
 
   const [answers, quiz, photos] = await Promise.all([
@@ -204,7 +197,6 @@ export async function maybeDeliverZoneScore(teamId: string, zoneId: string) {
     return row && row.status !== "pending";
   });
 
-  toast.info(`fullyReviewed = ${fullyReviewed}`);
   if (!fullyReviewed) return;
 
   const regularPoints = zoneChallenges.reduce((sum, c) => sum + (byChallenge.get(c.id)?.points_awarded ?? 0), 0);
@@ -219,7 +211,6 @@ export async function maybeDeliverZoneScore(teamId: string, zoneId: string) {
     zone_id: zoneId,
   });
   if (error) {
-    toast.error(JSON.stringify(error));
     return;
   }
 
