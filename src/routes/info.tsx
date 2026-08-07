@@ -1,11 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/AppShell";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export const Route = createFileRoute("/info")({
   ssr: false,
@@ -61,9 +56,9 @@ const SECTIONS = [
       "Elke opdracht toont het aantal punten dat een juist antwoord oplevert.",
       "Vragen met een vast juist antwoord worden meteen automatisch beoordeeld.",
       "Open vragen en foto's worden door de reisleider nagekeken dus daar moet je soms even op wachten.",
-      "Voor opdrachten met een ⭐ kan de reisleider extra creativiteitspunten toekennen."
+      "Voor opdrachten met een ⭐ kan de reisleider extra creativiteitspunten toekennen.",
       "Kleurcode: ⏳ wacht op nakijken · ✅ goedgekeurd (punten toegekend) · ❌ afgekeurd (geen punten).",
-      "Bonusopdrachten leveren extra punten op, maar zijn maar even beschikbaar'
+      "Bonusopdrachten leveren extra punten op, maar zijn maar even beschikbaar",
     ],
   },
   {
@@ -89,7 +84,7 @@ const SECTIONS = [
       "Uiteraard ben je vrij hier en daar af te wijken om een opdracht uit te voeren maar zorg dat je steeds terug op de 'hoofdroute' terecht komt.",
     ],
   },
-  
+
   {
     id: "bonus",
     icon: "⚡",
@@ -143,9 +138,7 @@ function InfoPage() {
         </Accordion>
       </div>
 
-      <p className="mt-4 text-center text-xs text-muted-foreground">
-        Veel succes en geniet van de expeditie! 🦁
-      </p>
+      <p className="mt-4 text-center text-xs text-muted-foreground">Veel succes en geniet van de expeditie! 🦁</p>
     </AppShell>
   );
 }
