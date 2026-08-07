@@ -10,6 +10,7 @@ import {
 import { fetchLocationChallengeStates, fetchLocationEvents } from "./locations";
 import { createNotification } from "./notifications";
 import type { Answer, Challenge, Photo, QuizAnswer, ReviewStatus } from "./types";
+import { toast } from "sonner";
 
 export type SubmissionTable = "answers" | "quiz_answers" | "photos";
 
@@ -127,34 +128,35 @@ async function afterReview(input: ReviewInput, status: ReviewStatus, points: num
           : `Geen punten voor "${challenge.title}".`,
       audience: "team",
       teamId: input.teamId,
-      kind: "bonus",
-    });
-  } else if (challenge?.is_location) {
-    await createNotification({
-      title: status === "approved" ? "✅ Punten toegekend" : "❌ Inzending afgekeurd",
-      body:
-        status === "approved"
-          ? `${points} punten voor de locatieopdracht "${challenge.title}".`
-          : `Geen punten voor de locatieopdracht "${challenge.title}".`,
-      audience: "team",
-      teamId: input.teamId,
-      kind: "location",
+      kind: "review",
     });
   }
 
   // Bonusopdrachten horen bij geen enkele zone.
-  if (challenge?.is_bonus) return;
-
-  // Locatieopdracht: de zone komt van het gekoppelde locatie-event.
-  if (challenge?.is_location) {
-    if (!challenge.location_event_id) return;
-    const events = await fetchLocationEvents();
-    const zoneId = events.find((e) => e.id === challenge.location_event_id)?.zone_id ?? null;
-    if (zoneId) await maybeDeliverZoneScore(input.teamId, zoneId);
+  if (challenge?.is_bonus) {
+    toast.info("bonus -> skip");
     return;
   }
 
-  if (input.zoneId) await maybeDeliverZoneScore(input.teamId, input.zoneId);
+  if (challenge?.is_location) {
+    toast.info("location challenge");
+
+    if (!challenge.location_event_id) {
+      toast.error("location_event_id ontbreekt");
+      return;
+    }
+    const events = await fetchLocationEvents();
+    const zoneId = events.find((e) => e.id === challenge.location_event_id)?.zone_id ?? null;
+    toast.info(`zoneId=${zoneId}`);
+    if (zoneId) {
+      await maybeDeliverZoneScore(input.teamId, zoneId);
+    }
+    return;
+  }
+  toast.info(`normal challenge zone=${input.zoneId}`);
+  if (input.zoneId) {
+    await maybeDeliverZoneScore(input.teamId, input.zoneId);
+  }
 }
 
 /* --------------------------- automatische zonecode --------------------------- */
