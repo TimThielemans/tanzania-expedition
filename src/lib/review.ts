@@ -201,6 +201,7 @@ export async function maybeDeliverZoneScore(teamId: string, zoneId: string) {
     return row && row.status !== "pending";
   });
 
+  toast.info(`fullyReviewed = ${fullyReviewed}`);
   if (!fullyReviewed) return;
 
   const regularPoints = zoneChallenges.reduce((sum, c) => sum + (byChallenge.get(c.id)?.points_awarded ?? 0), 0);
@@ -214,8 +215,10 @@ export async function maybeDeliverZoneScore(teamId: string, zoneId: string) {
     team_id: teamId,
     zone_id: zoneId,
   });
-
-  if (error) return;
+  if (error) {
+    toast.error(JSON.stringify(error));
+    return;
+  }
 
   const lines = [`Jullie behaalden ${regularPoints} punten in deze zone.`];
 
