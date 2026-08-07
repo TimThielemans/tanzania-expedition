@@ -51,21 +51,21 @@ export async function createNotification(input: NewNotification) {
     kind: input.kind ?? "info",
   });
 
-  if ("vibrate" in navigator) {
-    if (notification.kind === "bonus") {
+  if (error) throw error;
+
+  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+    if (input.kind === "bonus") {
       navigator.vibrate([200, 100, 200, 100, 200]);
     }
 
-    if (notification.kind === "location") {
+    if (input.kind === "location") {
       navigator.vibrate([150, 100, 150]);
     }
 
-    if (notification.kind === "review") {
+    if (input.kind === "review") {
       navigator.vibrate(200);
     }
   }
-
-  if (error) throw error;
 }
 
 export async function deleteNotification(id: string) {
