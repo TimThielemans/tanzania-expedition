@@ -410,7 +410,7 @@ function HomeScreen({ teamId }: { teamId: string }) {
         </section>
       ) : null}
 
-      <h2 className="mt-6 text-2xl">Zones</h2>
+      <h2 className="mt-6 text-2xl">Etappes</h2>
       <div data-tour="zones" className="mt-3 space-y-3">
         {(zones ?? []).map((zone, index) => {
           const zoneChallenges = zoneProgressChallenges(

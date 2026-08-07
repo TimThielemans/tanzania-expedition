@@ -579,11 +579,11 @@ export async function maybeDeliverZoneCode(teamId: string, zoneId: string) {
   } else if (next) {
     lines.push("", `${next.name} is automatisch ontgrendeld.`);
   } else {
-    lines.push("", "Dit was de laatste zone. Wat een expeditie!");
+    lines.push("", "Dit was de laatste etappe. Wat een expeditie!");
   }
 
   await createNotification({
-    title: "🎉 Goed gedaan!",
+    title: "🎉 Goed bezig!",
     body: lines.join("\n"),
     audience: "team",
     teamId,

@@ -36,9 +36,10 @@ const SECTIONS = [
     icon: "🎲",
     title: "Het spel",
     body: [
-      "Jullie reizen als team door verschillende zones van Tanzania.",
+      "Jullie reizen als team in de voetsporen van de reisleider in 4 verschillende etappes door Tanzania.",
       "Elke zone bevat opdrachten: vragen, schattingen, meerkeuze en foto-opdrachten.",
       "Hoe beter jullie antwoorden, hoe meer punten jullie verdienen.",
+      "Met meer punten wordt je vakantie alleen maar leuker en maak je meer kans op de hoofdprijs.",
     ],
   },
   {
@@ -46,10 +47,10 @@ const SECTIONS = [
     icon: "📜",
     title: "Spelregels",
     body: [
-      "Speel met één toestel per team en blijf samen.",
-      "Elke opdracht kan één keer ingezonden worden — overleg dus goed.",
-      "Foto's maken jullie ter plaatse, niet van het internet.",
-      "Fair play: de reisleider kan punten toekennen of aftrekken.",
+      "Je kan met meerdere toestellen inloggen en opdrachten beantwoorden maar slechts één toestel per team deelt de locatie.",
+      "Elke opdracht kan slechts één keer ingezonden worden, overleg dus goed. Communicatie is belangrijk he 😉",
+      "Foto's maken jullie zelf ter plaatse, niet plukken van het internet of uit je goed gevulde fotoalbum.",
+      "Fair play: de reisleider kan altijd beslissen extra punten toe te kennen of af te trekken.",
     ],
   },
   {
@@ -57,24 +58,38 @@ const SECTIONS = [
     icon: "⭐",
     title: "Puntensysteem",
     body: [
-      "Elke opdracht toont het aantal punten dat ze oplevert.",
+      "Elke opdracht toont het aantal punten dat een juist antwoord oplevert.",
       "Vragen met een vast juist antwoord worden meteen automatisch beoordeeld.",
-      "Open vragen en foto's worden door de reisleider nagekeken.",
+      "Open vragen en foto's worden door de reisleider nagekeken dus daar moet je soms even op wachten.",
+      "Voor opdrachten met een ⭐ kan de reisleider extra creativiteitspunten toekennen."
       "Kleurcode: ⏳ wacht op nakijken · ✅ goedgekeurd (punten toegekend) · ❌ afgekeurd (geen punten).",
-      "Bonusopdrachten leveren extra punten op, maar zijn maar even beschikbaar.",
+      "Bonusopdrachten leveren extra punten op, maar zijn maar even beschikbaar'
     ],
   },
   {
-    id: "zones",
+    id: "Etappes",
     icon: "🔓",
-    title: "Zones ontgrendelen",
+    title: "Etappes ontgrendelen",
     body: [
-      "De eerste zone staat altijd open.",
-      "Een zone zonder wachtwoord opent automatisch zodra de vorige zone volledig af is.",
-      "Een zone met wachtwoord blijft dicht tot de reisleider de code doorstuurt.",
-      "De code komt binnen via Meldingen, zodra al jullie antwoorden nagekeken zijn.",
+      "De eerste etappe (MTB Adventure) is altijd beschikbaar.",
+      "De daaropvolgende etappes kan je enkel openen met een code.",
+      "Deze code komt binnen via Meldingen, zodra je de laatste opdracht van de vorige etappe hebt ingediend.",
     ],
   },
+  {
+    id: "locatie",
+    icon: "📍",
+    title: "Locatie events",
+    body: [
+      "Sommige opdrachten worden enkel zichtbaar wanneer je op bepaalde punten op de route bent gepasseerd.",
+      "Je krijgt steeds een melding als er een nieuwe opdracht werd vrijgespeeld.",
+      "Deze locatiegebonden opdrachten verschijnen onderaan in je huidige zone.",
+      "Geef toestemming aan de app/browser om je locatie te delen en hou de app regelmatig open.",
+      "Na het indienen van opdrachten krijg je regelmatig een melding waar soms informatie over de te volgen route instaat, lees dus je meldingen en volg de route :)",
+      "Uiteraard ben je vrij hier en daar af te wijken om een opdracht uit te voeren maar zorg dat je steeds terug op de 'hoofdroute' terecht komt.",
+    ],
+  },
+  
   {
     id: "bonus",
     icon: "⚡",
@@ -91,9 +106,9 @@ const SECTIONS = [
     icon: "🆘",
     title: "Hulp nodig?",
     body: [
-      "Geen internet? Antwoorden worden lokaal bewaard en automatisch verstuurd zodra je weer verbinding hebt.",
-      "Zie je iets niet verschijnen? Sluit de app niet af, maar ververs de pagina.",
-      "Bij twijfel: spreek de reisleider aan.",
+      "Zie je iets niet verschijnen? Ververs de pagina eens.",
+      "Het is niet de bedoeling dat jullie lang moeten zoeken of echt ver moeten wandelen. Alles zou zichzelf moeten uitwijzen maar het is ook maar de eerste keer dat iemand dit speelt...",
+      "Bij twijfel: stuur een whatsappke naar de reisleider.",
     ],
   },
 ];
