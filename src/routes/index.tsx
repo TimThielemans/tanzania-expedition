@@ -334,7 +334,7 @@ function HomeScreen({ teamId }: { teamId: string }) {
         </div>
       ) : null}
 
-      {trackingOn && consented ? (
+      {trackingOn && consented && onboardingDone ? (
         <button
           type="button"
           data-tour="location-share"
