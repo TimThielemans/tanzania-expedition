@@ -112,7 +112,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
 ];
 
 const DONE = "done";
-const ONBOARDING_VERSION = "0v5";
+const ONBOARDING_VERSION = "0v6";
 
 const key = (teamId: string) => `bow-onboarding:${ONBOARDING_VERSION}:${teamId}`;
 
