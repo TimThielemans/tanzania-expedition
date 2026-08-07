@@ -201,7 +201,9 @@ function StatsPage() {
               </Button>
             ) : (
               <div className="mt-4 rounded-2xl bg-muted px-4 py-3 text-sm text-muted-foreground">
-                📱 Ander toestel deelt momenteel de locatie van jullie team.
+                📱 Ander toestel deelt jullie locatie.
+                <br />
+                Via Home kan je die instelling veranderen.
               </div>
             )}
           </>
