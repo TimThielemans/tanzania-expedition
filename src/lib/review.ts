@@ -167,6 +167,7 @@ async function afterReview(input: ReviewInput, status: ReviewStatus, points: num
  * nagekeken. Gebeurt maximaal één keer per team/zone.
  */
 export async function maybeDeliverZoneScore(teamId: string, zoneId: string) {
+  toast.info(`call maybedeliver zone score`);
   const [zones, challenges, locEvents, locStates] = await Promise.all([
     fetchZones(),
     fetchAllChallenges(),
@@ -175,10 +176,12 @@ export async function maybeDeliverZoneScore(teamId: string, zoneId: string) {
   ]);
 
   const zone = zones.find((z) => z.id === zoneId);
+  toast.info(`zone = ${zone}`);
   if (!zone) return;
 
   const zoneChallenges = zoneCompletionChallenges(challenges, locEvents, zoneId, locStates);
 
+  toast.info(`zoneChallenges = ${zoneChallenges}`);
   if (zoneChallenges.length === 0) return;
 
   const [answers, quiz, photos] = await Promise.all([
