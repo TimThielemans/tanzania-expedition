@@ -2,16 +2,12 @@ import { supabase } from "./supabase";
 import { logRpc } from "./errors";
 import type { AppNotification, NotificationAudience, NotificationRead } from "./types";
 
-
 export const ADMIN_READER = "admin";
 
 /* ------------------------------ reads ------------------------------ */
 
 export async function fetchNotifications(): Promise<AppNotification[]> {
-  const { data, error } = await supabase
-    .from("notifications")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const { data, error } = await supabase.from("notifications").select("*").order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as AppNotification[];
 }
@@ -54,6 +50,21 @@ export async function createNotification(input: NewNotification) {
     team_id: input.audience === "team" ? (input.teamId ?? null) : null,
     kind: input.kind ?? "info",
   });
+
+  if ("vibrate" in navigator) {
+    if (notification.kind === "bonus") {
+      navigator.vibrate([200, 100, 200, 100, 200]);
+    }
+
+    if (notification.kind === "location") {
+      navigator.vibrate([150, 100, 150]);
+    }
+
+    if (notification.kind === "review") {
+      navigator.vibrate(200);
+    }
+  }
+
   if (error) throw error;
 }
 
@@ -67,8 +78,6 @@ export async function deleteAllNotifications() {
   const result = await supabase.rpc("delete_all_notifications");
   logRpc("delete_all_notifications", result);
 }
-
-
 
 export async function setNotificationActive(id: string, active: boolean) {
   const { error } = await supabase.from("notifications").update({ active }).eq("id", id);
@@ -84,11 +93,9 @@ export async function markNotificationRead(notificationId: string, reader: strin
 
 export async function markAllNotificationsRead(ids: string[], reader: string) {
   if (ids.length === 0) return;
-  const { error } = await supabase
-    .from("notification_reads")
-    .upsert(
-      ids.map((notification_id) => ({ notification_id, reader })),
-      { onConflict: "notification_id,reader" },
-    );
+  const { error } = await supabase.from("notification_reads").upsert(
+    ids.map((notification_id) => ({ notification_id, reader })),
+    { onConflict: "notification_id,reader" },
+  );
   if (error) throw error;
 }
