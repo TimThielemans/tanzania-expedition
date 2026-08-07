@@ -86,7 +86,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     target: "nav-meldingen",
     placement: "top",
     title: "Meldingen",
-    body: "Ah eindelijk heb ik je aandacht! Hier lees je berichten van je reisleider. Nieuwe berichten vallen extra op en verdwijnen uit de aandacht zodra iemand van je team ze heeft gelezen.",
+    body: "Ah eindelijk heb ik je aandacht! Hier lees je berichten van je reisleider. Nieuwe berichten vallen extra op en verdwijnen uit de aandacht zodra iemand van je team ze heeft gelezen. TIP: klik op de meldingen om ze als gelezen te markeren, zo hou je een beter overzicht want je gaat veel meldingen krijgen.",
     action: { label: "Ik wil beginnen aan de reis!", goTo: "/info" },
   },
 
