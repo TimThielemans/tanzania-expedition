@@ -253,7 +253,7 @@ export async function setBonusActive(challenge: Challenge, active: boolean) {
 
   if (active) {
     await createNotification({
-      title: "📢 BONUSOPDRACHT",
+      title: "⚡️ BONUSOPDRACHT",
       body:
         challenge.notification_message?.trim() ||
         `${challenge.description ?? challenge.title}\n\nJullie hebben ${challenge.duration_minutes} minuten.`,
